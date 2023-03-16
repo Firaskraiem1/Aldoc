@@ -1,0 +1,158 @@
+
+
+
+
+
+      // spin
+
+
+      SpinCircleBottomBarHolder(
+        bottomNavigationBar: SCBottomBarDetails(
+          bnbHeight: 58,
+          circleColors: [Colors.white, Colors.green, Colors.redAccent],
+          iconTheme: const IconThemeData(color: Colors.white),
+          activeIconTheme: const IconThemeData(color: Colors.green),
+          backgroundColor: const Color(0xff151719),
+          titleStyle: const TextStyle(color: Colors.white, fontSize: 12),
+          activeTitleStyle: const TextStyle(color: Colors.green),
+          actionButtonDetails: SCActionButtonDetails(
+              color: Colors.green,
+              icon: const Icon(
+                Icons.document_scanner,
+                color: Colors.white,
+              ),
+              elevation: 50),
+          elevation: 100,
+          items: [
+            SCBottomBarItem(
+                icon: Icons.home_filled, title: "Home", onPressed: () {}),
+            SCBottomBarItem(
+                icon: Icons.file_upload,
+                title: "Upload file",
+                onPressed: () {}),
+          ],
+          circleItems: [
+            SCItem(icon: const Icon(Icons.add), onPressed: () {}),
+            SCItem(icon: const Icon(Icons.print), onPressed: () {}),
+            SCItem(icon: const Icon(Icons.map), onPressed: () {}),
+          ],
+        ),
+        ),
+
+
+        /// circle 
+
+        
+         bottomNavigationBar: CircleBottomNavigationBar(
+        initialSelection: 1,
+        inactiveIconColor: Colors.white,
+        itemIconOn: -2,
+        itemIconOff: -2,
+        itemTextOff: 1,
+        itemTextOn: 1,
+        textColor: Colors.white,
+        circleOutline: -30,
+        barBackgroundColor: const Color(0xff151719),
+        circleColor: Colors.green,
+        tabs: [
+          TabData(icon: Icons.home_filled, title: "Home"),
+          TabData(icon: Icons.document_scanner, title: "Scan file"),
+          TabData(icon: Icons.file_upload, title: "Upload file")
+        ],
+        onTabChangedListener: (int position) {},
+      ),
+
+
+
+      /// show menu 
+      showMenu(
+                color: Colors.transparent,
+                context: context,
+                position: const RelativeRect.fromLTRB(0, 350, 0, 0),
+                items: [
+                  PopupMenuItem(
+                    padding: const EdgeInsets.only(left: 100, top: 10),
+                    child: IconButton(
+                        onPressed: () {}, icon: const Icon(Icons.add)),
+                  ),
+                  PopupMenuItem(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: IconButton(
+                        onPressed: () {}, icon: const Icon(Icons.add)),
+                  ),
+                  PopupMenuItem(
+                      padding:
+                          const EdgeInsets.only(left: 200, top: 0, bottom: 10),
+                      child: IconButton(
+                          onPressed: () {}, icon: const Icon(Icons.add))),
+                ]);
+
+
+
+
+                ///////// camera screen
+
+
+
+
+                // import 'package:camera/camera.dart';
+// import 'package:flutter/material.dart';
+
+// class CameraScreen extends StatefulWidget {
+//   const CameraScreen({super.key});
+
+//   @override
+//   State<CameraScreen> createState() => _CameraScreenState();
+// }
+
+// class _CameraScreenState extends State<CameraScreen> {
+//   late List<CameraDescription> cameras;
+//   late CameraController cameraController;
+
+//   bool _camerainit = false;
+
+//   @override
+//   void initState() {
+//     cameraController.initialize();
+//     super.initState();
+//     startCamera();
+//   }
+
+//   Future<void> startCamera() async {
+//     cameras = await availableCameras();
+
+//     cameraController = CameraController(
+//       cameras[0],
+//       ResolutionPreset.high,
+//       enableAudio: false,
+//     );
+
+//     await cameraController.initialize().then((value) {
+//       if (!mounted) {
+//         return;
+//       }
+//       setState(() {});
+//     }).catchError((e) {
+//       print(e);
+//     });
+//   }
+
+//   @override
+//   void dispose() {
+//     cameraController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     if (cameraController.value.isInitialized) {
+//       return Scaffold(
+//         body: CameraPreview(cameraController),
+//       );
+//     } else {
+//       return const Center(
+//         child: CircularProgressIndicator(),
+//       );
+//     }
+//   }
+// }
