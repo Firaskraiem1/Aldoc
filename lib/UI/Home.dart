@@ -13,6 +13,13 @@ class Home extends StatefulWidget {
 ////variables
 // ignore: non_constant_identifier_names
 bool _FloatButtonPressed = false;
+// ignore: non_constant_identifier_names
+bool _FloatButtonIdPressed = false;
+// ignore: non_constant_identifier_names
+bool _FloatButtonPassPressed = false;
+// ignore: non_constant_identifier_names
+bool _FloatButtonCardPressed = false;
+
 String _currentState = "";
 late String _textBussButton;
 late String _textPassButton;
@@ -20,6 +27,8 @@ late String _textIdButton;
 late String _textBottomBar;
 
 class _HomeState extends State<Home> {
+  final camera = CameraScreen.createKey();
+
 ////declaration
   Alignment _alignement1 = Alignment.centerLeft;
   Alignment _alignement2 = Alignment.topCenter;
@@ -97,12 +106,13 @@ class _HomeState extends State<Home> {
           child: BackdropFilter(
               // color blur(flou)
               // if pressed= true  => color blur
-              filter: _FloatButtonPressed && _currentState == "home"
+              filter: _FloatButtonPressed &&
+                      (_currentState == "home" || _currentState == "uploadFile")
                   ? ImageFilter.blur(sigmaX: 2.5, sigmaY: 2.5)
                   : ImageFilter.blur(),
               //fin
               // widget stack button
-              child: stackButton())),
+              child: homeFloatButton())),
       //fin float action button
 //////////////////////////////////////////////////////////////////////////
       // Bootom appBar
@@ -112,7 +122,9 @@ class _HomeState extends State<Home> {
           padding: const EdgeInsets.only(left: 37, right: 37),
           // height of appBar height:
 
-          color: const Color(0xff151719), //color of app bar
+          color: _currentState == "scanId"
+              ? const Color(0xffbb9d7b)
+              : const Color(0xff151719), //color of app bar
           //Row bottom appBar
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,12 +138,14 @@ class _HomeState extends State<Home> {
                     splashRadius: 50.0,
                     padding: const EdgeInsets.only(
                         top: 20), //  padding of icon button
-                    onPressed: () {
-                      setState(() {
-                        _textBottomBar = "Scan file";
-                        _currentState = "home";
-                      });
-                    },
+                    onPressed: _FloatButtonPressed && _currentState == "home"
+                        ? () {}
+                        : () {
+                            setState(() {
+                              _textBottomBar = "Scan file";
+                              _currentState = "home";
+                            });
+                          },
                     icon: const Icon(Icons.home_filled),
                     color: Colors.white,
                   ),
@@ -195,9 +209,7 @@ class _HomeState extends State<Home> {
           ),
       //Fin bootom appBar
 //////////////////////////////////////////////////////////////////////////
-
       body: body(),
-
 //////////////////////////////////////////////////////////////////////////
 // background color scaffold screen
       backgroundColor: const Color(0xff151719),
@@ -216,7 +228,18 @@ class _HomeState extends State<Home> {
     return homeScreen();
   }
 
-  Widget stackButton() {
+  Widget homeFloatButton() {
+    if (_currentState == "scanId") {
+      return stackIdButton();
+    } else if (_currentState == "scanPass") {
+      return stackPassButton();
+    } else if (_currentState == "scanCard") {
+      return stackCardButton();
+    }
+    return stackScanButton();
+  }
+
+  Widget stackScanButton() {
     return Stack(
       children: [
         //align (button 1)
@@ -249,7 +272,12 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanCard";
-                      _textBottomBar = "Scan card";
+                      _textBottomBar = "Scan Card";
+                    });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
                     });
                   },
                   child: const Icon(Icons.add),
@@ -293,6 +321,11 @@ class _HomeState extends State<Home> {
                       _currentState = "scanPass";
                       _textBottomBar = "Scan pass";
                     });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
                   },
                   child: const Icon(Icons.add),
                 ),
@@ -332,9 +365,10 @@ class _HomeState extends State<Home> {
                   backgroundColor: const Color(0xff41B072),
                   onPressed: () {
                     setState(() {
-                      _textBottomBar = "Scan id";
                       _currentState = "scanId";
+                      _textBottomBar = "Scan id";
                     });
+
                     setState(() {
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
@@ -355,11 +389,211 @@ class _HomeState extends State<Home> {
           alignment: Alignment.bottomCenter,
           //padding of folat button
           child: Padding(
-            padding: paddingFloatButton(),
+            padding: _FloatButtonPressed
+                ? const EdgeInsets.only(bottom: 20)
+                : const EdgeInsets.all(0),
             child: Container(
               // with and height of float button
-              width: sizeFloatButton(50, 70),
-              height: sizeFloatButton(50, 70),
+              width: _FloatButtonPressed ? 50 : 70,
+              height: _FloatButtonPressed ? 50 : 70,
+              //fin
+              child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //Fin
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _FloatButtonPressed = !_FloatButtonPressed;
+                      if (_FloatButtonPressed) {
+                        _textBussButton = "busisness Card";
+                        _textPassButton = "Passport";
+                        _textIdButton = "id document";
+                        _alignement1 = Alignment.centerLeft;
+                        _alignement2 = Alignment.topCenter;
+                        _alignement3 = Alignment.centerRight;
+                      } else {
+                        _textBussButton = _textPassButton = _textIdButton = "";
+                        _alignement1 = _alignement2 =
+                            _alignement3 = Alignment.bottomCenter;
+                      }
+                    });
+                  },
+                  // icon
+                  child: _FloatButtonPressed
+                      ? const Icon(
+                          Icons.close,
+                          size: 40,
+                        )
+                      : const Icon(
+                          Icons.crop_free,
+                          size: 40,
+                        )
+                  // fin
+                  ),
+            ),
+          ),
+          //fin padding
+        ),
+        // fin float  button align
+      ],
+    );
+  }
+
+  Widget stackIdButton() {
+    return Stack(
+      children: [
+        //align (button 1)
+        Align(
+          alignment: _alignement1,
+          //column button 1
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text buss card
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textBussButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              //fin padding
+              // container button 1
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanCard";
+                    });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin conatiner button 1
+            ],
+          ),
+          //fin column
+        ),
+        //fin  align (button 1)
+        //align (button 2)
+        Align(
+          alignment: _alignement2,
+          //column button 2
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text passport
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textPassButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button 2
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanPass";
+                    });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin container button 2
+            ],
+          ),
+          //fin column
+        ),
+        //fin align (button 2)
+        //align (button 3)
+        Align(
+          alignment: _alignement3,
+          //column button 3
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              //padding text id doc
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textIdButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanId";
+                      _FloatButtonIdPressed = !_FloatButtonIdPressed;
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              //fin conatiner button
+            ],
+          ),
+          //fin  column
+        ),
+        // fin align button 3
+        //float button align
+        Align(
+          alignment: Alignment.bottomCenter,
+          //padding of folat button
+          child: Padding(
+            padding: _FloatButtonIdPressed
+                ? const EdgeInsets.only(bottom: 20)
+                : const EdgeInsets.all(0),
+            child: Container(
+              // with and height of float button
+              width: _FloatButtonIdPressed ? 50 : 70,
+              height: _FloatButtonIdPressed ? 50 : 70,
               //fin
               child: FloatingActionButton(
                 // color click
@@ -370,8 +604,8 @@ class _HomeState extends State<Home> {
                 backgroundColor: const Color(0xff41B072),
                 onPressed: () {
                   setState(() {
-                    _FloatButtonPressed = !_FloatButtonPressed;
-                    if (_FloatButtonPressed) {
+                    _FloatButtonIdPressed = !_FloatButtonIdPressed;
+                    if (_FloatButtonIdPressed) {
                       _textBussButton = "busisness Card";
                       _textPassButton = "Passport";
                       _textIdButton = "id document";
@@ -384,21 +618,18 @@ class _HomeState extends State<Home> {
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
                     }
-                  }
-                      //fin action
-                      );
-                  // if (_currentState == "scanId" ||
-                  //     _currentState == "scanPass" ||
-                  //     _currentState == "scanCard") {
-                  //   _FloatButtonPressed = false;
-                  // } else {
-                  //   _FloatButtonPressed = !_FloatButtonPressed;
-                  // }
-                  //action
+                  });
                 },
                 // icon
-                child: floatIcon(),
-
+                child: _FloatButtonIdPressed
+                    ? const Icon(
+                        Icons.close,
+                        size: 40,
+                      )
+                    : const Icon(
+                        Icons.add,
+                        size: 40,
+                      ),
                 // fin
               ),
             ),
@@ -410,62 +641,404 @@ class _HomeState extends State<Home> {
     );
   }
 
-  EdgeInsets paddingFloatButton() {
-    switch (_FloatButtonPressed) {
-      case true:
-        {
-          if (_currentState == "scanId" ||
-              _currentState == "scanPass" ||
-              _currentState == "scanCard") {
-            return const EdgeInsets.all(0);
-          } else {
-            return const EdgeInsets.only(bottom: 20);
-          }
-        }
-      default:
-        return const EdgeInsets.all(0);
-    }
+  Widget stackPassButton() {
+    return Stack(
+      children: [
+        //align (button 1)
+        Align(
+          alignment: _alignement1,
+          //column button 1
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text buss card
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textBussButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              //fin padding
+              // container button 1
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanCard";
+                    });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin conatiner button 1
+            ],
+          ),
+          //fin column
+        ),
+        //fin  align (button 1)
+        //align (button 2)
+        Align(
+          alignment: _alignement2,
+          //column button 2
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text passport
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textPassButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button 2
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanPass";
+                      _FloatButtonPassPressed = !_FloatButtonPassPressed;
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin container button 2
+            ],
+          ),
+          //fin column
+        ),
+        //fin align (button 2)
+        //align (button 3)
+        Align(
+          alignment: _alignement3,
+          //column button 3
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              //padding text id doc
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textIdButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanId";
+                    });
+
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              //fin conatiner button
+            ],
+          ),
+          //fin  column
+        ),
+        // fin align button 3
+        //float button align
+        Align(
+          alignment: Alignment.bottomCenter,
+          //padding of folat button
+          child: Padding(
+            padding: _FloatButtonPassPressed
+                ? const EdgeInsets.only(bottom: 20)
+                : const EdgeInsets.all(0),
+            child: Container(
+              // with and height of float button
+              width: _FloatButtonPassPressed ? 50 : 70,
+              height: _FloatButtonPassPressed ? 50 : 70,
+              //fin
+              child: FloatingActionButton(
+                // color click
+                splashColor: Colors.transparent,
+                //Fin
+                shape: const CircleBorder(
+                    side: BorderSide(color: Colors.white, width: 3)),
+                backgroundColor: const Color(0xff41B072),
+                onPressed: () {
+                  setState(() {
+                    _FloatButtonPassPressed = !_FloatButtonPassPressed;
+                    if (_FloatButtonPassPressed) {
+                      _textBussButton = "busisness Card";
+                      _textPassButton = "Passport";
+                      _textIdButton = "id document";
+
+                      _alignement1 = Alignment.centerLeft;
+                      _alignement2 = Alignment.topCenter;
+                      _alignement3 = Alignment.centerRight;
+                    } else {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    }
+                  });
+                },
+                // icon
+                child: _FloatButtonPassPressed
+                    ? const Icon(
+                        Icons.close,
+                        size: 40,
+                      )
+                    : const Icon(
+                        Icons.add,
+                        size: 40,
+                      ),
+                // fin
+              ),
+            ),
+          ),
+          //fin padding
+        ),
+        // fin float  button align
+      ],
+    );
   }
 
-  double sizeFloatButton(double v1, double v2) {
-    switch (_FloatButtonPressed) {
-      case true:
-        {
-          if (_currentState == "scanId" ||
-              _currentState == "scanPass" ||
-              _currentState == "scanCard") {
-            return v2;
-          } else {
-            return v1;
-          }
-        }
-      default:
-        return v2;
-    }
-  }
+  Widget stackCardButton() {
+    return Stack(
+      children: [
+        //align (button 1)
+        Align(
+          alignment: _alignement1,
+          //column button 1
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text buss card
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textBussButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              //fin padding
+              // container button 1
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanCard";
+                      _FloatButtonCardPressed = !_FloatButtonCardPressed;
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin conatiner button 1
+            ],
+          ),
+          //fin column
+        ),
+        //fin  align (button 1)
+        //align (button 2)
+        Align(
+          alignment: _alignement2,
+          //column button 2
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // padding text passport
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textPassButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button 2
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanPass";
+                    });
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              // fin container button 2
+            ],
+          ),
+          //fin column
+        ),
+        //fin align (button 2)
+        //align (button 3)
+        Align(
+          alignment: _alignement3,
+          //column button 3
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              //padding text id doc
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  _textIdButton,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              // fin padding
+              // conatiner button
+              Container(
+                width: 70,
+                height: 70,
+                child: FloatingActionButton(
+                  // color click
+                  splashColor: Colors.transparent,
+                  //
+                  shape: const CircleBorder(
+                      side: BorderSide(color: Colors.white, width: 3)),
+                  backgroundColor: const Color(0xff41B072),
+                  onPressed: () {
+                    setState(() {
+                      _currentState = "scanId";
+                    });
 
-  Widget floatIcon() {
-    switch (_FloatButtonPressed) {
-      case true:
-        {
-          if (_currentState == "scanId") {
-            return const Icon(Icons.add, size: 40);
-          } else if (_currentState == "scanPass") {
-            return const Icon(Icons.add, size: 40);
-          } else if (_currentState == "scanCard") {
-            return const Icon(Icons.add, size: 40);
-          } else if (_currentState == "uploadFile") {
-            if (_FloatButtonPressed) {
-              return const Icon(Icons.close, size: 40);
-            }
-            return const Icon(Icons.crop_free, size: 40);
-          } else {
-            return const Icon(Icons.close, size: 40);
-          }
-        }
-      default:
-        return const Icon(Icons.crop_free, size: 40);
-    }
+                    setState(() {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    });
+                  },
+                  child: const Icon(Icons.add),
+                ),
+              ),
+              //fin conatiner button
+            ],
+          ),
+          //fin  column
+        ),
+        // fin align button 3
+        //float button align
+        Align(
+          alignment: Alignment.bottomCenter,
+          //padding of folat button
+          child: Padding(
+            padding: _FloatButtonCardPressed
+                ? const EdgeInsets.only(bottom: 20)
+                : const EdgeInsets.all(0),
+            child: Container(
+              // with and height of float button
+              width: _FloatButtonCardPressed ? 50 : 70,
+              height: _FloatButtonCardPressed ? 50 : 70,
+              //fin
+              child: FloatingActionButton(
+                // color click
+                splashColor: Colors.transparent,
+                //Fin
+                shape: const CircleBorder(
+                    side: BorderSide(color: Colors.white, width: 3)),
+                backgroundColor: const Color(0xff41B072),
+                onPressed: () {
+                  setState(() {
+                    _FloatButtonCardPressed = !_FloatButtonCardPressed;
+                    if (_FloatButtonCardPressed) {
+                      _textBussButton = "busisness Card";
+                      _textPassButton = "Passport";
+                      _textIdButton = "id document";
+
+                      _alignement1 = Alignment.centerLeft;
+                      _alignement2 = Alignment.topCenter;
+                      _alignement3 = Alignment.centerRight;
+                    } else {
+                      _textBussButton = _textPassButton = _textIdButton = "";
+                      _alignement1 =
+                          _alignement2 = _alignement3 = Alignment.bottomCenter;
+                    }
+                  });
+                },
+                // icon
+                child: !_FloatButtonCardPressed
+                    ? const Icon(
+                        Icons.close,
+                        size: 40,
+                      )
+                    : const Icon(
+                        Icons.add,
+                        size: 40,
+                      ),
+                // fin
+              ),
+            ),
+          ),
+          //fin padding
+        ),
+        // fin float  button align
+      ],
+    );
   }
 
   Widget homeScreen() {
@@ -535,12 +1108,12 @@ class _HomeState extends State<Home> {
     return PreferredSize(
       preferredSize: Size(MediaQuery.of(context).size.width, 100),
       child: Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 50, left: 8, right: 8),
+        padding: const EdgeInsets.only(top: 12, bottom: 48, left: 9, right: 9),
         child: Stack(children: [
           AppBar(
             backgroundColor: Colors.transparent,
             flexibleSpace: Padding(
-              padding: const EdgeInsets.only(top: 20),
+              padding: const EdgeInsets.only(top: 24),
               child: Container(
                 decoration: const BoxDecoration(
                   color: Color(0xff969390),
@@ -574,19 +1147,25 @@ class _HomeState extends State<Home> {
             ),
             actions: [
               IconButton(
+                splashRadius: 0.1,
                 onPressed: () {},
                 icon: const Icon(Icons.flash_on),
                 padding: const EdgeInsets.only(right: 40),
               ),
               IconButton(
+                  splashRadius: 0.1,
                   onPressed: () {},
                   icon: const Icon(Icons.arrow_circle_down),
                   padding: const EdgeInsets.only(right: 40)),
               IconButton(
+                  splashRadius: 0.1,
                   onPressed: () {},
                   icon: const Icon(Icons.auto_awesome),
                   padding: const EdgeInsets.only(right: 40)),
-              IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+              IconButton(
+                  splashRadius: 0.1,
+                  onPressed: () {},
+                  icon: const Icon(Icons.settings)),
             ],
           ),
         ]),

@@ -1,7 +1,7 @@
 import 'package:aldoc/UI/Home.dart';
 import 'package:flutter/material.dart';
 
-void main() async {
+void main() {
   runApp(const MyApp());
 }
 

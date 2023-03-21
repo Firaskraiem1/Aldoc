@@ -7,11 +7,20 @@ class CameraScreen extends StatefulWidget {
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
+  // ignore: library_private_types_in_public_api
+  static GlobalKey<_CameraScreenState> createKey() =>
+      GlobalKey<_CameraScreenState>();
+}
+
+extension CameraScreenExtensionKey on GlobalKey<_CameraScreenState> {
+  void captureImage() => currentState?.captureImage();
 }
 
 class _CameraScreenState extends State<CameraScreen> {
   List<CameraDescription>? cameras;
   CameraController? cameraController;
+
+  XFile? image;
 
   @override
   void initState() {
@@ -47,19 +56,14 @@ class _CameraScreenState extends State<CameraScreen> {
     }
     return Scaffold(
       backgroundColor: Image.asset("assets/back.jpg").color,
-      body: Stack(children: [
-        Container(
+      body: SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
-          decoration: const BoxDecoration(
-              image: DecorationImage(image: AssetImage("assets/back.jpg"))),
-        ),
-        Align(
-          alignment: Alignment.center,
-          child: SizedBox(
-              height: 210, width: 250, child: CameraPreview(cameraController!)),
-        ),
-      ]),
+          child: image == null
+              ? CameraPreview(cameraController!)
+              : Container(
+                  child: imagePick(),
+                )),
     );
   }
 
@@ -84,13 +88,18 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
-  // void captureImage() {
-  //   cameraController!.takePicture().then((value) {
-  //     Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) => const UploadScreen(),
-  //         ));
-  //   });
-  // }
+  Widget? imagePick() {
+    if (image != null) {
+      return Image.network(
+        image!.path,
+        height: 200,
+      );
+    }
+    return null;
+  }
+
+  void captureImage() async {
+    image = await cameraController!.takePicture();
+    Navigator.pop(context, image?.path);
+  }
 }

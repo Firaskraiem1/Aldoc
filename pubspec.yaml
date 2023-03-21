@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   camera: ^0.10.3+2
   file_picker: ^5.2.5
+  rive: ^0.10.3
   
 
 

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rive/rive.dart';
 
 class UploadScreen extends StatefulWidget {
   const UploadScreen({super.key});
@@ -44,43 +45,44 @@ class _UploadScreenState extends State<UploadScreen> {
           : Center(
               child: Stack(
                 children: [
+                  const Positioned(
+                      top: 100,
+                      left: 100,
+                      right: 100,
+                      bottom: 100,
+                      child: RiveAnimation.asset(
+                          "assets/uploadbuttonanimation.riv")),
                   const Align(
                     alignment: Alignment.center,
                     child: SizedBox(
                       width: 200,
                       height: 200,
                       child: CircularProgressIndicator(
-                        color: Colors.green,
+                        color: Color(0xff41B072),
                         backgroundColor: Color(0xff151719),
                         strokeWidth: 20,
                       ),
                     ),
                   ),
                   Positioned(
-                      top: 100,
-                      left: 100,
-                      right: 100,
-                      bottom: 100,
-                      child: IconButton(
-                          splashRadius: 1.0,
-                          color: Colors.green,
-                          onPressed: () {
-                            setState(() {
-                              openFiles();
-                            });
-                          },
-                          icon: const Icon(
-                            Icons.arrow_upward,
-                            size: 120,
-                          ))),
+                    top: 100,
+                    left: 100,
+                    right: 100,
+                    bottom: 100,
+                    child: GestureDetector(
+                      onTap: () {
+                        openFiles();
+                      },
+                    ),
+                  ),
                   Positioned(
                     top: 400,
                     left: 50,
                     right: 50,
                     bottom: 40,
                     child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Row(
                           children: const [
