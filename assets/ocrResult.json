@@ -1,0 +1,18 @@
+{
+    "ocr_results": {
+        "document_number": "11569803",
+        "first_name": "أميمة",
+        "last_name": "الشريف",
+        "middle_name": "بن أحمد بن كريم",
+        "date_of_birth": "31/01/1956"
+    },
+    "detection_score": {
+        "document_number": 0.873,
+        "last_name": 0.884,
+        "first_name": 0.868,
+        "middle_name": 0.865,
+        "date_of_birth": 0.874,
+        "place_of_birth": 0.839,
+        "mean_detection_score": 0.867
+    }
+}

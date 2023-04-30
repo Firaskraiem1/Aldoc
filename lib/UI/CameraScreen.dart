@@ -1,25 +1,22 @@
+import 'package:aldoc/UI/GenericForm.dart';
+import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:rive/rive.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
-  // ignore: library_private_types_in_public_api
-  static GlobalKey<_CameraScreenState> createKey() =>
-      GlobalKey<_CameraScreenState>();
 }
 
-extension CameraScreenExtensionKey on GlobalKey<_CameraScreenState> {
-  void captureImage() => currentState?.captureImage();
-}
-
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends State<CameraScreen>
+    with SingleTickerProviderStateMixin {
   List<CameraDescription>? cameras;
   CameraController? cameraController;
-
   XFile? image;
 
   @override
@@ -35,36 +32,12 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
-    // open camera
     cameraController?.dispose();
     // orientation
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (cameraController == null || !cameraController!.value.isInitialized) {
-      return const SizedBox(
-        child: Text("erreur"),
-      );
-    }
-    return Scaffold(
-      backgroundColor: Image.asset("assets/back.jpg").color,
-      body: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: image == null
-              ? CameraPreview(cameraController!)
-              : Container(
-                  child: imagePick(),
-                )),
-    );
   }
 
   Future initCamera() async {
@@ -75,9 +48,10 @@ class _CameraScreenState extends State<CameraScreen> {
   void startCamera(int index) async {
     cameraController = CameraController(
       cameras![index],
-      ResolutionPreset.high,
+      ResolutionPreset.veryHigh,
       enableAudio: false,
     );
+
     cameraController!.initialize().then((value) {
       if (!mounted) {
         return;
@@ -88,18 +62,310 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
-  Widget? imagePick() {
-    if (image != null) {
-      return Image.network(
-        image!.path,
-        height: 200,
-      );
+  bool _isCaptureInProgress = false;
+  Future<void> captureImage() async {
+    if (_isCaptureInProgress) {
+      return;
     }
-    return null;
+    try {
+      _isCaptureInProgress = true;
+      image = await cameraController!.takePicture();
+      setState(() {});
+      _isCaptureInProgress = false;
+    } on CameraException catch (e) {
+      print('Erreur de capture : ${e.description}');
+    }
   }
 
-  void captureImage() async {
-    image = await cameraController!.takePicture();
-    Navigator.pop(context, image?.path);
+  Future<void> setFlashOn() async {
+    await cameraController?.setFlashMode(FlashMode.torch);
+  }
+
+  Future<void> setFlashoff() async {
+    await cameraController?.setFlashMode(FlashMode.off);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final camProv = Provider.of<cameraProvider>(context);
+    bool stateCamera = camProv.getCameraState();
+    bool stateFlash = camProv.getFlashState();
+    if (cameraController == null || !cameraController!.value.isInitialized) {
+      return const SizedBox(
+        child: Text(""),
+      );
+    } else if (stateCamera == true) {
+      captureImage().whenComplete(() {
+        camProv.setImagePath(image!.path.toString());
+        camProv.cameraState(false);
+        if (stateFlash == true) {
+          camProv.flashState(false);
+        }
+      }).then((value) {
+        camProv.removeAppBar(true);
+      });
+    } else if (stateFlash == true) {
+      setFlashOn();
+    } else if (stateFlash == false) {
+      setFlashoff();
+    }
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SizedBox(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: body()),
+    );
+  }
+
+  Widget? body() {
+    final camProv = Provider.of<cameraProvider>(context);
+    String? imagePath = camProv.getPathImage();
+    bool invoiceState = camProv.getInvoiceCamera();
+    bool passportState = camProv.getPassportCamera();
+    if (image == null && invoiceState == false && passportState == false) {
+      return Stack(children: [
+        SizedBox(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: CameraPreview(cameraController!)),
+        Center(
+          child: Container(
+              width: 300,
+              height: 190,
+              color: const Color.fromARGB(52, 253, 224, 224),
+              child: Stack(
+                children: [
+                  const RiveAnimation.asset("assets/scan.riv"),
+                  // Coin supérieur gauche
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      width: 30.0,
+                      height: 20.0,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(width: 4.0, color: Colors.white),
+                          left: BorderSide(width: 4.0, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Coin supérieur droit
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      width: 30.0,
+                      height: 20.0,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(width: 4.0, color: Colors.white),
+                          right: BorderSide(width: 4.0, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Coin inférieur gauche
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      width: 30.0,
+                      height: 20.0,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(width: 4.0, color: Colors.white),
+                          left: BorderSide(width: 4.0, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Coin inférieur droit
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Container(
+                      width: 30.0,
+                      height: 20.0,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(width: 4.0, color: Colors.white),
+                          right: BorderSide(width: 4.0, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )),
+        ),
+      ]);
+    } else if (imagePath == "" &&
+        invoiceState == false &&
+        passportState == false) {
+      image = null;
+      return Stack(children: [
+        SizedBox(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: CameraPreview(cameraController!)),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 30),
+            child: Container(
+                width: 400,
+                height: 200,
+                color: const Color.fromARGB(52, 253, 224, 224),
+                child: Stack(
+                  children: [
+                    const RiveAnimation.asset("assets/scan.riv"),
+                    // Coin supérieur gauche
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(width: 4.0, color: Colors.white),
+                            left: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin supérieur droit
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(width: 4.0, color: Colors.white),
+                            right: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin inférieur gauche
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(width: 4.0, color: Colors.white),
+                            left: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin inférieur droit
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(width: 4.0, color: Colors.white),
+                            right: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+        ),
+      ]);
+    } else if (imagePath == "" &&
+        invoiceState == true &&
+        passportState == false) {
+      return Stack(children: [
+        SizedBox(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: CameraPreview(cameraController!)),
+      ]);
+    } else if (imagePath == "" &&
+        passportState == true &&
+        invoiceState == false) {
+      return Stack(children: [
+        SizedBox(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: CameraPreview(cameraController!)),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 30),
+            child: Container(
+                width: 400,
+                height: 400,
+                color: const Color.fromARGB(52, 253, 224, 224),
+                child: Stack(
+                  children: [
+                    const RiveAnimation.asset("assets/scan.riv"),
+                    // Coin supérieur gauche
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(width: 4.0, color: Colors.white),
+                            left: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin supérieur droit
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(width: 4.0, color: Colors.white),
+                            right: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin inférieur gauche
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(width: 4.0, color: Colors.white),
+                            left: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Coin inférieur droit
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        width: 30.0,
+                        height: 20.0,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(width: 4.0, color: Colors.white),
+                            right: BorderSide(width: 4.0, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+        ),
+      ]);
+    }
+    return const GenericForm();
   }
 }

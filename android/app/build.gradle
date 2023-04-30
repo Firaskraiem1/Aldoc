@@ -51,6 +51,8 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        
+
     }
 
     buildTypes {
@@ -67,5 +69,6 @@ flutter {
 }
 
 dependencies {
+    implementation 'com.android.support:appcompat-v7:VERSION'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
