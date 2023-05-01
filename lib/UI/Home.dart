@@ -742,7 +742,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   Widget? homeFloatButton() {
-    final camProv = Provider.of<cameraProvider>(context);
     if (_currentState == "scanId") {
       return stackIdButton();
     } else if (_currentState == "scanPass") {
