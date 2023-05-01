@@ -37,6 +37,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data android:name="com.dexterous.flutterlocalnotifications.default_icon"
+            android:resource="@drawable/ic_stat_cloud_download" />
+
     </application>
 
 </manifest>

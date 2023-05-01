@@ -1,12 +1,15 @@
-// ignore_for_file: no_leading_underscores_for_local_identifiers, non_constant_identifier_names, unused_local_variable, depend_on_referenced_packages, unused_element, use_build_context_synchronously
+// ignore_for_file: no_leading_underscores_for_local_identifiers, non_constant_identifier_names, unused_local_variable, depend_on_referenced_packages, unused_element, use_build_context_synchronously, prefer_final_fields
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
+import 'package:aldoc/UI/local_notification.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:screenshot/screenshot.dart';
 import 'package:share_screenshot_widget/share_screenshot_widget.dart';
 
 class GenericForm extends StatefulWidget {
@@ -26,8 +29,9 @@ class _GenericFormState extends State<GenericForm> {
   bool buttonFavoritePressed = false;
   bool buttonSharePressed = false;
   // /////////////////////:
-  final GlobalKey _widgetKey = GlobalKey();
-
+  final GlobalKey _widgetScreenshotKey = GlobalKey();
+  ScreenshotController _screenshotController = ScreenshotController();
+  late final local_notification service;
   Future<void> readJson() async {
     final String response =
         await rootBundle.loadString("assets/ocrResult.json");
@@ -54,6 +58,8 @@ class _GenericFormState extends State<GenericForm> {
 
   @override
   void initState() {
+    service = local_notification();
+    service.intialize();
     super.initState();
     readJson();
     SystemChrome.setPreferredOrientations([
@@ -117,319 +123,331 @@ class _GenericFormState extends State<GenericForm> {
     final TextEditingController _saveName = TextEditingController();
     final filesProv = Provider.of<filesProvider>(context);
     String? savedName = filesProv.getSaveName();
+
+    Image? image;
     return Align(
       alignment: Alignment.bottomCenter,
-      child: ShareScreenshotAsImage(
-        globalKey: _widgetKey,
-        child: Container(
-          margin:
-              const EdgeInsets.only(left: 15, right: 15, top: 34, bottom: 37),
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(40),
-              color: const Color(0xff222833)),
-          child: Stack(children: [
-            formImage(),
-            Padding(
-              padding: const EdgeInsets.only(
-                  top: 280, bottom: 100, left: 22, right: 10),
-              child: ScrollConfiguration(
-                behavior: MyScrollBehavior(),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      mainAxisExtent: 80,
-                      mainAxisSpacing: 5,
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 0.1),
-                  padding: const EdgeInsets.only(top: 5, bottom: 10),
-                  itemCount: _result.length,
-                  itemBuilder: (context, index) {
-                    return Stack(children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                "${keys![index]} :",
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 7),
-                            child: Row(
+      child: Screenshot(
+        controller: _screenshotController,
+        child: ShareScreenshotAsImage(
+          globalKey: _widgetScreenshotKey,
+          child: Container(
+            margin:
+                const EdgeInsets.only(left: 15, right: 15, top: 34, bottom: 37),
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(40),
+                color: const Color(0xff222833)),
+            child: Stack(children: [
+              formImage(),
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 280, bottom: 100, left: 22, right: 10),
+                child: ScrollConfiguration(
+                  behavior: MyScrollBehavior(),
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            mainAxisExtent: 80,
+                            mainAxisSpacing: 5,
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 0.1),
+                    padding: const EdgeInsets.only(top: 5, bottom: 10),
+                    itemCount: _result.length,
+                    itemBuilder: (context, index) {
+                      return Stack(children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
                               children: [
-                                champContainer(
-                                    values![index], values2![index].toInt())
+                                Text(
+                                  "${keys![index]} :",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ]);
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-                top: 0,
-                right: 45,
-                child: IconButton(
-                    splashRadius: 0.1,
-                    onPressed: () {
-                      setState(() {
-                        buttonFavoritePressed = !buttonFavoritePressed;
-                      });
-
-                      showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: (context) {
-                          return BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0)),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
+                            Padding(
+                              padding: const EdgeInsets.only(top: 7),
+                              child: Row(
                                 children: [
-                                  Form(
-                                      key: _formKey,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            right: 10, left: 10),
-                                        child: TextFormField(
-                                          decoration: InputDecoration(
-                                            fillColor: Colors.white,
-                                            filled: true,
-                                            contentPadding:
-                                                const EdgeInsets.fromLTRB(
-                                                    20, 10, 20, 10),
-                                            focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        100.0),
-                                                borderSide: const BorderSide(
-                                                    color: Colors.grey)),
-                                            enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        100.0),
-                                                borderSide: BorderSide(
-                                                    color:
-                                                        Colors.grey.shade400)),
-                                            errorBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        100.0),
-                                                borderSide: const BorderSide(
-                                                    color: Colors.red,
-                                                    width: 2.0)),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            100.0),
-                                                    borderSide:
-                                                        const BorderSide(
-                                                            color: Colors.red,
-                                                            width: 2.0)),
-                                          ),
-                                          controller: _saveName,
-                                          validator: (value) {
-                                            if (value!.isEmpty) {
-                                              return "Enter file name";
-                                            } else if (value == savedName) {
-                                              return "file name already exists";
-                                            }
-                                            return null;
-                                          },
-                                        ),
-                                      )),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 5, right: 40, top: 15),
-                                        child: TextButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                buttonFavoritePressed = false;
-                                              });
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text(
-                                              "Cancel",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            )),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            right: 5, left: 40, top: 15),
-                                        child: TextButton(
-                                            onPressed: () async {
-                                              if (_formKey.currentState!
-                                                  .validate()) {
-                                                if (_saveName.text !=
-                                                        savedName ||
-                                                    savedName == null) {
-                                                  setState(() {
-                                                    filesProv.setSaveName(
-                                                        _saveName.text);
-                                                    filesProv
-                                                        .setFavoriteState(true);
-                                                    Navigator.pop(context);
-                                                    buttonFavoritePressed =
-                                                        true;
-                                                  });
-                                                }
-
-                                                // var s = SnackBar(
-                                                //     onVisible: () {
-                                                //       camProv
-                                                //           .setFileState(true);
-                                                //     },
-                                                //     action: SnackBarAction(
-                                                //       label: "Ok",
-                                                //       onPressed: () {
-                                                //         camProv.setFileState(
-                                                //             false);
-                                                //       },
-                                                //     ),
-                                                //     content: Row(
-                                                //       children: const [
-                                                //         Icon(Icons.check),
-                                                //         Text("hello")
-                                                //       ],
-                                                //     ));
-
-                                                // ScaffoldMessenger.of(context)
-                                                //     .showSnackBar(s);
-
-                                                /////////// add to list model //////////////
-                                                // if (ImagePath != "") {
-                                                //   fileList.add(FileModel(
-                                                //       fileSaved: FileSaved(
-                                                //           name:
-                                                //               _saveName.text,
-                                                //           ocrResult:
-                                                //               OcrResult(
-                                                //                   x: keys,
-                                                //                   y: values),
-                                                //           detectResult:
-                                                //               DetectResult(
-                                                //                   x: keys2,
-                                                //                   y: values2),
-                                                //           imagePath: ImagePath
-                                                //               .toString())));
-                                                // } else {
-                                                //   fileList.add(FileModel(
-                                                //       fileSaved: FileSaved(
-                                                //           name:
-                                                //               _saveName.text,
-                                                //           ocrResult:
-                                                //               OcrResult(
-                                                //                   x: keys,
-                                                //                   y: values),
-                                                //           detectResult:
-                                                //               DetectResult(
-                                                //                   x: keys2,
-                                                //                   y: values2),
-                                                //           imagePath:
-                                                //               ImageUploaded
-                                                //                   .toString())));
-                                                // }
-                                              }
-                                            },
-                                            child: const Text(
-                                              "Save",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            )),
-                                      )
-                                    ],
-                                  )
+                                  champContainer(
+                                      values![index], values2![index].toInt())
                                 ],
                               ),
                             ),
-                          );
-                        },
-                      );
+                          ],
+                        ),
+                      ]);
                     },
-                    icon: buttonFavoritePressed &&
-                                savedName != null &&
-                                filesProv.getFavoriteState() == true ||
-                            !buttonFavoritePressed &&
-                                savedName != null &&
-                                _saveName.text == "" &&
-                                filesProv.getFavoriteState() == true
-                        ? const Icon(
-                            Icons.star_rate,
-                            size: 22,
-                            color: Color(0xffF8FBFA),
-                          )
-                        : const Icon(
-                            Icons.star_rate,
-                            size: 20,
-                            color: Colors.grey,
-                          ))),
-            Positioned(
-                top: 0,
-                right: 10,
-                child: IconButton(
-                  splashRadius: 0.1,
-                  onPressed: () {
-                    buttonSharePressed = !buttonSharePressed;
-                    showMenu(
-                        color: const Color(0xffF8FBFA),
-                        context: context,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        position: const RelativeRect.fromLTRB(150, 75, 35, 0),
-                        items: [
-                          PopupMenuItem(
-                              child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.file_download_outlined),
-                              const SizedBox(width: 7),
-                              TextButton(
-                                child: const Text("Download File",
-                                    style: TextStyle(color: Colors.black)),
-                                onPressed: () async {},
-                              )
-                            ],
-                          )),
-                          PopupMenuItem(
-                              child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.ios_share_rounded),
-                              const SizedBox(width: 7),
-                              TextButton(
-                                onPressed: () {
-                                  shareWidgets(globalKey: _widgetKey);
-                                },
-                                child: const Text(
-                                  "Share",
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              )
-                            ],
-                          )),
-                        ]);
-                  },
-                  icon: const Icon(
-                    Icons.share,
-                    size: 20,
                   ),
-                  color: Colors.white,
-                )),
-          ]),
+                ),
+              ),
+              Positioned(
+                  top: 0,
+                  right: 45,
+                  child: IconButton(
+                      splashRadius: 0.1,
+                      onPressed: () {
+                        setState(() {
+                          buttonFavoritePressed = !buttonFavoritePressed;
+                        });
+                        showDialog(
+                          barrierDismissible: false,
+                          context: context,
+                          builder: (context) {
+                            return BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0)),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Form(
+                                        key: _formKey,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 10, left: 10),
+                                          child: TextFormField(
+                                            decoration: InputDecoration(
+                                              fillColor: Colors.white,
+                                              filled: true,
+                                              contentPadding:
+                                                  const EdgeInsets.fromLTRB(
+                                                      20, 10, 20, 10),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          100.0),
+                                                  borderSide: const BorderSide(
+                                                      color: Colors.grey)),
+                                              enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          100.0),
+                                                  borderSide: BorderSide(
+                                                      color: Colors
+                                                          .grey.shade400)),
+                                              errorBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          100.0),
+                                                  borderSide: const BorderSide(
+                                                      color: Colors.red,
+                                                      width: 2.0)),
+                                              focusedErrorBorder:
+                                                  OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              100.0),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                              color: Colors.red,
+                                                              width: 2.0)),
+                                            ),
+                                            controller: _saveName,
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return "Enter file name";
+                                              } else if (value == savedName) {
+                                                return "file name already exists";
+                                              }
+                                              return null;
+                                            },
+                                          ),
+                                        )),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 5, right: 40, top: 15),
+                                          child: TextButton(
+                                              onPressed: () {
+                                                setState(() {
+                                                  buttonFavoritePressed = false;
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                              child: const Text(
+                                                "Cancel",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              )),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 5, left: 40, top: 15),
+                                          child: TextButton(
+                                              onPressed: () async {
+                                                if (_formKey.currentState!
+                                                    .validate()) {
+                                                  if (_saveName.text !=
+                                                          savedName ||
+                                                      savedName == null) {
+                                                    setState(() {
+                                                      filesProv.setSaveName(
+                                                          _saveName.text);
+                                                      filesProv
+                                                          .setFavoriteState(
+                                                              true);
+                                                      Navigator.pop(context);
+                                                      buttonFavoritePressed =
+                                                          true;
+                                                    });
+                                                  }
+
+                                                  // var s = SnackBar(
+                                                  //     onVisible: () {
+                                                  //       camProv
+                                                  //           .setFileState(true);
+                                                  //     },
+                                                  //     action: SnackBarAction(
+                                                  //       label: "Ok",
+                                                  //       onPressed: () {
+                                                  //         camProv.setFileState(
+                                                  //             false);
+                                                  //       },
+                                                  //     ),
+                                                  //     content: Row(
+                                                  //       children: const [
+                                                  //         Icon(Icons.check),
+                                                  //         Text("hello")
+                                                  //       ],
+                                                  //     ));
+
+                                                  // ScaffoldMessenger.of(context)
+                                                  //     .showSnackBar(s);
+
+                                                  /////////// add to list model //////////////
+                                                  // if (ImagePath != "") {
+                                                  //   fileList.add(FileModel(
+                                                  //       fileSaved: FileSaved(
+                                                  //           name:
+                                                  //               _saveName.text,
+                                                  //           ocrResult:
+                                                  //               OcrResult(
+                                                  //                   x: keys,
+                                                  //                   y: values),
+                                                  //           detectResult:
+                                                  //               DetectResult(
+                                                  //                   x: keys2,
+                                                  //                   y: values2),
+                                                  //           imagePath: ImagePath
+                                                  //               .toString())));
+                                                  // } else {
+                                                  //   fileList.add(FileModel(
+                                                  //       fileSaved: FileSaved(
+                                                  //           name:
+                                                  //               _saveName.text,
+                                                  //           ocrResult:
+                                                  //               OcrResult(
+                                                  //                   x: keys,
+                                                  //                   y: values),
+                                                  //           detectResult:
+                                                  //               DetectResult(
+                                                  //                   x: keys2,
+                                                  //                   y: values2),
+                                                  //           imagePath:
+                                                  //               ImageUploaded
+                                                  //                   .toString())));
+                                                  // }
+                                                }
+                                              },
+                                              child: const Text(
+                                                "Save",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              )),
+                                        )
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      icon: buttonFavoritePressed &&
+                                  savedName != null &&
+                                  filesProv.getFavoriteState() == true ||
+                              !buttonFavoritePressed &&
+                                  savedName != null &&
+                                  _saveName.text == "" &&
+                                  filesProv.getFavoriteState() == true
+                          ? const Icon(
+                              Icons.star_rate,
+                              size: 22,
+                              color: Color(0xffF8FBFA),
+                            )
+                          : const Icon(
+                              Icons.star_rate,
+                              size: 20,
+                              color: Colors.grey,
+                            ))),
+              Positioned(
+                  top: 0,
+                  right: 10,
+                  child: IconButton(
+                    splashRadius: 0.1,
+                    onPressed: () {
+                      buttonSharePressed = !buttonSharePressed;
+                      showMenu(
+                          color: const Color(0xffF8FBFA),
+                          context: context,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          position: const RelativeRect.fromLTRB(150, 75, 35, 0),
+                          items: [
+                            PopupMenuItem(
+                                child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.file_download_outlined),
+                                const SizedBox(width: 7),
+                                TextButton(
+                                  child: const Text("Download File",
+                                      style: TextStyle(color: Colors.black)),
+                                  onPressed: () async {
+                                    await service.showNotification(
+                                        id: 0,
+                                        title: "Download",
+                                        body: "is started");
+                                  },
+                                )
+                              ],
+                            )),
+                            PopupMenuItem(
+                                child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.ios_share_rounded),
+                                const SizedBox(width: 7),
+                                TextButton(
+                                  onPressed: () {
+                                    shareWidgets(
+                                        globalKey: _widgetScreenshotKey);
+                                  },
+                                  child: const Text(
+                                    "Share",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                )
+                              ],
+                            )),
+                          ]);
+                    },
+                    icon: const Icon(
+                      Icons.share,
+                      size: 20,
+                    ),
+                    color: Colors.white,
+                  )),
+            ]),
+          ),
         ),
       ),
     );

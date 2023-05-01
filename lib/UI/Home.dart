@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:io';
 import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
@@ -70,7 +72,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   Future<void> uploadImage() async {
     try {
       FilePickerResult? resultFile = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
+          type: FileType.any,
+          allowMultiple: false,
           allowedExtensions: ["png", "pdf", "tiff", "jpeg"]);
 
       if (resultFile != null) {
