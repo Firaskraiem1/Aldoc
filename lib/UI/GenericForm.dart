@@ -8,6 +8,9 @@ import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_to_pdf/flutter_to_pdf.dart';
+import 'package:folder_file_saver/folder_file_saver.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_screenshot_widget/share_screenshot_widget.dart';
@@ -30,8 +33,8 @@ class _GenericFormState extends State<GenericForm> {
   bool buttonSharePressed = false;
   // /////////////////////:
   final GlobalKey _widgetScreenshotKey = GlobalKey();
-  ScreenshotController _screenshotController = ScreenshotController();
   late final local_notification service;
+  final ExportDelegate exportDelegate = ExportDelegate();
   Future<void> readJson() async {
     final String response =
         await rootBundle.loadString("assets/ocrResult.json");
@@ -83,6 +86,14 @@ class _GenericFormState extends State<GenericForm> {
     );
   }
 
+  Future<void> saveFile(document, String name) async {
+    final Directory dir = await getApplicationDocumentsDirectory();
+    final File file = File('${dir.path}/$name.pdf');
+    await file.writeAsBytes(await document.save(), flush: true);
+    debugPrint('Saved exported PDF at: ${file.path}');
+    FolderFileSaver.saveFileToFolderExt(file.path);
+  }
+
   Widget formImage() {
     final camProv = Provider.of<cameraProvider>(context);
     String? ImagePath = camProv.getPathImage();
@@ -124,13 +135,13 @@ class _GenericFormState extends State<GenericForm> {
     final filesProv = Provider.of<filesProvider>(context);
     String? savedName = filesProv.getSaveName();
 
-    Image? image;
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Screenshot(
-        controller: _screenshotController,
-        child: ShareScreenshotAsImage(
-          globalKey: _widgetScreenshotKey,
+      child: ShareScreenshotAsImage(
+        globalKey: _widgetScreenshotKey,
+        child: ExportFrame(
+          frameId: "genericForm",
+          exportDelegate: exportDelegate,
           child: Container(
             margin:
                 const EdgeInsets.only(left: 15, right: 15, top: 34, bottom: 37),
@@ -412,10 +423,14 @@ class _GenericFormState extends State<GenericForm> {
                                   child: const Text("Download File",
                                       style: TextStyle(color: Colors.black)),
                                   onPressed: () async {
+                                    final page = await exportDelegate
+                                        .exportToPdfDocument('genericForm');
+                                    saveFile(page, 'Extracted information');
+
                                     await service.showNotification(
                                         id: 0,
-                                        title: "Download",
-                                        body: "is started");
+                                        title: "File downloaded",
+                                        body: "");
                                   },
                                 )
                               ],
