@@ -8,12 +8,12 @@ import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_to_pdf/flutter_to_pdf.dart';
 import 'package:folder_file_saver/folder_file_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_screenshot_widget/share_screenshot_widget.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class GenericForm extends StatefulWidget {
   const GenericForm({super.key});
@@ -34,7 +34,9 @@ class _GenericFormState extends State<GenericForm> {
   // /////////////////////:
   final GlobalKey _widgetScreenshotKey = GlobalKey();
   late final local_notification service;
-  final ExportDelegate exportDelegate = ExportDelegate();
+  ScreenshotController _screenshotController = ScreenshotController();
+
+  ///methodes
   Future<void> readJson() async {
     final String response =
         await rootBundle.loadString("assets/ocrResult.json");
@@ -57,6 +59,28 @@ class _GenericFormState extends State<GenericForm> {
         values2 = _result2.values.cast<double>().toList();
       },
     );
+  }
+
+  Future<void> saveScreenshotToPdf() async {
+    // Capture the screenshot
+    final Uint8List? screenshotData = await _screenshotController.capture();
+
+    // Create a new PDF document
+    final pdf = pw.Document();
+
+    // Add an image of the screenshot to the document
+    final image = pw.MemoryImage(screenshotData!);
+    pdf.addPage(pw.Page(build: (context) {
+      return pw.Center(child: pw.Image(image));
+    }));
+
+    // Save the document to a file
+    final directory = await getApplicationDocumentsDirectory();
+    final file =
+        File('${directory.path}/Extracted Information${DateTime.now()}.pdf');
+    final bytes = await pdf.save();
+    await file.writeAsBytes(bytes);
+    FolderFileSaver.saveFileToFolderExt(file.path);
   }
 
   @override
@@ -86,14 +110,6 @@ class _GenericFormState extends State<GenericForm> {
     );
   }
 
-  Future<void> saveFile(document, String name) async {
-    final Directory dir = await getApplicationDocumentsDirectory();
-    final File file = File('${dir.path}/$name.pdf');
-    await file.writeAsBytes(await document.save(), flush: true);
-    debugPrint('Saved exported PDF at: ${file.path}');
-    FolderFileSaver.saveFileToFolderExt(file.path);
-  }
-
   Widget formImage() {
     final camProv = Provider.of<cameraProvider>(context);
     String? ImagePath = camProv.getPathImage();
@@ -106,7 +122,7 @@ class _GenericFormState extends State<GenericForm> {
             File(
               ImagePath,
             ),
-            height: 170,
+            height: 145,
             fit: BoxFit.fitWidth,
             width: MediaQuery.of(context).size.width,
           ));
@@ -139,9 +155,8 @@ class _GenericFormState extends State<GenericForm> {
       alignment: Alignment.bottomCenter,
       child: ShareScreenshotAsImage(
         globalKey: _widgetScreenshotKey,
-        child: ExportFrame(
-          frameId: "genericForm",
-          exportDelegate: exportDelegate,
+        child: Screenshot(
+          controller: _screenshotController,
           child: Container(
             margin:
                 const EdgeInsets.only(left: 15, right: 15, top: 34, bottom: 37),
@@ -309,62 +324,6 @@ class _GenericFormState extends State<GenericForm> {
                                                           true;
                                                     });
                                                   }
-
-                                                  // var s = SnackBar(
-                                                  //     onVisible: () {
-                                                  //       camProv
-                                                  //           .setFileState(true);
-                                                  //     },
-                                                  //     action: SnackBarAction(
-                                                  //       label: "Ok",
-                                                  //       onPressed: () {
-                                                  //         camProv.setFileState(
-                                                  //             false);
-                                                  //       },
-                                                  //     ),
-                                                  //     content: Row(
-                                                  //       children: const [
-                                                  //         Icon(Icons.check),
-                                                  //         Text("hello")
-                                                  //       ],
-                                                  //     ));
-
-                                                  // ScaffoldMessenger.of(context)
-                                                  //     .showSnackBar(s);
-
-                                                  /////////// add to list model //////////////
-                                                  // if (ImagePath != "") {
-                                                  //   fileList.add(FileModel(
-                                                  //       fileSaved: FileSaved(
-                                                  //           name:
-                                                  //               _saveName.text,
-                                                  //           ocrResult:
-                                                  //               OcrResult(
-                                                  //                   x: keys,
-                                                  //                   y: values),
-                                                  //           detectResult:
-                                                  //               DetectResult(
-                                                  //                   x: keys2,
-                                                  //                   y: values2),
-                                                  //           imagePath: ImagePath
-                                                  //               .toString())));
-                                                  // } else {
-                                                  //   fileList.add(FileModel(
-                                                  //       fileSaved: FileSaved(
-                                                  //           name:
-                                                  //               _saveName.text,
-                                                  //           ocrResult:
-                                                  //               OcrResult(
-                                                  //                   x: keys,
-                                                  //                   y: values),
-                                                  //           detectResult:
-                                                  //               DetectResult(
-                                                  //                   x: keys2,
-                                                  //                   y: values2),
-                                                  //           imagePath:
-                                                  //               ImageUploaded
-                                                  //                   .toString())));
-                                                  // }
                                                 }
                                               },
                                               child: const Text(
@@ -423,14 +382,16 @@ class _GenericFormState extends State<GenericForm> {
                                   child: const Text("Download File",
                                       style: TextStyle(color: Colors.black)),
                                   onPressed: () async {
-                                    final page = await exportDelegate
-                                        .exportToPdfDocument('genericForm');
-                                    saveFile(page, 'Extracted information');
-
-                                    await service.showNotification(
-                                        id: 0,
-                                        title: "File downloaded",
-                                        body: "");
+                                    saveScreenshotToPdf();
+                                    await Future.delayed(
+                                      const Duration(seconds: 2),
+                                      () {
+                                        service.showNotification(
+                                            id: 0,
+                                            title: "File downloaded",
+                                            body: "");
+                                      },
+                                    );
                                   },
                                 )
                               ],

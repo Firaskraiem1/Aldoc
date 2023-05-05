@@ -1,14 +1,17 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers
 
 import 'dart:io';
 import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/provider/authProvider.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,6 +38,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   Alignment _alignement1 = Alignment.centerLeft;
   Alignment _alignement2 = Alignment.topCenter;
   Alignment _alignement3 = Alignment.centerRight;
+
 ////
 ////methodes
 
@@ -69,6 +73,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   PlatformFile? image;
   File? upload_image;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   Future<void> uploadImage() async {
     try {
       FilePickerResult? resultFile = await FilePicker.platform.pickFiles(
@@ -729,8 +734,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   Widget body() {
-    final camProv = Provider.of<cameraProvider>(context, listen: false);
-    String? uploadState = camProv.getCurrentState();
+    final camProv = Provider.of<cameraProvider>(context);
     if (_currentState == "home") {
       return homeScreen();
     } else if (_currentState == "uploadFile") {
@@ -780,9 +784,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   child: Text(
                     _textBussButton,
                     style: TextStyle(
-                        color: _currentState == "uploadFile"
-                            ? Colors.white
-                            : Colors.black,
+                        color: _currentState == "home" ||
+                                _currentState == "uploadFile" &&
+                                    camProv.getGenericState() == false
+                            ? Colors.black
+                            : Colors.white,
                         fontSize: 10),
                   ),
                 ),
@@ -803,7 +809,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       setState(() {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("businessCard");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         _textBussButton = _textPassButton =
@@ -837,9 +843,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   child: Text(
                     _textPassButton,
                     style: TextStyle(
-                        color: _currentState == "uploadFile"
-                            ? Colors.white
-                            : Colors.black,
+                        color: _currentState == "home" ||
+                                _currentState == "uploadFile" &&
+                                    camProv.getGenericState() == false
+                            ? Colors.black
+                            : Colors.white,
                         fontSize: 10),
                   ),
                 ),
@@ -861,7 +869,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setPassportCamera(true);
                         camProv.setImagePath("");
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("passport");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
                         _textBussButton = _textPassButton =
@@ -897,9 +905,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   child: Text(
                     _textInvoiceButton,
                     style: TextStyle(
-                        color: _currentState == "uploadFile"
-                            ? Colors.white
-                            : Colors.black,
+                        color: _currentState == "home" ||
+                                _currentState == "uploadFile" &&
+                                    camProv.getGenericState() == false
+                            ? Colors.black
+                            : Colors.white,
                         fontSize: 10),
                   ),
                 ),
@@ -921,7 +931,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(true);
                         camProv.setImagePath("");
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
                         _textBussButton = _textPassButton =
@@ -957,9 +967,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   child: Text(
                     _textIdButton,
                     style: TextStyle(
-                        color: _currentState == "uploadFile"
-                            ? Colors.white
-                            : Colors.black,
+                        color: _currentState == "home" ||
+                                _currentState == "uploadFile" &&
+                                    camProv.getGenericState() == false
+                            ? Colors.black
+                            : Colors.white,
                         fontSize: 10),
                   ),
                 ),
@@ -980,7 +992,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       setState(() {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("idDocument");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
                         _textBussButton = _textPassButton =
@@ -1011,7 +1023,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ? const EdgeInsets.only(bottom: 20)
                 : const EdgeInsets.all(0),
             child: Container(
-              decoration: BoxDecoration(),
+              decoration: const BoxDecoration(),
               // with and height of float button
               width: _FloatButtonPressed ? 50 : 65,
               height: _FloatButtonPressed ? 50 : 65,
@@ -1116,6 +1128,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
@@ -1184,6 +1197,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(true);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("passport");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
@@ -1254,6 +1268,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(true);
+                        camProv.setCurrentState("invoice");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
@@ -1324,6 +1339,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
@@ -1380,34 +1396,43 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 shape: const CircleBorder(
                     side: BorderSide(color: Colors.white, width: 2.5)),
                 backgroundColor: const Color(0xff41B072),
-                onPressed: () {
-                  setState(() {
+                onPressed: () async {
+                  var connectivityResult =
+                      await Connectivity().checkConnectivity();
+                  if (connectivityResult == ConnectivityResult.mobile ||
+                      connectivityResult == ConnectivityResult.wifi) {
                     _FloatButtonPressed = false;
                     _FloatButtonPassPressed = false;
                     _FloatButtonCardPressed = false;
                     _FloatButtonInvoicePressed = false;
                     _FloatButtonIdPressed = !_FloatButtonIdPressed;
-                    if (_FloatButtonIdPressed &&
-                        camProv.getGenericState() == false) {
-                      camProv.cameraState(true);
-                      camProv.setGenericState(true);
-                      _FloatButtonIdPressed = false;
-                    } else if (_FloatButtonIdPressed &&
-                        camProv.getGenericState() == true) {
-                      _textBussButton = "business card";
-                      _textPassButton = "Passport";
-                      _textIdButton = "id document";
-                      _textInvoiceButton = "Invoice";
-                      _alignement1 = Alignment.centerLeft;
-                      _alignement2 = Alignment.topCenter;
-                      _alignement3 = Alignment.centerRight;
-                    } else {
-                      _textBussButton = _textPassButton =
-                          _textIdButton = _textInvoiceButton = "";
-                      _alignement1 =
-                          _alignement2 = _alignement3 = Alignment.bottomCenter;
-                    }
-                  });
+                    setState(() {
+                      if (_FloatButtonIdPressed &&
+                          camProv.getGenericState() == false) {
+                        camProv.cameraState(true);
+                        camProv.setGenericState(true);
+                        _FloatButtonIdPressed = false;
+                      } else if (_FloatButtonIdPressed &&
+                          camProv.getGenericState() == true) {
+                        _textBussButton = "business card";
+                        _textPassButton = "Passport";
+                        _textIdButton = "id document";
+                        _textInvoiceButton = "Invoice";
+                        _alignement1 = Alignment.centerLeft;
+                        _alignement2 = Alignment.topCenter;
+                        _alignement3 = Alignment.centerRight;
+                      } else {
+                        _textBussButton = _textPassButton =
+                            _textIdButton = _textInvoiceButton = "";
+                        _alignement1 = _alignement2 =
+                            _alignement3 = Alignment.bottomCenter;
+                      }
+                    });
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Failed to connect to host",
+                        backgroundColor: Colors.grey);
+                  }
                 },
                 // icon
                 child: _FloatButtonIdPressed &&
@@ -1486,6 +1511,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
@@ -1555,6 +1581,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(true);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("passport");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
@@ -1628,7 +1655,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(true);
                         camProv.setImagePath("");
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
                         _textBussButton = _textPassButton =
@@ -1698,6 +1725,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
@@ -1755,35 +1783,44 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 shape: const CircleBorder(
                     side: BorderSide(color: Colors.white, width: 2.5)),
                 backgroundColor: const Color(0xff41B072),
-                onPressed: () {
-                  setState(() {
+                onPressed: () async {
+                  var connectivityResult =
+                      await Connectivity().checkConnectivity();
+                  if (connectivityResult == ConnectivityResult.mobile ||
+                      connectivityResult == ConnectivityResult.wifi) {
                     _FloatButtonPressed = false;
                     _FloatButtonIdPressed = false;
                     _FloatButtonCardPressed = false;
                     _FloatButtonInvoicePressed = false;
                     _FloatButtonPassPressed = !_FloatButtonPassPressed;
-                    if (_FloatButtonPassPressed &&
-                        camProv.getGenericState() == false) {
-                      camProv.cameraState(true);
-                      camProv.setUploadPath("");
-                      camProv.setGenericState(true);
-                      _FloatButtonPassPressed = false;
-                    } else if (_FloatButtonPassPressed &&
-                        camProv.getGenericState() == true) {
-                      _textBussButton = "business card";
-                      _textPassButton = "Passport";
-                      _textIdButton = "id document";
-                      _textInvoiceButton = "Invoice";
-                      _alignement1 = Alignment.centerLeft;
-                      _alignement2 = Alignment.topCenter;
-                      _alignement3 = Alignment.centerRight;
-                    } else {
-                      _textBussButton = _textPassButton =
-                          _textIdButton = _textInvoiceButton = "";
-                      _alignement1 =
-                          _alignement2 = _alignement3 = Alignment.bottomCenter;
-                    }
-                  });
+                    setState(() {
+                      if (_FloatButtonPassPressed &&
+                          camProv.getGenericState() == false) {
+                        camProv.cameraState(true);
+                        camProv.setUploadPath("");
+                        camProv.setGenericState(true);
+                        _FloatButtonPassPressed = false;
+                      } else if (_FloatButtonPassPressed &&
+                          camProv.getGenericState() == true) {
+                        _textBussButton = "business card";
+                        _textPassButton = "Passport";
+                        _textIdButton = "id document";
+                        _textInvoiceButton = "Invoice";
+                        _alignement1 = Alignment.centerLeft;
+                        _alignement2 = Alignment.topCenter;
+                        _alignement3 = Alignment.centerRight;
+                      } else {
+                        _textBussButton = _textPassButton =
+                            _textIdButton = _textInvoiceButton = "";
+                        _alignement1 = _alignement2 =
+                            _alignement3 = Alignment.bottomCenter;
+                      }
+                    });
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Failed to connect to host",
+                        backgroundColor: Colors.grey);
+                  }
                 },
                 // icon
                 child: _FloatButtonPassPressed &&
@@ -1862,6 +1899,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
@@ -1932,6 +1970,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(true);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("passport");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
@@ -2003,7 +2042,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(true);
                         camProv.setPassportCamera(false);
                         camProv.setImagePath("");
-                        camProv.setCurrentState("");
+                        camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
                         _textBussButton = _textPassButton =
@@ -2073,6 +2112,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setInvoiceCamera(false);
                         camProv.setPassportCamera(false);
+                        camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
@@ -2130,35 +2170,44 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 shape: const CircleBorder(
                     side: BorderSide(color: Colors.white, width: 2.5)),
                 backgroundColor: const Color(0xff41B072),
-                onPressed: () {
-                  setState(() {
+                onPressed: () async {
+                  var connectivityResult =
+                      await Connectivity().checkConnectivity();
+                  if (connectivityResult == ConnectivityResult.mobile ||
+                      connectivityResult == ConnectivityResult.wifi) {
                     _FloatButtonPressed = false;
                     _FloatButtonIdPressed = false;
                     _FloatButtonPassPressed = false;
                     _FloatButtonInvoicePressed = false;
                     _FloatButtonCardPressed = !_FloatButtonCardPressed;
-                    if (_FloatButtonCardPressed &&
-                        camProv.getGenericState() == false) {
-                      camProv.setUploadPath("");
-                      camProv.cameraState(true);
-                      camProv.setGenericState(true);
-                      _FloatButtonCardPressed = false;
-                    } else if (_FloatButtonCardPressed &&
-                        camProv.getGenericState() == true) {
-                      _textBussButton = "business card";
-                      _textPassButton = "Passport";
-                      _textIdButton = "id document";
-                      _textInvoiceButton = "Invoice";
-                      _alignement1 = Alignment.centerLeft;
-                      _alignement2 = Alignment.topCenter;
-                      _alignement3 = Alignment.centerRight;
-                    } else {
-                      _textBussButton = _textPassButton =
-                          _textIdButton = _textInvoiceButton = "";
-                      _alignement1 =
-                          _alignement2 = _alignement3 = Alignment.bottomCenter;
-                    }
-                  });
+                    setState(() {
+                      if (_FloatButtonCardPressed &&
+                          camProv.getGenericState() == false) {
+                        camProv.setUploadPath("");
+                        camProv.cameraState(true);
+                        camProv.setGenericState(true);
+                        _FloatButtonCardPressed = false;
+                      } else if (_FloatButtonCardPressed &&
+                          camProv.getGenericState() == true) {
+                        _textBussButton = "business card";
+                        _textPassButton = "Passport";
+                        _textIdButton = "id document";
+                        _textInvoiceButton = "Invoice";
+                        _alignement1 = Alignment.centerLeft;
+                        _alignement2 = Alignment.topCenter;
+                        _alignement3 = Alignment.centerRight;
+                      } else {
+                        _textBussButton = _textPassButton =
+                            _textIdButton = _textInvoiceButton = "";
+                        _alignement1 = _alignement2 =
+                            _alignement3 = Alignment.bottomCenter;
+                      }
+                    });
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Failed to connect to host",
+                        backgroundColor: Colors.grey);
+                  }
                 },
                 // icon
                 child: _FloatButtonCardPressed &&
@@ -2235,6 +2284,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
@@ -2304,6 +2354,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setPassportCamera(true);
                         camProv.setInvoiceCamera(false);
+                        camProv.setCurrentState("passport");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
@@ -2374,6 +2425,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setInvoiceCamera(true);
                         camProv.setPassportCamera(false);
+                        camProv.setCurrentState("invoice");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
@@ -2446,6 +2498,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setGenericState(false);
                         camProv.setInvoiceCamera(false);
                         camProv.setPassportCamera(false);
+                        camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
@@ -2505,35 +2558,44 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     side: BorderSide(color: Colors.white, width: 2.5)),
                 backgroundColor: const Color(0xff41B072),
                 onPressed: () async {
-                  setState(() {
+                  var connectivityResult =
+                      await Connectivity().checkConnectivity();
+                  if (connectivityResult == ConnectivityResult.mobile ||
+                      connectivityResult == ConnectivityResult.wifi) {
                     _FloatButtonPressed = false;
                     _FloatButtonIdPressed = false;
                     _FloatButtonPassPressed = false;
                     _FloatButtonCardPressed = false;
                     _FloatButtonInvoicePressed = !_FloatButtonInvoicePressed;
-                    if (_FloatButtonInvoicePressed &&
-                        camProv.getGenericState() == false) {
-                      // camProv.setInvoiceCamera(true);
-                      camProv.setUploadPath("");
-                      camProv.cameraState(true);
-                      camProv.setGenericState(true);
-                      _FloatButtonInvoicePressed = false;
-                    } else if (_FloatButtonInvoicePressed &&
-                        camProv.getGenericState() == true) {
-                      _textBussButton = "business card";
-                      _textPassButton = "Passport";
-                      _textIdButton = "id document";
-                      _textInvoiceButton = "Invoice";
-                      _alignement1 = Alignment.centerLeft;
-                      _alignement2 = Alignment.topCenter;
-                      _alignement3 = Alignment.centerRight;
-                    } else {
-                      _textBussButton = _textPassButton =
-                          _textIdButton = _textInvoiceButton = "";
-                      _alignement1 =
-                          _alignement2 = _alignement3 = Alignment.bottomCenter;
-                    }
-                  });
+                    setState(() {
+                      if (_FloatButtonInvoicePressed &&
+                          camProv.getGenericState() == false) {
+                        // camProv.setInvoiceCamera(true);
+                        camProv.setUploadPath("");
+                        camProv.cameraState(true);
+                        camProv.setGenericState(true);
+                        _FloatButtonInvoicePressed = false;
+                      } else if (_FloatButtonInvoicePressed &&
+                          camProv.getGenericState() == true) {
+                        _textBussButton = "business card";
+                        _textPassButton = "Passport";
+                        _textIdButton = "id document";
+                        _textInvoiceButton = "Invoice";
+                        _alignement1 = Alignment.centerLeft;
+                        _alignement2 = Alignment.topCenter;
+                        _alignement3 = Alignment.centerRight;
+                      } else {
+                        _textBussButton = _textPassButton =
+                            _textIdButton = _textInvoiceButton = "";
+                        _alignement1 = _alignement2 =
+                            _alignement3 = Alignment.bottomCenter;
+                      }
+                    });
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Failed to connect to host",
+                        backgroundColor: Colors.grey);
+                  }
                 },
                 // icon
                 child: _FloatButtonInvoicePressed &&
@@ -2560,11 +2622,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  bool checkboxValue1 = false;
+  bool checkboxValue2 = false;
+  bool checkboxValue3 = false;
+  bool checkboxValue4 = false;
   Widget homeScreen() {
-    bool checkboxValue1 = false;
-    bool checkboxValue2 = false;
-    bool checkboxValue3 = false;
-    bool checkboxValue4 = false;
     final filesProv = Provider.of<filesProvider>(context);
     String? savedName = filesProv.getSaveName();
     return Center(

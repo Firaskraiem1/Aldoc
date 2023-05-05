@@ -7,6 +7,7 @@ import 'package:aldoc/provider/authProvider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,7 +20,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final double _headerHeight = 300; //250
   final Key _formKey = GlobalKey<FormState>();
-
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -113,30 +114,37 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                                 Container(
+                                  width: 175,
                                   decoration: ThemeHelper()
                                       .buttonBoxDecoration(context),
                                   child: ElevatedButton(
                                     style: ThemeHelper().buttonStyle(),
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          40, 10, 40, 10),
-                                      child: Text(
-                                        'Sign In'.toUpperCase(),
-                                        style: const TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white),
-                                      ),
-                                    ),
-                                    onPressed: () {
+                                    child: _isLoading
+                                        ? LoadingAnimationWidget.inkDrop(
+                                            color: Colors.white, size: 30)
+                                        : Text(
+                                            'Sign In'.toUpperCase(),
+                                            style: const TextStyle(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white),
+                                          ),
+                                    onPressed: () async {
                                       setState(() {
                                         authProv.setLoginState(true);
+                                        _isLoading = true;
                                       });
-                                      Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const Home(),
-                                          ));
+                                      await Future.delayed(
+                                        const Duration(seconds: 4),
+                                        () {
+                                          Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const Home(),
+                                              ));
+                                        },
+                                      );
                                     },
                                   ),
                                 ),

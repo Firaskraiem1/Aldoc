@@ -1,7 +1,10 @@
+// ignore_for_file: camel_case_types
+
 import 'package:aldoc/UI/IntroductionScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class splashScreen extends StatefulWidget {
   const splashScreen({super.key});
@@ -27,17 +30,18 @@ class _splashScreenState extends State<splashScreen> {
           "assets/aldoc.png",
         ),
         const SizedBox(height: 41.76),
-        const GFLoader(
-          type: GFLoaderType.ios,
-          size: 50,
-        ),
+        LoadingAnimationWidget.hexagonDots(color: Colors.black, size: 40),
+        // const GFLoader(
+        //   type: GFLoaderType.ios,
+        //   size: 50,
+        // ),
       ])),
     );
   }
 
   goToIntoduction() async {
     await Future.delayed(
-      const Duration(milliseconds: 1500),
+      const Duration(seconds: 4),
       () {},
     );
 

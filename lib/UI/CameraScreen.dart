@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image/image.dart' as img;
 import 'package:aldoc/UI/GenericForm.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:camera/camera.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +24,7 @@ class _CameraScreenState extends State<CameraScreen>
   List<CameraDescription>? cameras;
   CameraController? cameraController;
   XFile? image;
-
+  RequestClass requestClass = RequestClass();
   @override
   void initState() {
     super.initState();
@@ -90,16 +96,26 @@ class _CameraScreenState extends State<CameraScreen>
     final camProv = Provider.of<cameraProvider>(context);
     bool stateCamera = camProv.getCameraState();
     bool stateFlash = camProv.getFlashState();
+    File imageFile;
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return const SizedBox(
         child: Text(""),
       );
     } else if (stateCamera == true) {
-      captureImage().whenComplete(() {
+      captureImage().whenComplete(() async {
+        // imageFile = File(image!.path.toString());
+        // post request //
         camProv.setImagePath(image!.path.toString());
+        requestClass.postRequestIdDocument(
+            image!.path.toString(), camProv.getCurrentState());
         camProv.cameraState(false);
         if (stateFlash == true) {
-          camProv.flashState(false);
+          Future.delayed(
+            const Duration(seconds: 1),
+            () {
+              camProv.flashState(false);
+            },
+          );
         }
       }).then((value) {
         camProv.removeAppBar(true);
@@ -132,7 +148,7 @@ class _CameraScreenState extends State<CameraScreen>
         Center(
           child: Container(
               width: 300,
-              height: 190,
+              height: 230,
               color: const Color.fromARGB(52, 253, 224, 224),
               child: Stack(
                 children: [
@@ -201,82 +217,7 @@ class _CameraScreenState extends State<CameraScreen>
         invoiceState == false &&
         passportState == false) {
       image = null;
-      return Stack(children: [
-        SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: CameraPreview(cameraController!)),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 30, right: 30),
-            child: Container(
-                width: 400,
-                height: 200,
-                color: const Color.fromARGB(52, 253, 224, 224),
-                child: Stack(
-                  children: [
-                    const RiveAnimation.asset("assets/scan.riv"),
-                    // Coin supérieur gauche
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 30.0,
-                        height: 20.0,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(width: 4.0, color: Colors.white),
-                            left: BorderSide(width: 4.0, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Coin supérieur droit
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Container(
-                        width: 30.0,
-                        height: 20.0,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(width: 4.0, color: Colors.white),
-                            right: BorderSide(width: 4.0, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Coin inférieur gauche
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Container(
-                        width: 30.0,
-                        height: 20.0,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(width: 4.0, color: Colors.white),
-                            left: BorderSide(width: 4.0, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Coin inférieur droit
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Container(
-                        width: 30.0,
-                        height: 20.0,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(width: 4.0, color: Colors.white),
-                            right: BorderSide(width: 4.0, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )),
-          ),
-        ),
-      ]);
+      return null;
     } else if (imagePath == "" &&
         invoiceState == true &&
         passportState == false) {

@@ -111,14 +111,4 @@ class cameraProvider with ChangeNotifier {
   getGenericState() {
     return state7;
   }
-
-  // upload file state
-  setFileState(bool s) {
-    state8 = s;
-    notifyListeners();
-  }
-
-  getFileState() {
-    return state8;
-  }
 }

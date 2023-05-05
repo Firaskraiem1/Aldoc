@@ -3,10 +3,14 @@
 import 'dart:io';
 
 import 'package:aldoc/UI/GenericForm.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 
@@ -21,7 +25,7 @@ class _UploadScreenState extends State<UploadScreen> {
   PlatformFile? file;
   File? upload_file;
   bool fileSelected = false;
-
+  RequestClass requestClass = RequestClass();
   @override
   void initState() {
     super.initState();
@@ -41,66 +45,84 @@ class _UploadScreenState extends State<UploadScreen> {
 /////////////////// build //////////////////
   @override
   Widget build(BuildContext context) {
-    final camProv = Provider.of<cameraProvider>(context, listen: false);
     return Scaffold(
       backgroundColor: const Color(0xffF8FBFA),
-      body: fileSelected
-          ? const GenericForm()
-          : Center(
-              child: Stack(
+      body: body(),
+    );
+  }
+
+  ///////////////// fin /////////////////
+  Widget body() {
+    final camProv = Provider.of<cameraProvider>(context, listen: false);
+    if (fileSelected) {
+      return const GenericForm();
+    }
+    return Center(
+      child: Stack(
+        children: [
+          const Positioned(
+              top: 100,
+              left: 100,
+              right: 100,
+              bottom: 200,
+              child: RiveAnimation.asset("assets/uploadbuttonanimation.riv")),
+          Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Positioned(
-                      top: 100,
-                      left: 100,
-                      right: 100,
-                      bottom: 200,
-                      child: RiveAnimation.asset(
-                          "assets/uploadbuttonanimation.riv")),
-                  Align(
-                      alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          SizedBox(
-                            width: 200,
-                            height: 200,
-                            child: CircularProgressIndicator(
-                              color: Color(0xff41B072),
-                              backgroundColor: Color(0xff151719),
-                              strokeWidth: 20,
-                            ),
-                          ),
-                          Text(
-                            "  \n\n  click to browse for image xd \n(Allowed :PDF, TIFF, JPEG, PNG)",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ],
-                      )),
-                  Positioned(
-                    top: 100,
-                    left: 100,
-                    right: 100,
-                    bottom: 200,
-                    child: GestureDetector(
-                      onTap: () {
-                        openFiles();
-                        setState(() {
-                          camProv.setCurrentState("uploadFile");
-                        });
-                      },
+                  SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: LoadingAnimationWidget.discreteCircle(
+                        secondRingColor: const Color(0xff41B072),
+                        thirdRingColor: const Color(0xff41B072),
+                        color: const Color(0xff41B072),
+                        size: 180),
+                    // child: CircularProgressIndicator(
+                    //   color: Color(0xff41B072),
+                    //   backgroundColor: Color(0xff151719),
+                    //   strokeWidth: 20,
+                    // ),
+                  ),
+                  const Text(
+                    "  \n\n  click to browse for image xd \n(Allowed :PDF, TIFF, JPEG, PNG)",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
                     ),
                   ),
                 ],
-              ),
+              )),
+          Positioned(
+            top: 100,
+            left: 100,
+            right: 100,
+            bottom: 200,
+            child: GestureDetector(
+              onTap: () async {
+                var connectivityResult =
+                    await Connectivity().checkConnectivity();
+                if (connectivityResult == ConnectivityResult.mobile ||
+                    connectivityResult == ConnectivityResult.wifi) {
+                  openFiles();
+                  setState(() {
+                    camProv.setCurrentState("uploadFile");
+                  });
+                } else {
+                  Fluttertoast.showToast(
+                      msg: "Failed to connect to host",
+                      backgroundColor: Colors.grey);
+                }
+              },
             ),
+          ),
+        ],
+      ),
     );
   }
-  ///////////////// fin /////////////////
 
-  // method to choose file
+// method to choose file
   Future<void> openFiles() async {
     final camProv = Provider.of<cameraProvider>(context, listen: false);
     try {
@@ -111,11 +133,14 @@ class _UploadScreenState extends State<UploadScreen> {
         ///////////////////////
         setState(() {
           fileSelected = true;
+          camProv.setGenericState(true);
         });
         ///////////////////////
         file = resultFile.files.first;
         upload_file = File(file!.path.toString());
         camProv.setUploadPath(upload_file!.path);
+        // post request
+        requestClass.postRequestIdDocument(upload_file!.path.toString(), "");
       } else {}
     } catch (e) {
       print(e);
