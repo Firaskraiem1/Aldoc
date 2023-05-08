@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers
+// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable
 
 import 'dart:io';
 import 'dart:ui';
@@ -11,10 +11,12 @@ import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rive/rive.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -77,8 +79,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   Future<void> uploadImage() async {
     try {
       FilePickerResult? resultFile = await FilePicker.platform.pickFiles(
-          type: FileType.any,
-          allowMultiple: false,
+          type: FileType.custom,
           allowedExtensions: ["png", "pdf", "tiff", "jpeg"]);
 
       if (resultFile != null) {
@@ -120,6 +121,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           ? ScrollConfiguration(
               behavior: MyScrollBehavior(),
               child: Drawer(
+                //Color(0xff41B072)
+                backgroundColor: const Color(0xffF8FBFA),
                 child: ListView(children: [
                   TextButton.icon(
                       onPressed: () {
@@ -445,9 +448,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               IconButton(
                   onPressed: () {},
-                  icon: const Icon(
-                    Icons.notifications,
-                    color: Colors.black,
+                  icon: const RiveAnimation.asset(
+                    "assets/icons.riv",
+                    artboard: "BELL",
                   )),
               const SizedBox(
                 width: 15,
@@ -510,10 +513,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         alignment: Alignment.centerLeft,
                                         child: TextButton.icon(
                                             onPressed: () {
-                                              setState(() {
-                                                uploadImage();
-                                                Navigator.pop(context);
-                                              });
+                                              uploadImage().then(
+                                                (value) {
+                                                  Navigator.pop(context);
+                                                },
+                                              );
                                             },
                                             icon: const Icon(
                                               Icons.edit,
@@ -548,12 +552,27 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         mainAxisSize:
                                                             MainAxisSize.min,
                                                         children: [
+                                                          Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: const [
+                                                              Text(
+                                                                "Enter username",
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                              )
+                                                            ],
+                                                          ),
                                                           Form(
                                                               key: _formKey,
                                                               child: Padding(
                                                                 padding:
                                                                     const EdgeInsets
                                                                             .only(
+                                                                        top: 15,
                                                                         right:
                                                                             10,
                                                                         left:
@@ -1410,6 +1429,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       if (_FloatButtonIdPressed &&
                           camProv.getGenericState() == false) {
                         camProv.cameraState(true);
+                        camProv.setUploadPath("");
                         camProv.setGenericState(true);
                         _FloatButtonIdPressed = false;
                       } else if (_FloatButtonIdPressed &&
@@ -2570,7 +2590,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     setState(() {
                       if (_FloatButtonInvoicePressed &&
                           camProv.getGenericState() == false) {
-                        // camProv.setInvoiceCamera(true);
                         camProv.setUploadPath("");
                         camProv.cameraState(true);
                         camProv.setGenericState(true);
@@ -2628,7 +2647,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool checkboxValue4 = false;
   Widget homeScreen() {
     final filesProv = Provider.of<filesProvider>(context);
+    final camProv = Provider.of<cameraProvider>(context);
     String? savedName = filesProv.getSaveName();
+    String? ImageUploadedPath = camProv.getPathUploadImage();
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(top: 30),
@@ -2974,6 +2995,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     Radius.circular(10)),
                                             color: Color(0xffFFFFFF)),
                                         child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           mainAxisSize: MainAxisSize.max,
                                           children: [
                                             IconButton(
@@ -2985,18 +3008,49 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                   height: 20.25,
                                                 )),
                                             if (savedName != null)
-                                              TextButton(
-                                                style: const ButtonStyle(
-                                                    splashFactory:
-                                                        NoSplash.splashFactory),
-                                                onPressed: () {},
-                                                child: Text(
-                                                  savedName,
-                                                  style: const TextStyle(
-                                                    color: Color(0xff4A4A4A),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 130, left: 5),
+                                                child: TextButton(
+                                                  style: const ButtonStyle(
+                                                      splashFactory: NoSplash
+                                                          .splashFactory),
+                                                  onPressed: () {},
+                                                  child: Text(
+                                                    savedName,
+                                                    style: const TextStyle(
+                                                      color: Color(0xff4A4A4A),
+                                                    ),
                                                   ),
                                                 ),
-                                              )
+                                              ),
+                                            IconButton(
+                                                onPressed: () {
+                                                  ImageUploadedPath != null
+                                                      ? showDialog(
+                                                          context: context,
+                                                          builder: (context) {
+                                                            return AlertDialog(
+                                                              backgroundColor:
+                                                                  const Color(
+                                                                      0xffF8FBFA),
+                                                              shape: RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              15.0)),
+                                                              content: Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: []),
+                                                            );
+                                                          },
+                                                        )
+                                                      : null;
+                                                },
+                                                icon: const Icon(
+                                                    Icons.visibility))
                                           ],
                                         ),
                                       ),

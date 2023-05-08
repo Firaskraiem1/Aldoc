@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image/image.dart' as img;
 import 'package:aldoc/UI/GenericForm.dart';
+import 'package:aldoc/UI/Home.dart';
 import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:camera/camera.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 
@@ -25,6 +23,8 @@ class _CameraScreenState extends State<CameraScreen>
   CameraController? cameraController;
   XFile? image;
   RequestClass requestClass = RequestClass();
+  // image croped Path (ronger)
+  String? cropPath;
   @override
   void initState() {
     super.initState();
@@ -96,19 +96,43 @@ class _CameraScreenState extends State<CameraScreen>
     final camProv = Provider.of<cameraProvider>(context);
     bool stateCamera = camProv.getCameraState();
     bool stateFlash = camProv.getFlashState();
-    File imageFile;
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return const SizedBox(
         child: Text(""),
       );
     } else if (stateCamera == true) {
       captureImage().whenComplete(() async {
-        // imageFile = File(image!.path.toString());
-        // post request //
-        camProv.setImagePath(image!.path.toString());
-        requestClass.postRequestIdDocument(
-            image!.path.toString(), camProv.getCurrentState());
         camProv.cameraState(false);
+        CroppedFile? croppedFile = await ImageCropper().cropImage(
+          sourcePath: image!.path,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio3x2,
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9
+          ],
+          uiSettings: [
+            AndroidUiSettings(
+                activeControlsWidgetColor: const Color(0xff41B072),
+                backgroundColor: const Color(0xffF8FBFA),
+                toolbarTitle: 'Cropper',
+                toolbarColor: const Color(0xffF8FBFA),
+                toolbarWidgetColor: Colors.black,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: false),
+          ],
+        );
+        if (croppedFile != null) {
+          cropPath = croppedFile.path;
+          camProv.setImagePath(croppedFile.path.toString());
+          // post request //
+          requestClass.postRequestIdDocument(
+              croppedFile.path.toString(), camProv.getCurrentState());
+          camProv.removeAppBar(true);
+        } else {
+          camProv.setGenericState(false);
+        }
         if (stateFlash == true) {
           Future.delayed(
             const Duration(seconds: 1),
@@ -117,9 +141,7 @@ class _CameraScreenState extends State<CameraScreen>
             },
           );
         }
-      }).then((value) {
-        camProv.removeAppBar(true);
-      });
+      }).then((value) {});
     } else if (stateFlash == true) {
       setFlashOn();
     } else if (stateFlash == false) {
@@ -139,7 +161,7 @@ class _CameraScreenState extends State<CameraScreen>
     String? imagePath = camProv.getPathImage();
     bool invoiceState = camProv.getInvoiceCamera();
     bool passportState = camProv.getPassportCamera();
-    if (image == null && invoiceState == false && passportState == false) {
+    if (cropPath == null && invoiceState == false && passportState == false) {
       return Stack(children: [
         SizedBox(
             height: MediaQuery.of(context).size.height,
@@ -216,7 +238,7 @@ class _CameraScreenState extends State<CameraScreen>
     } else if (imagePath == "" &&
         invoiceState == false &&
         passportState == false) {
-      image = null;
+      cropPath = null;
       return null;
     } else if (imagePath == "" &&
         invoiceState == true &&

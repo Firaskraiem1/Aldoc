@@ -10,7 +10,6 @@ class cameraProvider with ChangeNotifier {
   bool state5 = false;
   bool state6 = false;
   bool state7 = false;
-  bool state8 = false;
   String? state4;
   String? uploadPath;
   String? path;
