@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
 import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -10,26 +12,22 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-////variables
-// ignore: non_constant_identifier_names
-bool _FloatButtonPressed = false;
-// ignore: non_constant_identifier_names
-bool _FloatButtonIdPressed = false;
-// ignore: non_constant_identifier_names
-bool _FloatButtonPassPressed = false;
-// ignore: non_constant_identifier_names
-bool _FloatButtonCardPressed = false;
-
-String _currentState = "";
-late String _textBussButton;
-late String _textPassButton;
-late String _textIdButton;
-late String _textBottomBar;
-
 class _HomeState extends State<Home> {
-  final camera = CameraScreen.createKey();
-
-////declaration
+  ////variables
+  // ignore: non_constant_identifier_names
+  bool _FloatButtonPressed = false;
+  // ignore: non_constant_identifier_names
+  bool _FloatButtonIdPressed = false;
+  // ignore: non_constant_identifier_names
+  bool _FloatButtonPassPressed = false;
+  // ignore: non_constant_identifier_names
+  bool _FloatButtonCardPressed = false;
+  String _currentState = "";
+  late String _textBussButton;
+  late String _textPassButton;
+  late String _textIdButton;
+  late String _textBottomBar;
+  Map<String, dynamic>? _result;
   Alignment _alignement1 = Alignment.centerLeft;
   Alignment _alignement2 = Alignment.topCenter;
   Alignment _alignement3 = Alignment.centerRight;
@@ -42,18 +40,29 @@ class _HomeState extends State<Home> {
     _textBussButton = "";
     _textPassButton = "";
     _textIdButton = "";
-
+    readJson();
     _alignement1 = Alignment.bottomCenter;
     _alignement2 = Alignment.bottomCenter;
     _alignement3 = Alignment.bottomCenter;
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
   }
 
+  Future<void> readJson() async {
+    final String response =
+        await rootBundle.loadString("assets/ocrResult.json");
+    final Map<String, dynamic> data = await json.decode(response);
+    setState(() {
+      _result = data["ocr_results"];
+    });
+  }
 ////////
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: _currentState == "scanId" ? true : false,
 //////////////////////////////////////////////////////////////////////////
       // appBar
       appBar: _currentState != "scanId"
@@ -115,13 +124,11 @@ class _HomeState extends State<Home> {
               child: homeFloatButton())),
       //fin float action button
 //////////////////////////////////////////////////////////////////////////
-      // Bootom appBar
+      //Bootom appBar
       bottomNavigationBar: BottomAppBar(
-
           // padding bottom appbar
           padding: const EdgeInsets.only(left: 37, right: 37),
           // height of appBar height:
-
           color: _currentState == "scanId"
               ? const Color(0xffbb9d7b)
               : const Color(0xff151719), //color of app bar
@@ -144,6 +151,13 @@ class _HomeState extends State<Home> {
                             setState(() {
                               _textBottomBar = "Scan file";
                               _currentState = "home";
+                              _FloatButtonPressed = _FloatButtonCardPressed =
+                                  _FloatButtonPassPressed =
+                                      _FloatButtonIdPressed = false;
+                              _textBussButton =
+                                  _textPassButton = _textIdButton = "";
+                              _alignement1 = _alignement2 =
+                                  _alignement3 = Alignment.bottomCenter;
                             });
                           },
                     icon: const Icon(Icons.home_filled),
@@ -209,14 +223,14 @@ class _HomeState extends State<Home> {
           ),
       //Fin bootom appBar
 //////////////////////////////////////////////////////////////////////////
-      body: body(),
+      body: formView(),
 //////////////////////////////////////////////////////////////////////////
 // background color scaffold screen
       backgroundColor: const Color(0xff151719),
     );
   }
 
-///////////////////////////// widgets//////////////////////////
+///////////////////////////// widgets ////////////////////////////
   Widget body() {
     if (_currentState == "home") {
       return homeScreen();
@@ -273,8 +287,6 @@ class _HomeState extends State<Home> {
                     setState(() {
                       _currentState = "scanCard";
                       _textBottomBar = "Scan Card";
-                    });
-                    setState(() {
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -320,8 +332,6 @@ class _HomeState extends State<Home> {
                     setState(() {
                       _currentState = "scanPass";
                       _textBottomBar = "Scan pass";
-                    });
-                    setState(() {
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -367,9 +377,6 @@ class _HomeState extends State<Home> {
                     setState(() {
                       _currentState = "scanId";
                       _textBottomBar = "Scan id";
-                    });
-
-                    setState(() {
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -475,6 +482,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanCard";
+                      _textBottomBar = "Scan Card";
                     });
                     setState(() {
                       _textBussButton = _textPassButton = _textIdButton = "";
@@ -521,8 +529,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanPass";
-                    });
-                    setState(() {
+                      _textBottomBar = "Scan Pass";
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -567,6 +574,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanId";
+                      _textBottomBar = "Scan id";
                       _FloatButtonIdPressed = !_FloatButtonIdPressed;
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
@@ -604,12 +612,14 @@ class _HomeState extends State<Home> {
                 backgroundColor: const Color(0xff41B072),
                 onPressed: () {
                   setState(() {
+                    _FloatButtonPressed = false;
+                    _FloatButtonPassPressed = false;
+                    _FloatButtonCardPressed = false;
                     _FloatButtonIdPressed = !_FloatButtonIdPressed;
                     if (_FloatButtonIdPressed) {
                       _textBussButton = "busisness Card";
                       _textPassButton = "Passport";
                       _textIdButton = "id document";
-
                       _alignement1 = Alignment.centerLeft;
                       _alignement2 = Alignment.topCenter;
                       _alignement3 = Alignment.centerRight;
@@ -674,8 +684,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanCard";
-                    });
-                    setState(() {
+                      _textBottomBar = "Scan Card";
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -720,6 +729,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanPass";
+                      _textBottomBar = "Scan Pass";
                       _FloatButtonPassPressed = !_FloatButtonPassPressed;
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
@@ -765,9 +775,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanId";
-                    });
-
-                    setState(() {
+                      _textBottomBar = "Scan id";
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -804,6 +812,9 @@ class _HomeState extends State<Home> {
                 backgroundColor: const Color(0xff41B072),
                 onPressed: () {
                   setState(() {
+                    _FloatButtonPressed = false;
+                    _FloatButtonIdPressed = false;
+                    _FloatButtonCardPressed = false;
                     _FloatButtonPassPressed = !_FloatButtonPassPressed;
                     if (_FloatButtonPassPressed) {
                       _textBussButton = "busisness Card";
@@ -874,6 +885,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanCard";
+                      _textBottomBar = "Scan Card";
                       _FloatButtonCardPressed = !_FloatButtonCardPressed;
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
@@ -919,8 +931,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanPass";
-                    });
-                    setState(() {
+                      _textBottomBar = "Scan Pass";
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -965,9 +976,7 @@ class _HomeState extends State<Home> {
                   onPressed: () {
                     setState(() {
                       _currentState = "scanId";
-                    });
-
-                    setState(() {
+                      _textBottomBar = "Scan id";
                       _textBussButton = _textPassButton = _textIdButton = "";
                       _alignement1 =
                           _alignement2 = _alignement3 = Alignment.bottomCenter;
@@ -1004,6 +1013,9 @@ class _HomeState extends State<Home> {
                 backgroundColor: const Color(0xff41B072),
                 onPressed: () {
                   setState(() {
+                    _FloatButtonPressed = false;
+                    _FloatButtonIdPressed = false;
+                    _FloatButtonPassPressed = false;
                     _FloatButtonCardPressed = !_FloatButtonCardPressed;
                     if (_FloatButtonCardPressed) {
                       _textBussButton = "busisness Card";
@@ -1021,7 +1033,7 @@ class _HomeState extends State<Home> {
                   });
                 },
                 // icon
-                child: !_FloatButtonCardPressed
+                child: _FloatButtonCardPressed
                     ? const Icon(
                         Icons.close,
                         size: 40,
@@ -1042,64 +1054,224 @@ class _HomeState extends State<Home> {
   }
 
   Widget homeScreen() {
-    return SingleChildScrollView(
-      //padding container
-      child: Padding(
-        padding: const EdgeInsets.only(top: 23, left: 36, right: 37, bottom: 0),
-        // center container
-        child: Center(
-          child: Container(
-            width: 302,
-            height: 789,
-            child: Column(
-              children: const [
-                //padding image aldoc.png
-                Padding(
-                  padding:
-                      EdgeInsets.only(top: 123.82, right: 77.49, left: 78.49),
-                  child: Image(
-                    height: 60.18,
-                    width: 146.03,
-                    image: AssetImage("assets/aldoc.png"),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 36, right: 37),
+      // center container
+      child: Center(
+        child: Container(
+          width: 302,
+          height: 789,
+          child: Column(
+            children: const [
+              //padding image aldoc.png
+              Padding(
+                padding: EdgeInsets.only(top: 40, right: 77.49, left: 78.49),
+                child: Image(
+                  height: 60.18,
+                  width: 146.03,
+                  image: AssetImage("assets/aldoc.png"),
                 ),
-                //Fin
-                //padding image Text1.png
-                Padding(
-                  padding: EdgeInsets.only(top: 20, right: 7, left: 9),
-                  child: Image(
-                    height: 52,
-                    width: 286,
-                    image: AssetImage("assets/Text1.png"),
-                  ),
+              ),
+              //Fin
+              //padding image Text1.png
+              Padding(
+                padding: EdgeInsets.only(top: 20, right: 7, left: 9),
+                child: Image(
+                  height: 52,
+                  width: 286,
+                  image: AssetImage("assets/Text1.png"),
                 ),
-                //Fin
-                // //padding image Text2.png
-                // Padding(
-                //   padding: EdgeInsets.only(top: 41, right: 2, left: 7),
-                //   child: Image(
-                //     height: 114,
-                //     width: 293,
-                //     image: AssetImage("assets/Text2.png"),
-                //   ),
-                // ),
-                // //Fin
-                //padding image ocr.png
-                Padding(
-                  padding: EdgeInsets.only(
-                      top: 35, right: 40.2, left: 61.2, bottom: 48.82),
-                  child: Image(
-                    height: 202.45,
-                    width: 200.6,
-                    image: AssetImage("assets/ocr.png"),
-                  ),
+              ),
+              //Fin
+              //padding image ocr.png
+              Padding(
+                padding: EdgeInsets.only(
+                    top: 35, right: 40.2, left: 61.2, bottom: 20),
+                child: Image(
+                  height: 202.45,
+                  width: 200.6,
+                  image: AssetImage("assets/ocr.png"),
                 ),
-                //Fin
-              ],
-            ),
+              ),
+              //Fin
+            ],
           ),
         ),
-        //fin
+      ),
+      //fin
+    );
+  }
+
+  Widget? formView() {
+    if (_result != null) {
+      return SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(40),
+              color: const Color.fromARGB(255, 2, 19, 47)),
+          child: Stack(alignment: Alignment.center, children: [
+            Positioned(
+                top: 0,
+                right: 35,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.star_rate,
+                    size: 20,
+                  ),
+                  color: Colors.white,
+                )),
+            Positioned(
+                top: 0,
+                right: 5,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.more_horiz,
+                  ),
+                  color: Colors.white,
+                )),
+            const Positioned(
+                left: 30,
+                top: 30,
+                child: Text(
+                  "No:",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                left: 30,
+                top: 50,
+                child: champContainer(140, 45, _result!["document_number"])),
+            const Positioned(
+                right: 115,
+                top: 30,
+                child: Text(
+                  "Country:",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                top: 50,
+                right: 30,
+                child: champContainer(140, 45, _result!["place_of_birth"])),
+            const Positioned(
+                left: 30,
+                top: 110,
+                child: Text(
+                  "Last name:",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                left: 30,
+                top: 130,
+                child: champContainer(140, 45, _result!["last_name"])),
+            const Positioned(
+                right: 100,
+                top: 110,
+                child: Text(
+                  "First name:",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                top: 130,
+                right: 30,
+                child: champContainer(140, 45, _result!["first_name"])),
+            const Positioned(
+                left: 30,
+                top: 190,
+                child: Text(
+                  "Lineage:",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                top: 210,
+                right: 30,
+                left: 30,
+                child: champContainer(140, 45, _result!["middle_name"])),
+            const Positioned(
+                left: 30,
+                top: 270,
+                child: Text(
+                  "Date of birth  :",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                left: 30,
+                top: 290,
+                child: champContainer(140, 45, _result!["date_of_birth"])),
+            const Positioned(
+                right: 75,
+                top: 270,
+                child: Text(
+                  "Place of birth  :",
+                  style: TextStyle(color: Colors.white),
+                )),
+            Positioned(
+                top: 290,
+                right: 30,
+                child: champContainer(140, 45, _result!["place_of_birth"])),
+            Positioned(
+                left: 95,
+                top: 360,
+                child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.thumb_up,
+                      color: Colors.white,
+                      size: 20,
+                    ))),
+            Positioned(
+                top: 360,
+                right: 155,
+                child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.chat,
+                      color: Colors.white,
+                      size: 20,
+                    ))),
+            Positioned(
+                top: 360,
+                right: 95,
+                child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.share,
+                      color: Colors.white,
+                      size: 20,
+                    ))),
+          ]),
+        ),
+      );
+    }
+    return null;
+  }
+
+  Widget champContainer(double w, double h, String t) {
+    return Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(7)),
+      child: Center(
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(t, style: const TextStyle(fontSize: 13)),
+          IconButton(
+              alignment: Alignment.centerRight,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: t));
+              },
+              icon: const Icon(
+                Icons.content_copy,
+                size: 17,
+              )),
+          const Icon(
+            size: 17,
+            Icons.check_circle,
+            color: Color(0xff41B072),
+          )
+        ]),
       ),
     );
   }
