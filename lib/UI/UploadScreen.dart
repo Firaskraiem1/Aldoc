@@ -1,8 +1,17 @@
+// ignore_for_file: unrelated_type_equality_checks
+
 import 'dart:io';
-import 'dart:ui';
+
+import 'package:aldoc/UI/GenericForm.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
+import 'package:aldoc/provider/cameraProvider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
 
 class UploadScreen extends StatefulWidget {
@@ -16,6 +25,7 @@ class _UploadScreenState extends State<UploadScreen> {
   PlatformFile? file;
   File? upload_file;
   bool fileSelected = false;
+  RequestClass requestClass = RequestClass();
   @override
   void initState() {
     super.initState();
@@ -28,10 +38,7 @@ class _UploadScreenState extends State<UploadScreen> {
   void dispose() {
     super.dispose();
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
   }
 
@@ -39,111 +46,104 @@ class _UploadScreenState extends State<UploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff151719),
-      body: fileSelected
-          ? uploadWidget()
-          : Center(
-              child: Stack(
-                children: [
-                  const Positioned(
-                      top: 100,
-                      left: 100,
-                      right: 100,
-                      bottom: 100,
-                      child: RiveAnimation.asset(
-                          "assets/uploadbuttonanimation.riv")),
-                  const Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 200,
-                      height: 200,
-                      child: CircularProgressIndicator(
-                        color: Color(0xff41B072),
-                        backgroundColor: Color(0xff151719),
-                        strokeWidth: 20,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 100,
-                    left: 100,
-                    right: 100,
-                    bottom: 100,
-                    child: GestureDetector(
-                      onTap: () {
-                        openFiles();
-                      },
-                    ),
-                  ),
-                  Positioned(
-                    top: 400,
-                    left: 50,
-                    right: 50,
-                    bottom: 40,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Row(
-                          children: const [
-                            Text(
-                              "Click to browse for image xd",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: const [
-                            Text("(Allowed :PDF, TIFF, JPEG, PNG)",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 18)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+      backgroundColor: const Color(0xffF8FBFA),
+      body: body(),
     );
   }
-  ///////////////// fin /////////////////
 
-  // method to choose file
-  void openFiles() async {
+  ///////////////// fin /////////////////
+  Widget body() {
+    final camProv = Provider.of<cameraProvider>(context, listen: false);
+    if (fileSelected) {
+      return const GenericForm();
+    }
+    return Center(
+      child: Stack(
+        children: [
+          const Positioned(
+              top: 100,
+              left: 100,
+              right: 100,
+              bottom: 200,
+              child: RiveAnimation.asset("assets/uploadbuttonanimation.riv")),
+          Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: LoadingAnimationWidget.discreteCircle(
+                        secondRingColor: const Color(0xff41B072),
+                        thirdRingColor: const Color(0xff41B072),
+                        color: const Color(0xff41B072),
+                        size: 180),
+                    // child: CircularProgressIndicator(
+                    //   color: Color(0xff41B072),
+                    //   backgroundColor: Color(0xff151719),
+                    //   strokeWidth: 20,
+                    // ),
+                  ),
+                  const Text(
+                    "  \n\n  click to browse for image xd \n(Allowed :PDF, TIFF, JPEG, PNG)",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              )),
+          Positioned(
+            top: 100,
+            left: 100,
+            right: 100,
+            bottom: 200,
+            child: GestureDetector(
+              onTap: () async {
+                var connectivityResult =
+                    await Connectivity().checkConnectivity();
+                if (connectivityResult == ConnectivityResult.mobile ||
+                    connectivityResult == ConnectivityResult.wifi) {
+                  openFiles();
+                  setState(() {
+                    camProv.setCurrentState("uploadFile");
+                  });
+                } else {
+                  Fluttertoast.showToast(
+                      msg: "Failed to connect to host",
+                      backgroundColor: Colors.grey);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// method to choose file
+  Future<void> openFiles() async {
+    final camProv = Provider.of<cameraProvider>(context, listen: false);
     try {
       FilePickerResult? resultFile = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ["png", "pdf", "tiff", "jpeg"]);
       if (resultFile != null) {
-        ////////////////////////
+        ///////////////////////
         setState(() {
           fileSelected = true;
+          camProv.setGenericState(true);
         });
         ///////////////////////
         file = resultFile.files.first;
         upload_file = File(file!.path.toString());
+        camProv.setUploadPath(upload_file!.path);
+        // post request
+        requestClass.postRequestIdDocument(upload_file!.path.toString(), "");
       } else {}
     } catch (e) {
       print(e);
     }
-  }
-
-  //fin
-//////////****  widget upload ******* /////////////
-  Widget? uploadWidget() {
-    if (file != null) {
-      return Center(
-        child: SizedBox(
-          width: 250,
-          height: 250,
-          child: Image.file(upload_file!),
-        ),
-      );
-    }
-    return null;
   }
 }
