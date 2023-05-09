@@ -1,4 +1,4 @@
-// ignore_for_file: unrelated_type_equality_checks
+// ignore_for_file: unrelated_type_equality_checks, non_constant_identifier_names
 
 import 'dart:io';
 
@@ -10,6 +10,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
@@ -54,7 +55,7 @@ class _UploadScreenState extends State<UploadScreen> {
   ///////////////// fin /////////////////
   Widget body() {
     final camProv = Provider.of<cameraProvider>(context, listen: false);
-    if (fileSelected) {
+    if (camProv.getGenericState() == true) {
       return const GenericForm();
     }
     return Center(
@@ -131,16 +132,55 @@ class _UploadScreenState extends State<UploadScreen> {
           allowedExtensions: ["png", "pdf", "tiff", "jpeg"]);
       if (resultFile != null) {
         ///////////////////////
-        setState(() {
-          fileSelected = true;
-          camProv.setGenericState(true);
-        });
+        // setState(() {
+        //   fileSelected = true;
+        //   camProv.setGenericState(true);
+        // });
         ///////////////////////
         file = resultFile.files.first;
         upload_file = File(file!.path.toString());
-        camProv.setUploadPath(upload_file!.path);
-        // post request
-        requestClass.postRequestIdDocument(upload_file!.path.toString(), "");
+        if (upload_file!.path.split(".").last == 'pdf') {
+          camProv.setUploadPath(upload_file!.path.toString());
+          // post request
+          requestClass.postRequestIdDocument(upload_file!.path.toString(), "");
+          setState(() {
+            camProv.setGenericState(true);
+          });
+        } else {
+          CroppedFile? croppedFile = await ImageCropper().cropImage(
+            sourcePath: upload_file!.path,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+            uiSettings: [
+              AndroidUiSettings(
+                  activeControlsWidgetColor: const Color(0xff41B072),
+                  backgroundColor: const Color(0xffF8FBFA),
+                  toolbarTitle: 'Cropper',
+                  toolbarColor: const Color(0xffF8FBFA),
+                  toolbarWidgetColor: Colors.black,
+                  initAspectRatio: CropAspectRatioPreset.original,
+                  lockAspectRatio: false),
+            ],
+          );
+          if (croppedFile != null) {
+            camProv.setUploadPath(croppedFile.path.toString());
+            // post request
+            requestClass.postRequestIdDocument(croppedFile.path.toString(), "");
+            setState(() {
+              camProv.setGenericState(true);
+            });
+          } else {
+            setState(() {
+              camProv.setGenericState(false);
+              camProv.removeAppBar(false);
+            });
+          }
+        }
       } else {}
     } catch (e) {
       print(e);

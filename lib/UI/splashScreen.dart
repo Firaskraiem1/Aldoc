@@ -1,9 +1,9 @@
 // ignore_for_file: camel_case_types
 
 import 'package:aldoc/UI/IntroductionScreen.dart';
-import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:flutter/material.dart';
-import 'package:getwidget/getwidget.dart';
+import 'package:flutter/services.dart';
+
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class splashScreen extends StatefulWidget {
@@ -17,6 +17,9 @@ class _splashScreenState extends State<splashScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
     goToIntoduction();
   }
 

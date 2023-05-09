@@ -9,6 +9,7 @@ import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:folder_file_saver/folder_file_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -86,6 +87,24 @@ class _GenericFormState extends State<GenericForm> {
     FolderFileSaver.saveFileToFolderExt(file.path);
   }
 
+  screenshot() async {
+    final Uint8List? screenshotData = await _screenshotController.capture();
+    // Create a new PDF document
+    final pdf = pw.Document();
+    // Add an image of the screenshot to the document
+    final image = pw.MemoryImage(screenshotData!);
+    pdf.addPage(pw.Page(build: (context) {
+      return pw.Center(child: pw.Image(image));
+    }));
+
+    // Save the document to a file
+    final directory = await getApplicationDocumentsDirectory();
+    final file =
+        File('${directory.path}/Extracted Information${DateTime.now()}.pdf');
+    final bytes = await pdf.save();
+    await file.writeAsBytes(bytes);
+  }
+
   @override
   void initState() {
     service = local_notification();
@@ -125,7 +144,7 @@ class _GenericFormState extends State<GenericForm> {
             File(
               ImagePath,
             ),
-            // height: 145,
+            height: 230,
             // fit: BoxFit.fitWidth,
             width: MediaQuery.of(context).size.width,
           ));
@@ -145,7 +164,7 @@ class _GenericFormState extends State<GenericForm> {
                 File(
                   ImageUploadedPath,
                 ),
-                // height: 145,
+                height: 230,
                 // fit: BoxFit.fitWidth,
                 width: MediaQuery.of(context).size.width,
               ),
@@ -184,7 +203,7 @@ class _GenericFormState extends State<GenericForm> {
                     top: ImageUploaded != null &&
                             ImageUploaded.split(".").last == 'pdf'
                         ? 400
-                        : 280,
+                        : 320,
                     bottom: 100,
                     left: 22,
                     right: 10),
@@ -372,6 +391,10 @@ class _GenericFormState extends State<GenericForm> {
                                                             .setFavoriteState(
                                                                 true);
                                                         Navigator.pop(context);
+                                                        Fluttertoast.showToast(
+                                                            msg: "File saved!",
+                                                            backgroundColor:
+                                                                Colors.grey);
                                                         buttonFavoritePressed =
                                                             true;
                                                       });

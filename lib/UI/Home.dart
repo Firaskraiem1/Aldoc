@@ -1,9 +1,9 @@
-// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable
+// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable, override_on_non_overriding_member, prefer_typing_uninitialized_variables, avoid_print
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
-import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/provider/authProvider.dart';
@@ -11,11 +11,11 @@ import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rive/rive.dart';
 
 class Home extends StatefulWidget {
@@ -70,6 +70,66 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     ]);
   }
 
+// home screen methodes and  variables
+  bool checkboxValue1 = false;
+  bool checkboxAllFiles1 = false;
+  bool checkboxValue2 = false;
+  bool checkboxAllFiles2 = false;
+  bool checkboxValue3 = false;
+  bool checkboxAllFiles3 = false;
+  bool checkboxValue4 = false;
+  bool checkboxAllFiles4 = false;
+  final creationTime = DateTime.now().minute;
+  var time;
+  Future<void> fetchData() async {
+    setState(() {
+      time = DateTime.now().minute - creationTime;
+    });
+  }
+
+  final RefreshController _refreshControllerAllFiles =
+      RefreshController(initialRefresh: false);
+  final RefreshController _refreshControllerFavoriteFilles =
+      RefreshController(initialRefresh: false);
+  void _onRefreshFavoriteFiles() async {
+    // monitor network fetch
+    await Future.delayed(const Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    _refreshControllerFavoriteFilles.refreshCompleted();
+  }
+
+  void _onLoadingFavoriteFiles() async {
+    // monitor network fetch
+    await Future.delayed(
+      const Duration(milliseconds: 1000),
+      () {},
+    );
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+
+    if (mounted) setState(() {});
+    _refreshControllerFavoriteFilles.loadComplete();
+  }
+
+  void _onLoadingAllFiles() async {
+    // monitor network fetch
+    await Future.delayed(
+      const Duration(milliseconds: 1000),
+      () {},
+    );
+    // if failed,use loadFailed(),if no data return,use LoadNodata()
+
+    if (mounted) setState(() {});
+    _refreshControllerAllFiles.loadComplete();
+  }
+
+  void _onRefreshAllFiles() async {
+    // monitor network fetch
+    await Future.delayed(const Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    _refreshControllerAllFiles.refreshCompleted();
+  }
+
+///////////////////////////////////
 ////////
   bool imageSelected = false;
   PlatformFile? image;
@@ -124,7 +184,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 //Color(0xff41B072)
                 backgroundColor: const Color(0xffF8FBFA),
                 child: ListView(children: [
+                  const DrawerHeader(
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage("assets/aldoc.png"))),
+                    child: null,
+                  ),
                   TextButton.icon(
+                      style: ButtonStyle(
+                        overlayColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            return Colors.transparent;
+                          },
+                        ),
+                      ),
                       onPressed: () {
                         Navigator.pushReplacement(
                             context,
@@ -132,19 +205,32 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                               builder: (context) => const LoginPage(),
                             ));
                       },
-                      icon: const Icon(
-                        Icons.login,
-                        color: Colors.black,
+                      icon: const Padding(
+                        padding: EdgeInsets.only(right: 20),
+                        child: Icon(
+                          Icons.login,
+                          color: Colors.black,
+                        ),
                       ),
                       label: const Text(
                         "Log In",
                         style: TextStyle(color: Colors.black),
                       )),
                   TextButton.icon(
+                      style: ButtonStyle(
+                        overlayColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            return Colors.transparent;
+                          },
+                        ),
+                      ),
                       onPressed: () {},
-                      icon: const Icon(
-                        Icons.info,
-                        color: Colors.black,
+                      icon: const Padding(
+                        padding: EdgeInsets.only(right: 18),
+                        child: Icon(
+                          Icons.info,
+                          color: Colors.black,
+                        ),
                       ),
                       label: const Text(
                         "about",
@@ -356,9 +442,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           },
                           icon: Image.asset("assets/upload.png"),
                           color: const Color(0xffF8FBFA),
-                          // color: _currentState == "uploadFile"
-                          //     ? Colors.green
-                          //     : Colors.white,
                         ),
                       ],
                     ),
@@ -512,6 +595,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: TextButton.icon(
+                                            style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty
+                                                      .resolveWith<Color>(
+                                                (Set<MaterialState> states) {
+                                                  return Colors.transparent;
+                                                },
+                                              ),
+                                            ),
                                             onPressed: () {
                                               uploadImage().then(
                                                 (value) {
@@ -532,6 +624,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: TextButton.icon(
+                                            style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty
+                                                      .resolveWith<Color>(
+                                                (Set<MaterialState> states) {
+                                                  return Colors.transparent;
+                                                },
+                                              ),
+                                            ),
                                             onPressed: () {
                                               //edit username show dialog
                                               showDialog(
@@ -718,6 +819,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: TextButton.icon(
+                                            style: ButtonStyle(
+                                              overlayColor:
+                                                  MaterialStateProperty
+                                                      .resolveWith<Color>(
+                                                (Set<MaterialState> states) {
+                                                  return Colors.transparent;
+                                                },
+                                              ),
+                                            ),
                                             onPressed: () {
                                               authProv.setLoginState(false);
                                               Navigator.pushReplacement(
@@ -777,9 +887,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     } else if (_currentState == "scanInvoice") {
       return stackInvoiceButton();
     } else if (_currentState == "uploadFile") {
-      // if (camProv.getFileState() == true) {
-      //   return null;
-      // }
       return stackScanButton();
     }
     return stackScanButton();
@@ -2641,10 +2748,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  bool checkboxValue1 = false;
-  bool checkboxValue2 = false;
-  bool checkboxValue3 = false;
-  bool checkboxValue4 = false;
   Widget homeScreen() {
     final filesProv = Provider.of<filesProvider>(context);
     final camProv = Provider.of<cameraProvider>(context);
@@ -2715,6 +2818,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         child: TabBarView(
                           controller: _tabController,
                           children: [
+                            //favorite file
                             Stack(children: [
                               Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -2801,8 +2905,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                 setState(() {
                                                                   checkboxValue1 =
                                                                       checkboxValue2 =
-                                                                          checkboxValue2 =
-                                                                              checkboxValue2 = false;
+                                                                          checkboxValue3 =
+                                                                              checkboxValue4 = false;
+                                                                  Navigator.pop(
+                                                                      context);
                                                                 });
                                                               },
                                                             ),
@@ -2979,86 +3085,110 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   ]),
                               Padding(
                                 padding: const EdgeInsets.only(top: 35),
-                                child: ListView.builder(
-                                  itemCount: 8,
-                                  itemBuilder: (context, index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 36, right: 37, top: 10),
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                            borderRadius: BorderRadius.only(
-                                                topRight: Radius.circular(10),
-                                                topLeft: Radius.circular(10),
-                                                bottomLeft: Radius.circular(10),
-                                                bottomRight:
-                                                    Radius.circular(10)),
-                                            color: Color(0xffFFFFFF)),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          mainAxisSize: MainAxisSize.max,
-                                          children: [
-                                            IconButton(
-                                                splashRadius: 0.1,
-                                                onPressed: () {},
-                                                icon: Image.asset(
-                                                  "assets/FileHomeIcon.png",
-                                                  width: 16.46,
-                                                  height: 20.25,
-                                                )),
-                                            if (savedName != null)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    right: 130, left: 5),
-                                                child: TextButton(
-                                                  style: const ButtonStyle(
-                                                      splashFactory: NoSplash
-                                                          .splashFactory),
-                                                  onPressed: () {},
-                                                  child: Text(
-                                                    savedName,
-                                                    style: const TextStyle(
-                                                      color: Color(0xff4A4A4A),
+                                // refresh indicator
+                                child: SmartRefresher(
+                                  header: const WaterDropMaterialHeader(
+                                    backgroundColor: Color(0xff41B072),
+                                    color: Colors.white,
+                                  ),
+                                  controller: _refreshControllerFavoriteFilles,
+                                  onRefresh: () {
+                                    fetchData();
+                                    _onRefreshFavoriteFiles();
+                                  },
+                                  onLoading: _onLoadingFavoriteFiles,
+                                  child: ListView.builder(
+                                    itemCount: 15,
+                                    itemBuilder: (context, index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 36, right: 37, top: 10),
+                                        child: InkWell(
+                                          splashFactory:
+                                              InkSplash.splashFactory,
+                                          onTap: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  backgroundColor:
+                                                      const Color(0xffF8FBFA),
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0)),
+                                                  content: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: []),
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                      color: Colors.black,
+                                                      // blurRadius: 1,
+                                                      spreadRadius: 0.5)
+                                                ],
+                                                borderRadius: BorderRadius.only(
+                                                    topRight:
+                                                        Radius.circular(15),
+                                                    topLeft:
+                                                        Radius.circular(15),
+                                                    bottomLeft:
+                                                        Radius.circular(15),
+                                                    bottomRight:
+                                                        Radius.circular(15)),
+                                                color: Color(0xffFFFFFF)),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.max,
+                                              children: [
+                                                IconButton(
+                                                    splashRadius: 0.1,
+                                                    onPressed: () {},
+                                                    icon: Image.asset(
+                                                      "assets/FileHomeIcon.png",
+                                                      width: 16.46,
+                                                      height: 20.25,
+                                                    )),
+                                                // if (savedName != null)
+                                                Expanded(
+                                                  child: ListTile(
+                                                    title: Text(
+                                                      " savedName",
+                                                      style: const TextStyle(
+                                                        color:
+                                                            Color(0xff4A4A4A),
+                                                      ),
                                                     ),
+                                                    subtitle: Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          const Text("type"),
+                                                          time == 0
+                                                              ? const Text(
+                                                                  "now")
+                                                              : Text(
+                                                                  "$time m ago")
+                                                        ]),
                                                   ),
                                                 ),
-                                              ),
-                                            IconButton(
-                                                onPressed: () {
-                                                  ImageUploadedPath != null
-                                                      ? showDialog(
-                                                          context: context,
-                                                          builder: (context) {
-                                                            return AlertDialog(
-                                                              backgroundColor:
-                                                                  const Color(
-                                                                      0xffF8FBFA),
-                                                              shape: RoundedRectangleBorder(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              15.0)),
-                                                              content: Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  children: []),
-                                                            );
-                                                          },
-                                                        )
-                                                      : null;
-                                                },
-                                                icon: const Icon(
-                                                    Icons.visibility))
-                                          ],
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ]),
+                            // all files
                             Stack(children: [
                               Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -3073,7 +3203,239 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     TextButton.icon(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showModalBottomSheet(
+                                          isDismissible: false,
+                                          backgroundColor: Colors.transparent,
+                                          context: context,
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 15, right: 15),
+                                              child: Container(
+                                                  decoration: const BoxDecoration(
+                                                      color: Color(0xffF8FBFA),
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                              topLeft: Radius
+                                                                  .circular(20),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                      20))),
+                                                  child: ScrollConfiguration(
+                                                    behavior:
+                                                        MyScrollBehavior(),
+                                                    child:
+                                                        SingleChildScrollView(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              bottom: 15),
+                                                      child: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          ListTile(
+                                                            leading: IconButton(
+                                                                onPressed: () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                },
+                                                                icon:
+                                                                    const Icon(
+                                                                  Icons.close,
+                                                                  color: Colors
+                                                                      .black,
+                                                                )),
+                                                            title: const Center(
+                                                              child: Text(
+                                                                "Filter",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        17,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                              ),
+                                                            ),
+                                                            trailing:
+                                                                TextButton(
+                                                              style: const ButtonStyle(
+                                                                  splashFactory:
+                                                                      NoSplash
+                                                                          .splashFactory),
+                                                              child: const Text(
+                                                                "Clear all",
+                                                                style: TextStyle(
+                                                                    color: Colors
+                                                                        .black,
+                                                                    fontSize:
+                                                                        15),
+                                                              ),
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  checkboxAllFiles1 =
+                                                                      checkboxAllFiles2 =
+                                                                          checkboxAllFiles3 =
+                                                                              checkboxAllFiles4 = false;
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                          Row(
+                                                            children: const [
+                                                              Padding(
+                                                                padding: EdgeInsets
+                                                                    .only(
+                                                                        left:
+                                                                            15,
+                                                                        bottom:
+                                                                            5,
+                                                                        top:
+                                                                            20),
+                                                                child: Text(
+                                                                  "Document type",
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                ),
+                                                              )
+                                                            ],
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    left: 7),
+                                                            child: Row(
+                                                                children: [
+                                                                  FormField(
+                                                                    builder:
+                                                                        (state) {
+                                                                      return Checkbox(
+                                                                        activeColor:
+                                                                            const Color(0xff41B072),
+                                                                        value:
+                                                                            checkboxAllFiles1,
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          setState(
+                                                                              () {
+                                                                            checkboxAllFiles1 =
+                                                                                value!;
+                                                                            state.didChange(value);
+                                                                          });
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      "Id document"),
+                                                                ]),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    left: 7),
+                                                            child: Row(
+                                                                children: [
+                                                                  FormField(
+                                                                    builder:
+                                                                        (state) {
+                                                                      return Checkbox(
+                                                                        activeColor:
+                                                                            const Color(0xff41B072),
+                                                                        value:
+                                                                            checkboxAllFiles2,
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          setState(
+                                                                              () {
+                                                                            checkboxAllFiles2 =
+                                                                                value!;
+                                                                            state.didChange(value);
+                                                                          });
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      "Business card"),
+                                                                ]),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    left: 7),
+                                                            child: Row(
+                                                                children: [
+                                                                  FormField(
+                                                                    builder:
+                                                                        (state) {
+                                                                      return Checkbox(
+                                                                        activeColor:
+                                                                            const Color(0xff41B072),
+                                                                        value:
+                                                                            checkboxAllFiles3,
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          setState(
+                                                                              () {
+                                                                            checkboxAllFiles3 =
+                                                                                value!;
+                                                                            state.didChange(value);
+                                                                          });
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      "Passport"),
+                                                                ]),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    left: 7),
+                                                            child: Row(
+                                                                children: [
+                                                                  FormField(
+                                                                    builder:
+                                                                        (state) {
+                                                                      return Checkbox(
+                                                                        activeColor:
+                                                                            const Color(0xff41B072),
+                                                                        value:
+                                                                            checkboxAllFiles4,
+                                                                        onChanged:
+                                                                            (value) {
+                                                                          setState(
+                                                                              () {
+                                                                            checkboxAllFiles4 =
+                                                                                value!;
+                                                                            state.didChange(value);
+                                                                          });
+                                                                        },
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                  const Text(
+                                                                      "Invoice"),
+                                                                ]),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  )),
+                                            );
+                                          },
+                                        );
+                                      },
                                       icon: const Icon(
                                         Icons.expand_more,
                                         color: Color(0xff4A4A4A),
@@ -3093,37 +3455,54 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   ]),
                               Padding(
                                 padding: const EdgeInsets.only(top: 35),
-                                child: ListView.builder(
-                                  itemCount: 8,
-                                  itemBuilder: (context, index) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 36, right: 37, top: 10),
-                                      child: Container(
-                                        decoration: const BoxDecoration(
-                                            borderRadius: BorderRadius.only(
-                                                topRight: Radius.circular(10),
-                                                topLeft: Radius.circular(10),
-                                                bottomLeft: Radius.circular(10),
-                                                bottomRight:
-                                                    Radius.circular(10)),
-                                            color: Color(0xffFFFFFF)),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.max,
-                                          children: [
-                                            IconButton(
-                                                splashRadius: 0.1,
-                                                onPressed: () {},
-                                                icon: Image.asset(
-                                                  "assets/FileHomeIcon.png",
-                                                  width: 16.46,
-                                                  height: 20.25,
-                                                ))
-                                          ],
+                                // refresh indicator
+                                child: SmartRefresher(
+                                  header: const WaterDropMaterialHeader(
+                                    backgroundColor: Color(0xff41B072),
+                                    color: Colors.white,
+                                  ),
+                                  controller: _refreshControllerAllFiles,
+                                  onLoading: _onLoadingAllFiles,
+                                  onRefresh: _onRefreshAllFiles,
+                                  child: ListView.builder(
+                                    itemCount: 8,
+                                    itemBuilder: (context, index) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 36, right: 37, top: 10),
+                                        child: Container(
+                                          decoration: const BoxDecoration(
+                                              boxShadow: [
+                                                BoxShadow(
+                                                    color: Colors.black,
+                                                    // blurRadius: 1,
+                                                    spreadRadius: 0.5)
+                                              ],
+                                              borderRadius: BorderRadius.only(
+                                                  topRight: Radius.circular(10),
+                                                  topLeft: Radius.circular(10),
+                                                  bottomLeft:
+                                                      Radius.circular(10),
+                                                  bottomRight:
+                                                      Radius.circular(10)),
+                                              color: Color(0xffFFFFFF)),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              IconButton(
+                                                  splashRadius: 0.1,
+                                                  onPressed: () {},
+                                                  icon: Image.asset(
+                                                    "assets/FileHomeIcon.png",
+                                                    width: 16.46,
+                                                    height: 20.25,
+                                                  ))
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ])
@@ -3140,104 +3519,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       ),
     );
   }
-
-  // PreferredSizeWidget cameraAppbar() {
-  //   final camProv = Provider.of<cameraProvider>(context);
-  //   bool removeAppBar = camProv.getRemoveAppBar();
-  //   if (removeAppBar == false && _currentState != "uploadFile") {
-  //     return PreferredSize(
-  //       preferredSize: Size(MediaQuery.of(context).size.width, 100),
-  //       child: Padding(
-  //         padding:
-  //             const EdgeInsets.only(top: 12, bottom: 48, left: 9, right: 9),
-  //         child: Stack(children: [
-  //           AppBar(
-  //             backgroundColor: Colors.transparent,
-  //             flexibleSpace: Padding(
-  //               padding: const EdgeInsets.only(top: 27),
-  //               child: Container(
-  //                 decoration: const BoxDecoration(
-  //                   color: Color(0xff959391),
-  //                   borderRadius: BorderRadius.all(Radius.circular(30)),
-  //                 ),
-  //               ),
-  //             ),
-  //             leading: CircleAvatar(
-  //               backgroundImage:
-  //                   image != null ? FileImage(upload_image!) : null,
-  //               backgroundColor: Colors.white,
-  //               child: GestureDetector(
-  //                 onTap: () {},
-  //               ),
-  //             ),
-  //             actions: [
-  //               IconButton(
-  //                 splashRadius: 0.1,
-  //                 onPressed: buttonFlashPressed
-  //                     ? () {
-  //                         setState(() {
-  //                           buttonFlashPressed = !buttonFlashPressed;
-  //                           camProv.flashState(false);
-  //                         });
-  //                       }
-  //                     : () {
-  //                         setState(() {
-  //                           buttonFlashPressed = !buttonFlashPressed;
-  //                           camProv.flashState(true);
-  //                         });
-  //                       },
-  //                 icon: buttonFlashPressed
-  //                     ? const Icon(Icons.flash_on)
-  //                     : const Icon(Icons.flash_off),
-  //                 padding: const EdgeInsets.only(right: 40),
-  //               ),
-  //               IconButton(
-  //                   splashRadius: 0.1,
-  //                   onPressed: () {},
-  //                   icon: const Icon(Icons.arrow_circle_down),
-  //                   padding: const EdgeInsets.only(right: 40)),
-  //               IconButton(
-  //                   splashRadius: 0.1,
-  //                   onPressed: () {},
-  //                   icon: const Icon(Icons.auto_awesome),
-  //                   padding: const EdgeInsets.only(right: 40)),
-  //               IconButton(
-  //                   splashRadius: 0.1,
-  //                   onPressed: () {},
-  //                   icon: const Icon(Icons.settings)),
-  //             ],
-  //           ),
-  //         ]),
-  //       ),
-  //     );
-  //   }
-  //   return PreferredSize(
-  //       preferredSize: Size(MediaQuery.of(context).size.width, 100),
-  //       child: const SizedBox());
-  // }
-  //PreferredSizeWidget cameraAppbar() {
-  //   final camProv = Provider.of<cameraProvider>(context);
-  // return PreferredSize(
-  //   preferredSize: Size(MediaQuery.of(context).size.width, 100),
-  //   child: Padding(
-  //     padding: const EdgeInsets.only(top: 30),
-  //     child: ListTile(
-  //       leading: IconButton(
-  //           onPressed: () {},
-  //           icon: const Icon(
-  //             Icons.close,
-  //             color: Colors.white,
-  //             size: 30,
-  //           )),
-  //       trailing: const Icon(
-  //         Icons.flash_on,
-  //         color: Colors.white,
-  //         size: 30,
-  //       ),
-  //     ),
-  //   ),
-  // );
-  // }
 }
 
 // SCROLL GLOW EFFECT

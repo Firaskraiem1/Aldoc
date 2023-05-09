@@ -103,43 +103,76 @@ class _CameraScreenState extends State<CameraScreen>
     } else if (stateCamera == true) {
       captureImage().whenComplete(() async {
         camProv.cameraState(false);
-        CroppedFile? croppedFile = await ImageCropper().cropImage(
-          sourcePath: image!.path,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9
-          ],
-          uiSettings: [
-            AndroidUiSettings(
-                activeControlsWidgetColor: const Color(0xff41B072),
-                backgroundColor: const Color(0xffF8FBFA),
-                toolbarTitle: 'Cropper',
-                toolbarColor: const Color(0xffF8FBFA),
-                toolbarWidgetColor: Colors.black,
-                initAspectRatio: CropAspectRatioPreset.original,
-                lockAspectRatio: false),
-          ],
-        );
-        if (croppedFile != null) {
-          cropPath = croppedFile.path;
-          camProv.setImagePath(croppedFile.path.toString());
-          // post request //
-          requestClass.postRequestIdDocument(
-              croppedFile.path.toString(), camProv.getCurrentState());
-          camProv.removeAppBar(true);
-        } else {
-          camProv.setGenericState(false);
-        }
         if (stateFlash == true) {
           Future.delayed(
             const Duration(seconds: 1),
             () {
-              camProv.flashState(false);
+              setState(() {
+                camProv.flashState(false);
+              });
             },
           );
+          CroppedFile? croppedFile = await ImageCropper().cropImage(
+            sourcePath: image!.path,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+            uiSettings: [
+              AndroidUiSettings(
+                  activeControlsWidgetColor: const Color(0xff41B072),
+                  backgroundColor: const Color(0xffF8FBFA),
+                  toolbarTitle: 'Cropper',
+                  toolbarColor: const Color(0xffF8FBFA),
+                  toolbarWidgetColor: Colors.black,
+                  initAspectRatio: CropAspectRatioPreset.original,
+                  lockAspectRatio: false),
+            ],
+          );
+          if (croppedFile != null) {
+            cropPath = croppedFile.path;
+            camProv.setImagePath(croppedFile.path.toString());
+            // post request //
+            requestClass.postRequestIdDocument(
+                croppedFile.path.toString(), camProv.getCurrentState());
+            camProv.removeAppBar(true);
+          } else {
+            camProv.setGenericState(false);
+          }
+        } else {
+          CroppedFile? croppedFile = await ImageCropper().cropImage(
+            sourcePath: image!.path,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+            uiSettings: [
+              AndroidUiSettings(
+                  activeControlsWidgetColor: const Color(0xff41B072),
+                  backgroundColor: const Color(0xffF8FBFA),
+                  toolbarTitle: 'Cropper',
+                  toolbarColor: const Color(0xffF8FBFA),
+                  toolbarWidgetColor: Colors.black,
+                  initAspectRatio: CropAspectRatioPreset.original,
+                  lockAspectRatio: false),
+            ],
+          );
+          if (croppedFile != null) {
+            cropPath = croppedFile.path;
+            camProv.setImagePath(croppedFile.path.toString());
+            // post request //
+            requestClass.postRequestIdDocument(
+                croppedFile.path.toString(), camProv.getCurrentState());
+            camProv.removeAppBar(true);
+          } else {
+            camProv.setGenericState(false);
+          }
         }
       }).then((value) {});
     } else if (stateFlash == true) {

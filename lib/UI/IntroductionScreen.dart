@@ -1,7 +1,8 @@
 import 'package:aldoc/UI/Home.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:flutter/material.dart';
-import 'package:getwidget/getwidget.dart';
+import 'package:flutter/services.dart';
+
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class IntroductionScreen extends StatefulWidget {
@@ -13,6 +14,15 @@ class IntroductionScreen extends StatefulWidget {
 
 class _IntroductionScreenState extends State<IntroductionScreen> {
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
