@@ -246,27 +246,33 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 35),
-        child: Container(
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(90),
-                color: Colors.transparent),
-            //padding container de stack
-            padding: const EdgeInsets.only(top: 0),
-            //conatiner of float action button
-            width: 300,
-            height: 210, // width and height of container (3 buttons )
-            // color of container (3 buttons )
-            child: BackdropFilter(
-                // color blur(flou)
-                // if pressed= true  => color blur
-                filter: _FloatButtonPressed &&
-                        (_currentState == "home" ||
-                            _currentState == "uploadFile")
-                    ? ImageFilter.blur(sigmaX: 2.5, sigmaY: 2.5)
-                    : ImageFilter.blur(),
-                //fin
-                // widget stack button
-                child: homeFloatButton())),
+        child: _FloatButtonPressed ||
+                _FloatButtonIdPressed ||
+                _FloatButtonCardPressed ||
+                _FloatButtonPassPressed ||
+                _FloatButtonInvoicePressed
+            ? Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    color: Colors.transparent),
+                //padding container de stack
+                padding: const EdgeInsets.only(top: 0),
+                //conatiner of float action button
+                width: 300,
+                height: 200, // width and height of container (3 buttons )
+                // color of container (3 buttons )
+                child: BackdropFilter(
+                    // color blur(flou)
+                    // if pressed= true  => color blur
+                    filter: _FloatButtonPressed &&
+                            (_currentState == "home" ||
+                                _currentState == "uploadFile")
+                        ? ImageFilter.blur(sigmaX: 2.5, sigmaY: 2.5)
+                        : ImageFilter.blur(),
+                    //fin
+                    // widget stack button
+                    child: homeFloatButton()))
+            : homeFloatButton(),
       ),
       //fin float action button
       //////////////////////////////////////////////////////////////////////////
@@ -512,6 +518,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         child: const SizedBox());
   }
 
+// method for user profile (update username)
   String updatedText = "userName";
   void updateText(String t) {
     setState(() {
@@ -915,7 +922,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     camProv.getGenericState() == false
                             ? Colors.black
                             : Colors.white,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 //fin padding
@@ -974,7 +982,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     camProv.getGenericState() == false
                             ? Colors.black
                             : Colors.white,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1036,7 +1045,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     camProv.getGenericState() == false
                             ? Colors.black
                             : Colors.white,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1098,7 +1108,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     camProv.getGenericState() == false
                             ? Colors.black
                             : Colors.white,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1167,7 +1178,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     setState(() {
                       _FloatButtonPressed = !_FloatButtonPressed;
                       if (_FloatButtonPressed) {
-                        _textBussButton = "busisness card";
+                        _textBussButton = "business card";
                         _textPassButton = "Passport";
                         _textIdButton = "id document";
                         _textInvoiceButton = "Invoice";
@@ -1233,7 +1244,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 //fin padding
@@ -1302,7 +1314,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1373,7 +1386,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1444,7 +1458,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1617,7 +1632,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 //fin padding
@@ -1687,7 +1703,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1760,7 +1777,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -1831,7 +1849,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2005,7 +2024,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 //fin padding
@@ -2076,7 +2096,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2147,7 +2168,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2218,7 +2240,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2390,7 +2413,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 //fin padding
@@ -2460,7 +2484,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2531,7 +2556,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -2604,7 +2630,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 _currentState == "scanInvoice"
                             ? Colors.white
                             : Colors.black,
-                        fontSize: 10),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 // fin padding
@@ -3098,14 +3125,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   },
                                   onLoading: _onLoadingFavoriteFiles,
                                   child: ListView.builder(
+                                    padding: const EdgeInsets.only(bottom: 40),
                                     itemCount: 15,
                                     itemBuilder: (context, index) {
                                       return Padding(
                                         padding: const EdgeInsets.only(
                                             left: 36, right: 37, top: 10),
                                         child: InkWell(
-                                          splashFactory:
-                                              InkSplash.splashFactory,
+                                          overlayColor:
+                                              const MaterialStatePropertyAll(
+                                                  Colors.transparent),
                                           onTap: () {
                                             showDialog(
                                               context: context,
@@ -3465,39 +3494,65 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   onLoading: _onLoadingAllFiles,
                                   onRefresh: _onRefreshAllFiles,
                                   child: ListView.builder(
+                                    padding: const EdgeInsets.only(bottom: 40),
                                     itemCount: 8,
                                     itemBuilder: (context, index) {
                                       return Padding(
                                         padding: const EdgeInsets.only(
                                             left: 36, right: 37, top: 10),
-                                        child: Container(
-                                          decoration: const BoxDecoration(
-                                              boxShadow: [
-                                                BoxShadow(
-                                                    color: Colors.black,
-                                                    // blurRadius: 1,
-                                                    spreadRadius: 0.5)
+                                        child: InkWell(
+                                          overlayColor:
+                                              const MaterialStatePropertyAll(
+                                                  Colors.transparent),
+                                          onTap: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return AlertDialog(
+                                                  backgroundColor:
+                                                      const Color(0xffF8FBFA),
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              15.0)),
+                                                  content: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: []),
+                                                );
+                                              },
+                                            );
+                                          },
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                      color: Colors.black,
+                                                      spreadRadius: 0.5)
+                                                ],
+                                                borderRadius: BorderRadius.only(
+                                                    topRight:
+                                                        Radius.circular(10),
+                                                    topLeft:
+                                                        Radius.circular(10),
+                                                    bottomLeft:
+                                                        Radius.circular(10),
+                                                    bottomRight:
+                                                        Radius.circular(10)),
+                                                color: Color(0xffFFFFFF)),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.max,
+                                              children: [
+                                                IconButton(
+                                                    splashRadius: 0.1,
+                                                    onPressed: () {},
+                                                    icon: Image.asset(
+                                                      "assets/FileHomeIcon.png",
+                                                      width: 16.46,
+                                                      height: 20.25,
+                                                    ))
                                               ],
-                                              borderRadius: BorderRadius.only(
-                                                  topRight: Radius.circular(10),
-                                                  topLeft: Radius.circular(10),
-                                                  bottomLeft:
-                                                      Radius.circular(10),
-                                                  bottomRight:
-                                                      Radius.circular(10)),
-                                              color: Color(0xffFFFFFF)),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            children: [
-                                              IconButton(
-                                                  splashRadius: 0.1,
-                                                  onPressed: () {},
-                                                  icon: Image.asset(
-                                                    "assets/FileHomeIcon.png",
-                                                    width: 16.46,
-                                                    height: 20.25,
-                                                  ))
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       );

@@ -87,24 +87,6 @@ class _GenericFormState extends State<GenericForm> {
     FolderFileSaver.saveFileToFolderExt(file.path);
   }
 
-  screenshot() async {
-    final Uint8List? screenshotData = await _screenshotController.capture();
-    // Create a new PDF document
-    final pdf = pw.Document();
-    // Add an image of the screenshot to the document
-    final image = pw.MemoryImage(screenshotData!);
-    pdf.addPage(pw.Page(build: (context) {
-      return pw.Center(child: pw.Image(image));
-    }));
-
-    // Save the document to a file
-    final directory = await getApplicationDocumentsDirectory();
-    final file =
-        File('${directory.path}/Extracted Information${DateTime.now()}.pdf');
-    final bytes = await pdf.save();
-    await file.writeAsBytes(bytes);
-  }
-
   @override
   void initState() {
     service = local_notification();

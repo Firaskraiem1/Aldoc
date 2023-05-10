@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api, no_leading_underscores_for_local_identifiers, override_on_non_overriding_member
+
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/forget_password_verification_page.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +18,8 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
-
+  TextEditingController email = TextEditingController();
+  EmailOTP myauth = EmailOTP();
   @override
   void initState() {
     super.initState();
@@ -42,7 +46,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Container(
+                SizedBox(
                   height: _headerHeight,
                   child:
                       HeaderWidget(_headerHeight, true, Icons.password_rounded),
@@ -102,6 +106,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 decoration:
                                     ThemeHelper().inputBoxDecorationShaddow(),
                                 child: TextFormField(
+                                  controller: email,
                                   decoration: ThemeHelper().textInputDecoration(
                                       "Email", "Enter your email"),
                                   validator: (val) {
@@ -116,7 +121,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   },
                                 ),
                               ),
-                              SizedBox(height: 40.0),
+                              const SizedBox(height: 40.0),
                               Container(
                                 decoration:
                                     ThemeHelper().buttonBoxDecoration(context),
@@ -134,14 +139,36 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       ),
                                     ),
                                   ),
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ForgotPasswordVerificationPage()),
-                                      );
+                                      myauth.setConfig(
+                                          appEmail: email.text,
+                                          appName: "Email OTP",
+                                          userEmail: email.text,
+                                          otpLength: 4,
+                                          otpType: OTPType.digitsOnly);
+                                      if (await myauth.sendOTP() == true) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                          backgroundColor: Color(0xff41B072),
+                                          content: Text("OTP has been sent"),
+                                        ));
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ForgotPasswordVerificationPage(
+                                                    myauth: myauth,
+                                                  )),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                          backgroundColor: Color(0xff41B072),
+                                          content:
+                                              Text("Oops, OTP send failed"),
+                                        ));
+                                      }
                                     }
                                   },
                                 ),

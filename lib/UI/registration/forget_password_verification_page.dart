@@ -1,14 +1,55 @@
+// ignore_for_file: library_private_types_in_public_api, no_leading_underscores_for_local_identifiers, override_on_non_overriding_member, prefer_final_fields, use_build_context_synchronously
+
+import 'package:aldoc/UI/registration/AddNewPassword.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
+import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:otp_text_field/otp_field.dart';
-import 'package:otp_text_field/style.dart';
+
+class Otp extends StatelessWidget {
+  const Otp({
+    Key? key,
+    required this.otpController,
+  }) : super(key: key);
+  final TextEditingController otpController;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 50,
+      child: TextFormField(
+        showCursor: false,
+        controller: otpController,
+        keyboardType: TextInputType.number,
+        style: Theme.of(context).textTheme.headlineMedium,
+        textAlign: TextAlign.center,
+        inputFormatters: [
+          LengthLimitingTextInputFormatter(1),
+          FilteringTextInputFormatter.digitsOnly
+        ],
+        onChanged: (value) {
+          if (value.length == 1) {
+            FocusScope.of(context).nextFocus();
+          }
+          if (value.isEmpty) {
+            FocusScope.of(context).previousFocus();
+          }
+        },
+        decoration: const InputDecoration(
+          hintText: ('0'),
+        ),
+        onSaved: (value) {},
+      ),
+    );
+  }
+}
 
 class ForgotPasswordVerificationPage extends StatefulWidget {
-  const ForgotPasswordVerificationPage({Key? key}) : super(key: key);
-
+  const ForgotPasswordVerificationPage({Key? key, required this.myauth})
+      : super(key: key);
+  final EmailOTP myauth;
   @override
   _ForgotPasswordVerificationPageState createState() =>
       _ForgotPasswordVerificationPageState();
@@ -17,8 +58,10 @@ class ForgotPasswordVerificationPage extends StatefulWidget {
 class _ForgotPasswordVerificationPageState
     extends State<ForgotPasswordVerificationPage> {
   final _formKey = GlobalKey<FormState>();
-  bool _pinSuccess = false;
-
+  TextEditingController otp1Controller = TextEditingController();
+  TextEditingController otp2Controller = TextEditingController();
+  TextEditingController otp3Controller = TextEditingController();
+  TextEditingController otp4Controller = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -45,7 +88,7 @@ class _ForgotPasswordVerificationPageState
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Container(
+                SizedBox(
                   height: _headerHeight,
                   child: HeaderWidget(
                       _headerHeight, true, Icons.privacy_tip_outlined),
@@ -88,19 +131,44 @@ class _ForgotPasswordVerificationPageState
                           key: _formKey,
                           child: Column(
                             children: <Widget>[
-                              OTPTextField(
-                                length: 4,
-                                width: 300,
-                                fieldWidth: 50,
-                                style: const TextStyle(fontSize: 30),
-                                textFieldAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                fieldStyle: FieldStyle.underline,
-                                onCompleted: (pin) {
-                                  setState(() {
-                                    _pinSuccess = true;
-                                  });
-                                },
+                              // OTPTextField(
+                              //   length: 4,
+                              //   width: 300,
+                              //   fieldWidth: 50,
+                              //   style: const TextStyle(fontSize: 30),
+                              //   textFieldAlignment:
+                              //       MainAxisAlignment.spaceAround,
+                              //   fieldStyle: FieldStyle.underline,
+                              //   onChanged: (value) {
+                              //     if (value.length == 1) {
+                              //       pinCode1 = value.toString();
+                              //       FocusScope.of(context).nextFocus();
+                              //     } else if (value.length == 2) {
+                              //       pinCode2 = value.toString();
+                              //     } else if (value.length == 3) {
+                              //       pinCode3 = value.toString();
+                              //     } else if (value.length == 4) {
+                              //       pinCode4 = value.toString();
+                              //     }
+                              //     if (value.isEmpty) {
+                              //       FocusScope.of(context).previousFocus();
+                              //     }
+                              //   },
+                              //   onCompleted: (pin) {
+                              //     setState(() {
+                              //       _pinSuccess = true;
+                              //     });
+                              //   },
+                              // ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Otp(otpController: otp1Controller),
+                                  Otp(otpController: otp2Controller),
+                                  Otp(otpController: otp3Controller),
+                                  Otp(otpController: otp4Controller),
+                                ],
                               ),
                               const SizedBox(height: 50.0),
                               Text.rich(
@@ -135,13 +203,36 @@ class _ForgotPasswordVerificationPageState
                               ),
                               const SizedBox(height: 40.0),
                               Container(
-                                decoration: _pinSuccess
-                                    ? ThemeHelper().buttonBoxDecoration(context)
-                                    : ThemeHelper().buttonBoxDecoration(
-                                        context, "#AAAAAA", "#757575"),
+                                decoration: ThemeHelper().buttonBoxDecoration(
+                                    context, "#AAAAAA", "#757575"),
                                 child: ElevatedButton(
                                   style: ThemeHelper().buttonStyle(),
-                                  onPressed: _pinSuccess ? () {} : null,
+                                  onPressed: () async {
+                                    if (await widget.myauth.verifyOTP(
+                                            otp: otp1Controller.text +
+                                                otp2Controller.text +
+                                                otp3Controller.text +
+                                                otp4Controller.text) ==
+                                        true) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                        backgroundColor: Color(0xff41B072),
+                                        content: Text("OTP is verified"),
+                                      ));
+                                      Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const AddNewPassword(),
+                                          ));
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                        backgroundColor: Color(0xff41B072),
+                                        content: Text("Invalid OTP"),
+                                      ));
+                                    }
+                                  },
                                   child: Padding(
                                     padding: const EdgeInsets.fromLTRB(
                                         40, 10, 40, 10),

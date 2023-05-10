@@ -3,8 +3,9 @@ import 'package:hexcolor/hexcolor.dart';
 
 class ThemeHelper {
   InputDecoration textInputDecoration(
-      [String lableText = "", String hintText = ""]) {
+      [String lableText = "", String hintText = "", IconData? ic]) {
     return InputDecoration(
+      suffixIcon: Icon(ic),
       labelText: lableText,
       hintText: hintText,
       fillColor: Colors.white,

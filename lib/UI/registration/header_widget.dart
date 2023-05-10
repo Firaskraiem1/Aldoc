@@ -1,3 +1,5 @@
+// ignore_for_file: no_logic_in_create_state, library_private_types_in_public_api, prefer_final_fields, unused_local_variable, avoid_unnecessary_containers
+
 import 'package:flutter/material.dart';
 
 class HeaderWidget extends StatefulWidget {
@@ -94,7 +96,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
             visible: _showIcon,
             child: Padding(
               padding: const EdgeInsets.only(top: 70),
-              child: Container(
+              child: SizedBox(
                 height: _height - 40,
                 child: Center(
                   child: Container(

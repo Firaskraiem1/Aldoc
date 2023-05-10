@@ -21,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final double _headerHeight = 300; //250
   final Key _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool iSobscurePassword = true;
   @override
   void initState() {
     super.initState();
@@ -40,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authProv = Provider.of<authProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xffF8FBFA),
       body: ScrollConfiguration(
@@ -76,8 +78,8 @@ class _LoginPageState extends State<LoginPage> {
                                       ThemeHelper().inputBoxDecorationShaddow(),
                                   child: TextField(
                                     decoration: ThemeHelper()
-                                        .textInputDecoration(
-                                            'Email', 'Enter your email'),
+                                        .textInputDecoration('Email',
+                                            'Enter your email', Icons.email),
                                   ),
                                 ),
                                 const SizedBox(height: 30.0),
@@ -85,10 +87,49 @@ class _LoginPageState extends State<LoginPage> {
                                   decoration:
                                       ThemeHelper().inputBoxDecorationShaddow(),
                                   child: TextField(
-                                    obscureText: true,
-                                    decoration: ThemeHelper()
-                                        .textInputDecoration(
-                                            'Password', 'Enter your password'),
+                                    obscureText: iSobscurePassword,
+                                    decoration: InputDecoration(
+                                      suffixIcon: IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              iSobscurePassword =
+                                                  !iSobscurePassword;
+                                            });
+                                          },
+                                          icon: iSobscurePassword
+                                              ? const Icon(
+                                                  Icons.key_off,
+                                                )
+                                              : const Icon(
+                                                  Icons.key,
+                                                )),
+                                      labelText: "Password*",
+                                      hintText: "Enter your password",
+                                      fillColor: Colors.white,
+                                      filled: true,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                          20, 10, 20, 10),
+                                      focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(100.0),
+                                          borderSide: const BorderSide(
+                                              color: Colors.grey)),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(100.0),
+                                          borderSide: BorderSide(
+                                              color: Colors.grey.shade400)),
+                                      errorBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(100.0),
+                                          borderSide: const BorderSide(
+                                              color: Colors.red, width: 2.0)),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(100.0),
+                                          borderSide: const BorderSide(
+                                              color: Colors.red, width: 2.0)),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 15.0),

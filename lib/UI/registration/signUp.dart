@@ -15,7 +15,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   bool checkedValue = false;
   bool checkboxValue = false;
-
+  bool iSobscureText1 = true;
+  bool iSobscureText2 = true;
   @override
   void initState() {
     super.initState();
@@ -99,7 +100,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
                               decoration: ThemeHelper().textInputDecoration(
-                                  'First Name', 'Enter your first name'),
+                                  'First Name',
+                                  'Enter your first name',
+                                  Icons.person),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return "Enter a firstName";
@@ -114,7 +117,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
                               decoration: ThemeHelper().textInputDecoration(
-                                  'Last Name', 'Enter your last name'),
+                                  'Last Name',
+                                  'Enter your last name',
+                                  Icons.person),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return "Enter a lastName";
@@ -129,7 +134,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
                               decoration: ThemeHelper().textInputDecoration(
-                                  "Email", "Enter your email"),
+                                  "Email", "Enter your email", Icons.email),
                               keyboardType: TextInputType.emailAddress,
                               validator: (val) {
                                 if ((val!.isEmpty) ||
@@ -146,9 +151,44 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
-                              obscureText: true,
-                              decoration: ThemeHelper().textInputDecoration(
-                                  "Password*", "Enter your password"),
+                              obscureText: iSobscureText1,
+                              decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        iSobscureText1 = !iSobscureText1;
+                                      });
+                                    },
+                                    icon: iSobscureText1
+                                        ? const Icon(
+                                            Icons.key_off,
+                                          )
+                                        : const Icon(
+                                            Icons.key,
+                                          )),
+                                labelText: "Password*",
+                                hintText: "Enter your password",
+                                fillColor: Colors.white,
+                                filled: true,
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide:
+                                        const BorderSide(color: Colors.grey)),
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: BorderSide(
+                                        color: Colors.grey.shade400)),
+                                errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red, width: 2.0)),
+                                focusedErrorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red, width: 2.0)),
+                              ),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return "Please enter your password";
@@ -162,10 +202,44 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
-                              obscureText: true,
-                              decoration: ThemeHelper().textInputDecoration(
-                                  "Confirm Password*",
-                                  "Enter your confirm password"),
+                              obscureText: iSobscureText2,
+                              decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        iSobscureText2 = !iSobscureText2;
+                                      });
+                                    },
+                                    icon: iSobscureText2
+                                        ? const Icon(
+                                            Icons.key_off,
+                                          )
+                                        : const Icon(
+                                            Icons.key,
+                                          )),
+                                labelText: "Confirm Password*",
+                                hintText: "Enter your confirm password",
+                                fillColor: Colors.white,
+                                filled: true,
+                                contentPadding:
+                                    const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide:
+                                        const BorderSide(color: Colors.grey)),
+                                enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: BorderSide(
+                                        color: Colors.grey.shade400)),
+                                errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red, width: 2.0)),
+                                focusedErrorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(100.0),
+                                    borderSide: const BorderSide(
+                                        color: Colors.red, width: 2.0)),
+                              ),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return "Please enter your password";
@@ -180,7 +254,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
                               decoration: ThemeHelper().textInputDecoration(
-                                  'Organization', 'Enter your organization'),
+                                  'Organization',
+                                  'Enter your organization',
+                                  Icons.corporate_fare),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return "Enter an organization";

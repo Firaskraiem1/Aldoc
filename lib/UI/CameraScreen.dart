@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:aldoc/UI/GenericForm.dart';
-import 'package:aldoc/UI/Home.dart';
 import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:camera/camera.dart';
