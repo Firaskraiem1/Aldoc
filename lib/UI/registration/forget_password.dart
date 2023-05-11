@@ -108,7 +108,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 child: TextFormField(
                                   controller: email,
                                   decoration: ThemeHelper().textInputDecoration(
-                                      "Email", "Enter your email"),
+                                      "Email", "Enter your email", Icons.email),
                                   validator: (val) {
                                     if (val!.isEmpty) {
                                       return "Email can't be empty";
@@ -143,7 +143,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     if (_formKey.currentState!.validate()) {
                                       myauth.setConfig(
                                           appEmail: email.text,
-                                          appName: "Email OTP",
+                                          appName: "Email code verification",
                                           userEmail: email.text,
                                           otpLength: 4,
                                           otpType: OTPType.digitsOnly);
@@ -151,7 +151,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(const SnackBar(
                                           backgroundColor: Color(0xff41B072),
-                                          content: Text("OTP has been sent"),
+                                          content: Text(
+                                              "Verification code has been sent "),
                                         ));
                                         Navigator.pushReplacement(
                                           context,
@@ -166,7 +167,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                             .showSnackBar(const SnackBar(
                                           backgroundColor: Color(0xff41B072),
                                           content:
-                                              Text("Oops, OTP send failed"),
+                                              Text("Oops, code send failed"),
                                         ));
                                       }
                                     }

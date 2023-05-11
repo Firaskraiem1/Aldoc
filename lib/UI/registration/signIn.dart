@@ -89,6 +89,7 @@ class _LoginPageState extends State<LoginPage> {
                                   child: TextField(
                                     obscureText: iSobscurePassword,
                                     decoration: InputDecoration(
+                                      suffixIconColor: Colors.grey,
                                       suffixIcon: IconButton(
                                           onPressed: () {
                                             setState(() {
@@ -104,6 +105,8 @@ class _LoginPageState extends State<LoginPage> {
                                                   Icons.key,
                                                 )),
                                       labelText: "Password*",
+                                      labelStyle:
+                                          const TextStyle(color: Colors.black),
                                       hintText: "Enter your password",
                                       fillColor: Colors.white,
                                       filled: true,

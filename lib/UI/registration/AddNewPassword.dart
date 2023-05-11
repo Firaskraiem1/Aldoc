@@ -77,6 +77,7 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                 child: TextFormField(
                                   obscureText: iSobscureNewPassword,
                                   decoration: InputDecoration(
+                                    suffixIconColor: Colors.grey,
                                     suffixIcon: IconButton(
                                         onPressed: () {
                                           setState(() {
@@ -92,6 +93,8 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                                 Icons.key,
                                               )),
                                     labelText: "New password",
+                                    labelStyle:
+                                        const TextStyle(color: Colors.black),
                                     hintText: "Enter your new password",
                                     fillColor: Colors.white,
                                     filled: true,
@@ -133,6 +136,7 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                 child: TextFormField(
                                   obscureText: iSobscureConfirmPassword,
                                   decoration: InputDecoration(
+                                    suffixIconColor: Colors.grey,
                                     suffixIcon: IconButton(
                                         onPressed: () {
                                           setState(() {
@@ -148,6 +152,8 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                                 Icons.key,
                                               )),
                                     labelText: "Confirm new password",
+                                    labelStyle:
+                                        const TextStyle(color: Colors.black),
                                     hintText: "Enter your confirm new password",
                                     fillColor: Colors.white,
                                     filled: true,

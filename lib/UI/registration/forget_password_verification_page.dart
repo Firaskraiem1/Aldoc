@@ -131,35 +131,6 @@ class _ForgotPasswordVerificationPageState
                           key: _formKey,
                           child: Column(
                             children: <Widget>[
-                              // OTPTextField(
-                              //   length: 4,
-                              //   width: 300,
-                              //   fieldWidth: 50,
-                              //   style: const TextStyle(fontSize: 30),
-                              //   textFieldAlignment:
-                              //       MainAxisAlignment.spaceAround,
-                              //   fieldStyle: FieldStyle.underline,
-                              //   onChanged: (value) {
-                              //     if (value.length == 1) {
-                              //       pinCode1 = value.toString();
-                              //       FocusScope.of(context).nextFocus();
-                              //     } else if (value.length == 2) {
-                              //       pinCode2 = value.toString();
-                              //     } else if (value.length == 3) {
-                              //       pinCode3 = value.toString();
-                              //     } else if (value.length == 4) {
-                              //       pinCode4 = value.toString();
-                              //     }
-                              //     if (value.isEmpty) {
-                              //       FocusScope.of(context).previousFocus();
-                              //     }
-                              //   },
-                              //   onCompleted: (pin) {
-                              //     setState(() {
-                              //       _pinSuccess = true;
-                              //     });
-                              //   },
-                              // ),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -183,16 +154,18 @@ class _ForgotPasswordVerificationPageState
                                     TextSpan(
                                       text: 'Resend',
                                       recognizer: TapGestureRecognizer()
-                                        ..onTap = () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return ThemeHelper().alertDialog(
-                                                  "Successful",
-                                                  "Verification code resend successful.",
-                                                  context);
-                                            },
-                                          );
+                                        ..onTap = () async {
+                                          if (await widget.myauth.sendOTP()) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return ThemeHelper().alertDialog(
+                                                    "Successful",
+                                                    "Verification code resend successful.",
+                                                    context);
+                                              },
+                                            );
+                                          }
                                         },
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold,
@@ -217,7 +190,7 @@ class _ForgotPasswordVerificationPageState
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(const SnackBar(
                                         backgroundColor: Color(0xff41B072),
-                                        content: Text("OTP is verified"),
+                                        content: Text("Email is verified"),
                                       ));
                                       Navigator.pushReplacement(
                                           context,
@@ -229,7 +202,7 @@ class _ForgotPasswordVerificationPageState
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(const SnackBar(
                                         backgroundColor: Color(0xff41B072),
-                                        content: Text("Invalid OTP"),
+                                        content: Text("Invalid Code"),
                                       ));
                                     }
                                   },

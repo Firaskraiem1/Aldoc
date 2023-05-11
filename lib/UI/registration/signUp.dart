@@ -153,6 +153,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             child: TextFormField(
                               obscureText: iSobscureText1,
                               decoration: InputDecoration(
+                                suffixIconColor: Colors.grey,
                                 suffixIcon: IconButton(
                                     onPressed: () {
                                       setState(() {
@@ -167,6 +168,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                             Icons.key,
                                           )),
                                 labelText: "Password*",
+                                labelStyle:
+                                    const TextStyle(color: Colors.black),
                                 hintText: "Enter your password",
                                 fillColor: Colors.white,
                                 filled: true,
@@ -204,6 +207,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             child: TextFormField(
                               obscureText: iSobscureText2,
                               decoration: InputDecoration(
+                                suffixIconColor: Colors.grey,
                                 suffixIcon: IconButton(
                                     onPressed: () {
                                       setState(() {
@@ -218,6 +222,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                             Icons.key,
                                           )),
                                 labelText: "Confirm Password*",
+                                labelStyle:
+                                    const TextStyle(color: Colors.black),
                                 hintText: "Enter your confirm password",
                                 fillColor: Colors.white,
                                 filled: true,
