@@ -3,6 +3,7 @@
 import 'package:aldoc/UI/registration/AddNewPassword.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -62,9 +63,13 @@ class _ForgotPasswordVerificationPageState
   TextEditingController otp2Controller = TextEditingController();
   TextEditingController otp3Controller = TextEditingController();
   TextEditingController otp4Controller = TextEditingController();
+  final Language _language = Language();
   @override
   void initState() {
     super.initState();
+    setState(
+      () => _language.getLanguage(),
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -105,23 +110,33 @@ class _ForgotPasswordVerificationPageState
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'Verification',
-                                style: TextStyle(
-                                    fontSize: 35,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54),
+                            children: [
+                              Align(
+                                alignment: _language.getLanguage() == "AR"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Text(
+                                  _language.tVerificationMessage1(),
+                                  style: const TextStyle(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
-                              Text(
-                                'Enter the verification code we just sent you on your email address.',
-                                style: TextStyle(
-                                    // fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54),
+                              Align(
+                                alignment: _language.getLanguage() == "AR"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Text(
+                                  _language.tVerificationMessage2(),
+                                  style: const TextStyle(
+                                      // fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                ),
                               ),
                             ],
                           ),
@@ -145,26 +160,24 @@ class _ForgotPasswordVerificationPageState
                               Text.rich(
                                 TextSpan(
                                   children: [
-                                    const TextSpan(
-                                      text: "If you didn't receive a code! ",
-                                      style: TextStyle(
+                                    TextSpan(
+                                      text: _language.tVerificationMessage3(),
+                                      style: const TextStyle(
                                         color: Colors.black38,
                                       ),
                                     ),
                                     TextSpan(
-                                      text: 'Resend',
+                                      text: _language.tVerificationButton(),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () async {
                                           if (await widget.myauth.sendOTP()) {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return ThemeHelper().alertDialog(
-                                                    "Successful",
-                                                    "Verification code resend successful.",
-                                                    context);
-                                              },
-                                            );
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                              backgroundColor:
+                                                  const Color(0xff41B072),
+                                              content: Text(_language
+                                                  .tVerificationMessage4()),
+                                            ));
                                           }
                                         },
                                       style: const TextStyle(
@@ -188,9 +201,11 @@ class _ForgotPasswordVerificationPageState
                                                 otp4Controller.text) ==
                                         true) {
                                       ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                        backgroundColor: Color(0xff41B072),
-                                        content: Text("Email is verified"),
+                                          .showSnackBar(SnackBar(
+                                        backgroundColor:
+                                            const Color(0xff41B072),
+                                        content: Text(
+                                            _language.tVerificationMessage5()),
                                       ));
                                       Navigator.pushReplacement(
                                           context,
@@ -200,9 +215,11 @@ class _ForgotPasswordVerificationPageState
                                           ));
                                     } else {
                                       ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                        backgroundColor: Color(0xff41B072),
-                                        content: Text("Invalid Code"),
+                                          .showSnackBar(SnackBar(
+                                        backgroundColor:
+                                            const Color(0xff41B072),
+                                        content: Text(
+                                            _language.tVerificationMessage6()),
                                       ));
                                     }
                                   },
@@ -210,7 +227,9 @@ class _ForgotPasswordVerificationPageState
                                     padding: const EdgeInsets.fromLTRB(
                                         40, 10, 40, 10),
                                     child: Text(
-                                      "Verify".toUpperCase(),
+                                      _language
+                                          .tVerificationButton2()
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,

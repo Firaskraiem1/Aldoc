@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:aldoc/UI/GenericForm.dart';
 import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -27,9 +28,13 @@ class _UploadScreenState extends State<UploadScreen> {
   File? upload_file;
   bool fileSelected = false;
   RequestClass requestClass = RequestClass();
+  final Language _language = Language();
   @override
   void initState() {
     super.initState();
+    setState(
+      () => _language.getLanguage(),
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -86,9 +91,9 @@ class _UploadScreenState extends State<UploadScreen> {
                     //   strokeWidth: 20,
                     // ),
                   ),
-                  const Text(
-                    "  \n\n  click to browse for image xd \n(Allowed :PDF, TIFF, JPEG, PNG)",
-                    style: TextStyle(
+                  Text(
+                    _language.tUploadText(),
+                    style: const TextStyle(
                       color: Colors.black,
                       fontSize: 20,
                     ),
@@ -142,7 +147,7 @@ class _UploadScreenState extends State<UploadScreen> {
         if (upload_file!.path.split(".").last == 'pdf') {
           camProv.setUploadPath(upload_file!.path.toString());
           // post request
-          requestClass.postRequestIdDocument(upload_file!.path.toString(), "");
+          requestClass.extractPostRequest(upload_file!.path.toString(), "");
           setState(() {
             camProv.setGenericState(true);
           });
@@ -170,7 +175,7 @@ class _UploadScreenState extends State<UploadScreen> {
           if (croppedFile != null) {
             camProv.setUploadPath(croppedFile.path.toString());
             // post request
-            requestClass.postRequestIdDocument(croppedFile.path.toString(), "");
+            requestClass.extractPostRequest(croppedFile.path.toString(), "");
             setState(() {
               camProv.setGenericState(true);
             });

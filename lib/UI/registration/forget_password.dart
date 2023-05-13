@@ -4,6 +4,7 @@ import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/forget_password_verification_page.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -20,9 +21,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController email = TextEditingController();
   EmailOTP myauth = EmailOTP();
+  final Language _language = Language();
   @override
   void initState() {
     super.initState();
+    setState(
+      () => _language.getLanguage(),
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -63,32 +68,32 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
-                                'Forgot Password?',
-                                style: TextStyle(
+                                _language.tLoginForgotPassword(),
+                                style: const TextStyle(
                                     fontSize: 35,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black54),
                                 // textAlign: TextAlign.center,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
                               Text(
-                                'Enter the email address associated with your account.',
-                                style: TextStyle(
+                                _language.tForgorPasswordMessage1(),
+                                style: const TextStyle(
                                     // fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black54),
                                 // textAlign: TextAlign.center,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
                               Text(
-                                'We will email you a verification code to check your authenticity.',
-                                style: TextStyle(
+                                _language.tForgorPasswordMessage2(),
+                                style: const TextStyle(
                                   color: Colors.black38,
                                   // fontSize: 20,
                                 ),
@@ -106,16 +111,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 decoration:
                                     ThemeHelper().inputBoxDecorationShaddow(),
                                 child: TextFormField(
+                                  textAlign: _language.getLanguage() == "AR"
+                                      ? TextAlign.end
+                                      : TextAlign.start,
                                   controller: email,
                                   decoration: ThemeHelper().textInputDecoration(
-                                      "Email", "Enter your email", Icons.email),
+                                      _language.tLoginEmail(),
+                                      _language.tLoginEmailMessage(),
+                                      Icons.email),
                                   validator: (val) {
                                     if (val!.isEmpty) {
-                                      return "Email can't be empty";
+                                      return _language.tLoginEmailMessage();
                                     } else if (!RegExp(
                                             r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
                                         .hasMatch(val)) {
-                                      return "Enter a valid email address";
+                                      return _language
+                                          .tLoginEmailErrorMessage();
                                     }
                                     return null;
                                   },
@@ -131,7 +142,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     padding: const EdgeInsets.fromLTRB(
                                         40, 10, 40, 10),
                                     child: Text(
-                                      "Send".toUpperCase(),
+                                      _language
+                                          .tForgorPasswordButton()
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -143,16 +156,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                     if (_formKey.currentState!.validate()) {
                                       myauth.setConfig(
                                           appEmail: email.text,
-                                          appName: "Email code verification",
+                                          appName: 'Email verification code',
                                           userEmail: email.text,
                                           otpLength: 4,
                                           otpType: OTPType.digitsOnly);
                                       if (await myauth.sendOTP() == true) {
                                         ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          backgroundColor: Color(0xff41B072),
-                                          content: Text(
-                                              "Verification code has been sent "),
+                                            .showSnackBar(SnackBar(
+                                          backgroundColor:
+                                              const Color(0xff41B072),
+                                          content: Text(_language
+                                              .tVerificationCodeSentMessage()),
                                         ));
                                         Navigator.pushReplacement(
                                           context,
@@ -164,10 +178,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         );
                                       } else {
                                         ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          backgroundColor: Color(0xff41B072),
-                                          content:
-                                              Text("Oops, code send failed"),
+                                            .showSnackBar(SnackBar(
+                                          backgroundColor:
+                                              const Color(0xff41B072),
+                                          content: Text(_language
+                                              .tVerificationCodeSentErrorMessage()),
                                         ));
                                       }
                                     }
@@ -178,10 +193,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               Text.rich(
                                 TextSpan(
                                   children: [
-                                    const TextSpan(
-                                        text: "Remember your password? "),
                                     TextSpan(
-                                      text: 'Login',
+                                        text: _language
+                                            .tForgorPasswordMessage3()),
+                                    TextSpan(
+                                      text: _language.tLoginButton(),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {
                                           Navigator.push(

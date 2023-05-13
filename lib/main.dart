@@ -1,13 +1,20 @@
 import 'package:aldoc/UI/splashScreen.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/authProvider.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_framework/responsive_wrapper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+String? language = "EN";
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.getInstance().then((value) {
+    language = value.getString("language");
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -30,7 +37,10 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider(
           create: (context) => filesProvider(),
-        )
+        ),
+        ChangeNotifierProvider(
+          create: (context) => Language(),
+        ),
       ],
       child: Builder(
         builder: (BuildContext context) {

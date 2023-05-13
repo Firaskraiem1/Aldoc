@@ -3,7 +3,9 @@
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AddNewPassword extends StatefulWidget {
   const AddNewPassword({super.key});
@@ -15,6 +17,18 @@ class AddNewPassword extends StatefulWidget {
 class _AddNewPasswordState extends State<AddNewPassword> {
   bool iSobscureNewPassword = true;
   bool iSobscureConfirmPassword = true;
+  final Language _language = Language();
+  @override
+  void initState() {
+    super.initState();
+    setState(
+      () => _language.getLanguage(),
+    );
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     double _headerHeight = 300;
@@ -43,25 +57,35 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                    fontSize: 35,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54),
-                                // textAlign: TextAlign.center,
+                            children: [
+                              Align(
+                                alignment: _language.getLanguage() == "AR"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Text(
+                                  _language.tLoginForgotPassword(),
+                                  style: const TextStyle(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                  // textAlign: TextAlign.center,
+                                ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
-                              Text(
-                                'Enter the new password .',
-                                style: TextStyle(
-                                    // fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54),
-                                // textAlign: TextAlign.center,
+                              Align(
+                                alignment: _language.getLanguage() == "AR"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Text(
+                                  _language.tAddNewPasswordMessage1(),
+                                  style: const TextStyle(
+                                      // fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54),
+                                  // textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
@@ -75,27 +99,59 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                 decoration:
                                     ThemeHelper().inputBoxDecorationShaddow(),
                                 child: TextFormField(
+                                  textAlign: _language.getLanguage() == "AR"
+                                      ? TextAlign.end
+                                      : TextAlign.start,
                                   obscureText: iSobscureNewPassword,
                                   decoration: InputDecoration(
                                     suffixIconColor: Colors.grey,
-                                    suffixIcon: IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            iSobscureNewPassword =
-                                                !iSobscureNewPassword;
-                                          });
-                                        },
-                                        icon: iSobscureNewPassword
-                                            ? const Icon(
-                                                Icons.key_off,
-                                              )
-                                            : const Icon(
-                                                Icons.key,
-                                              )),
-                                    labelText: "New password",
+                                    suffixIcon: _language.getLanguage() != "AR"
+                                        ? IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                iSobscureNewPassword =
+                                                    !iSobscureNewPassword;
+                                              });
+                                            },
+                                            icon: iSobscureNewPassword
+                                                ? const Icon(
+                                                    Icons.key_off,
+                                                    color: Colors.grey,
+                                                  )
+                                                : const Icon(
+                                                    Icons.key,
+                                                    color: Colors.grey,
+                                                  ))
+                                        : null,
+                                    prefixIcon: _language.getLanguage() == "AR"
+                                        ? IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                iSobscureNewPassword =
+                                                    !iSobscureNewPassword;
+                                              });
+                                            },
+                                            icon: iSobscureNewPassword
+                                                ? const Icon(
+                                                    Icons.key_off,
+                                                    color: Colors.grey,
+                                                  )
+                                                : const Icon(
+                                                    Icons.key,
+                                                    color: Colors.grey,
+                                                  ))
+                                        : null,
+                                    label: Align(
+                                        alignment:
+                                            _language.getLanguage() == "AR"
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                        child:
+                                            Text(_language.tLoginPassword())),
                                     labelStyle:
                                         const TextStyle(color: Colors.black),
-                                    hintText: "Enter your new password",
+                                    hintText:
+                                        _language.tAddNewPasswordMessage1(),
                                     fillColor: Colors.white,
                                     filled: true,
                                     contentPadding: const EdgeInsets.fromLTRB(
@@ -123,7 +179,8 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                   ),
                                   validator: (val) {
                                     if (val!.isEmpty) {
-                                      return "New password can't be empty";
+                                      return _language
+                                          .tAddNewPasswordMessage1();
                                     }
                                     return null;
                                   },
@@ -134,27 +191,59 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                 decoration:
                                     ThemeHelper().inputBoxDecorationShaddow(),
                                 child: TextFormField(
+                                  textAlign: _language.getLanguage() == "AR"
+                                      ? TextAlign.end
+                                      : TextAlign.start,
                                   obscureText: iSobscureConfirmPassword,
                                   decoration: InputDecoration(
                                     suffixIconColor: Colors.grey,
-                                    suffixIcon: IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            iSobscureConfirmPassword =
-                                                !iSobscureConfirmPassword;
-                                          });
-                                        },
-                                        icon: iSobscureConfirmPassword
-                                            ? const Icon(
-                                                Icons.key_off,
-                                              )
-                                            : const Icon(
-                                                Icons.key,
-                                              )),
-                                    labelText: "Confirm new password",
+                                    suffixIcon: _language.getLanguage() != "AR"
+                                        ? IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                iSobscureConfirmPassword =
+                                                    !iSobscureConfirmPassword;
+                                              });
+                                            },
+                                            icon: iSobscureConfirmPassword
+                                                ? const Icon(
+                                                    Icons.key_off,
+                                                    color: Colors.grey,
+                                                  )
+                                                : const Icon(
+                                                    Icons.key,
+                                                    color: Colors.grey,
+                                                  ))
+                                        : null,
+                                    prefixIcon: _language.getLanguage() == "AR"
+                                        ? IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                iSobscureConfirmPassword =
+                                                    !iSobscureConfirmPassword;
+                                              });
+                                            },
+                                            icon: iSobscureConfirmPassword
+                                                ? const Icon(
+                                                    Icons.key_off,
+                                                    color: Colors.grey,
+                                                  )
+                                                : const Icon(
+                                                    Icons.key,
+                                                    color: Colors.grey,
+                                                  ))
+                                        : null,
+                                    label: Align(
+                                        alignment:
+                                            _language.getLanguage() == "AR"
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                        child: Text(_language
+                                            .tRegisterConfirmPassword())),
                                     labelStyle:
                                         const TextStyle(color: Colors.black),
-                                    hintText: "Enter your confirm new password",
+                                    hintText:
+                                        _language.tAddNewPasswordMessage1(),
                                     fillColor: Colors.white,
                                     filled: true,
                                     contentPadding: const EdgeInsets.fromLTRB(
@@ -182,7 +271,8 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                   ),
                                   validator: (val) {
                                     if (val!.isEmpty) {
-                                      return "Confirm new password can't be empty";
+                                      return _language
+                                          .tAddNewPasswordMessage1();
                                     }
                                     return null;
                                   },
@@ -198,7 +288,9 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                     padding: const EdgeInsets.fromLTRB(
                                         40, 10, 40, 10),
                                     child: Text(
-                                      "Send".toUpperCase(),
+                                      _language
+                                          .tForgorPasswordButton()
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,

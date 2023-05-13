@@ -134,7 +134,7 @@ class _CameraScreenState extends State<CameraScreen>
             cropPath = croppedFile.path;
             camProv.setImagePath(croppedFile.path.toString());
             // post request //
-            requestClass.postRequestIdDocument(
+            requestClass.extractPostRequest(
                 croppedFile.path.toString(), camProv.getCurrentState());
             camProv.removeAppBar(true);
           } else {
@@ -165,7 +165,7 @@ class _CameraScreenState extends State<CameraScreen>
             cropPath = croppedFile.path;
             camProv.setImagePath(croppedFile.path.toString());
             // post request //
-            requestClass.postRequestIdDocument(
+            requestClass.extractPostRequest(
                 croppedFile.path.toString(), camProv.getCurrentState());
             camProv.removeAppBar(true);
           } else {

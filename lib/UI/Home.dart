@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
 import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/authProvider.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
@@ -17,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -33,24 +35,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool _FloatButtonCardPressed = false;
   bool _FloatButtonInvoicePressed = false;
   String _currentState = "";
-  late String _textBussButton;
-  late String _textPassButton;
-  late String _textIdButton;
-  late String _textInvoiceButton;
   Alignment _alignement1 = Alignment.centerLeft;
   Alignment _alignement2 = Alignment.topCenter;
   Alignment _alignement3 = Alignment.centerRight;
-
+  final Language _language = Language();
 ////
 ////methodes
 
   @override
   void initState() {
     super.initState();
-    _textBussButton = "";
-    _textPassButton = "";
-    _textIdButton = "";
-    _textInvoiceButton = "";
+    setState(
+      () => _language.getLanguage(),
+    );
     _currentState = "home";
     _alignement1 = Alignment.bottomCenter;
     _alignement2 = Alignment.bottomCenter;
@@ -58,6 +55,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
+
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -79,6 +77,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool checkboxAllFiles3 = false;
   bool checkboxValue4 = false;
   bool checkboxAllFiles4 = false;
+  bool showLanguageDemoPage = false;
+  bool showLanguageProfilPage = false;
   final creationTime = DateTime.now().minute;
   var time;
   Future<void> fetchData() async {
@@ -212,10 +212,123 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           color: Colors.black,
                         ),
                       ),
-                      label: const Text(
-                        "Log In",
-                        style: TextStyle(color: Colors.black),
+                      label: Text(
+                        _language.tDrawerLogin(),
+                        style: const TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
                       )),
+                  TextButton.icon(
+                      style: ButtonStyle(
+                        overlayColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            return Colors.transparent;
+                          },
+                        ),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          showLanguageDemoPage = !showLanguageDemoPage;
+                        });
+                      },
+                      icon: Padding(
+                        padding: const EdgeInsets.only(left: 12, right: 10),
+                        child: showLanguageDemoPage
+                            ? const Icon(
+                                Icons.arrow_drop_up_sharp,
+                                color: Colors.black,
+                              )
+                            : const Icon(
+                                Icons.arrow_drop_down_sharp,
+                                color: Colors.black,
+                              ),
+                      ),
+                      label: Text(
+                        _language.tDrawerLanguage(),
+                        style: const TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      )),
+                  showLanguageDemoPage
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 50),
+                                child: TextButton(
+                                    style: ButtonStyle(
+                                      overlayColor: MaterialStateProperty
+                                          .resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                          return Colors.transparent;
+                                        },
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      SharedPreferences pref =
+                                          await SharedPreferences.getInstance();
+                                      pref.setString('language', "AR");
+                                      _language.setLanguage("AR");
+                                      setState(() {
+                                        showLanguageDemoPage = false;
+                                      });
+                                    },
+                                    child: const Text(
+                                      "AR",
+                                      style: TextStyle(color: Colors.black),
+                                    )),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 50),
+                                child: TextButton(
+                                    style: ButtonStyle(
+                                      overlayColor: MaterialStateProperty
+                                          .resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                          return Colors.transparent;
+                                        },
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      SharedPreferences pref =
+                                          await SharedPreferences.getInstance();
+                                      pref.setString('language', "FR");
+                                      _language.setLanguage("FR");
+                                      setState(() {
+                                        showLanguageDemoPage = false;
+                                      });
+                                    },
+                                    child: const Text(
+                                      "FR",
+                                      style: TextStyle(color: Colors.black),
+                                    )),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 50),
+                                child: TextButton(
+                                    style: ButtonStyle(
+                                      overlayColor: MaterialStateProperty
+                                          .resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                          return Colors.transparent;
+                                        },
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      SharedPreferences pref =
+                                          await SharedPreferences.getInstance();
+                                      pref.setString('language', "EN");
+                                      _language.setLanguage("EN");
+                                      setState(() {
+                                        showLanguageDemoPage = false;
+                                      });
+                                    },
+                                    child: const Text(
+                                      "EN",
+                                      style: TextStyle(color: Colors.black),
+                                    )),
+                              ),
+                            ])
+                      : const SizedBox(),
                   TextButton.icon(
                       style: ButtonStyle(
                         overlayColor: MaterialStateProperty.resolveWith<Color>(
@@ -232,10 +345,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           color: Colors.black,
                         ),
                       ),
-                      label: const Text(
-                        "about",
-                        style: TextStyle(color: Colors.black),
-                      ))
+                      label: Text(
+                        _language.tDrawerAbout(),
+                        style: const TextStyle(
+                            color: Colors.black, fontWeight: FontWeight.bold),
+                      )),
                 ]),
               ),
             )
@@ -307,12 +421,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         currentState != "uploadFile" &&
         loginState == false) {
       return PreferredSize(
-        preferredSize: Size(MediaQuery.of(context).size.width, 80),
+        preferredSize: Size(MediaQuery.of(context).size.width, 50),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: const EdgeInsets.only(top: 30, bottom: 25),
           child: ListTile(
             leading: IconButton(
-              padding: const EdgeInsets.only(top: 43),
               onPressed: () {
                 _scaffoldKey.currentState!.openDrawer();
               },
@@ -397,8 +510,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                 _FloatButtonIdPressed =
                                                     _FloatButtonInvoicePressed =
                                                         false;
-                                    _textBussButton = _textPassButton =
-                                        _textIdButton = _textInvoiceButton = "";
+                                    // _textBussButton = _textPassButton =
+                                    //     _textIdButton = _textInvoiceButton = "";
                                     _alignement1 = _alignement2 =
                                         _alignement3 = Alignment.bottomCenter;
                                   });
@@ -438,8 +551,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   _FloatButtonPassPressed =
                                       _FloatButtonIdPressed =
                                           _FloatButtonInvoicePressed = false;
-                              _textBussButton = _textPassButton =
-                                  _textIdButton = _textInvoiceButton = "";
+                              // _textBussButton = _textPassButton =
+                              //     _textIdButton = _textInvoiceButton = "";
                               _alignement1 = _alignement2 =
                                   _alignement3 = Alignment.bottomCenter;
                               camProv.setGenericState(false);
@@ -519,7 +632,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
 // method for user profile (update username)
-  String updatedText = "userName";
+  String updatedText = "";
   void updateText(String t) {
     setState(() {
       updatedText = t;
@@ -536,14 +649,80 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.only(top: 40, right: 20),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
+              // IconButton(
+              //     onPressed: () {},
+              //     icon: const RiveAnimation.asset(
+              //       "assets/icons.riv",
+              //       artboard: "BELL",
+              //     )),
+              // const SizedBox(
+              //   width: 10,
+              // ),
+              showLanguageProfilPage
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: GestureDetector(
+                              onTap: () async {
+                                setState(() {
+                                  showLanguageProfilPage = false;
+                                  _language.setLanguage("EN");
+                                });
+                                SharedPreferences pref =
+                                    await SharedPreferences.getInstance();
+                                pref.setString('language', "EN");
+                              },
+                              child: const Text("EN")),
+                        ),
+                        const Text("|"),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10, left: 10),
+                          child: GestureDetector(
+                              onTap: () async {
+                                setState(() {
+                                  showLanguageProfilPage = false;
+                                  _language.setLanguage("FR");
+                                });
+                                SharedPreferences pref =
+                                    await SharedPreferences.getInstance();
+                                pref.setString('language', "FR");
+                              },
+                              child: const Text("FR")),
+                        ),
+                        const Text("|"),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 20, left: 10),
+                          child: GestureDetector(
+                              onTap: () async {
+                                setState(() {
+                                  showLanguageProfilPage = false;
+                                  _language.setLanguage("AR");
+                                });
+                                SharedPreferences pref =
+                                    await SharedPreferences.getInstance();
+                                pref.setString('language', "AR");
+                              },
+                              child: const Text("AR")),
+                        ),
+                        const Icon(
+                          Icons.arrow_back_ios,
+                          size: 15,
+                        )
+                      ],
+                    )
+                  : const SizedBox(),
               IconButton(
-                  onPressed: () {},
-                  icon: const RiveAnimation.asset(
-                    "assets/icons.riv",
-                    artboard: "BELL",
-                  )),
+                  onPressed: () {
+                    setState(() {
+                      showLanguageProfilPage = !showLanguageProfilPage;
+                    });
+                  },
+                  icon: const Icon(Icons.language)),
+
               const SizedBox(
-                width: 15,
+                width: 20,
               ),
               CircleAvatar(
                 //size
@@ -595,264 +774,316 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                             top: 20, bottom: 40),
                                         child: Center(
                                             child: Text(
-                                          updatedText,
+                                          updatedText == ""
+                                              ? _language.tProfilUsername()
+                                              : updatedText,
                                           style: const TextStyle(fontSize: 18),
                                         )),
                                       ),
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: TextButton.icon(
-                                            style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty
-                                                      .resolveWith<Color>(
-                                                (Set<MaterialState> states) {
-                                                  return Colors.transparent;
-                                                },
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            _language.getLanguage() == "AR"
+                                                ? MainAxisAlignment.end
+                                                : MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: ListTile(
+                                              onTap: () {
+                                                uploadImage().then(
+                                                  (value) {
+                                                    Navigator.pop(context);
+                                                  },
+                                                );
+                                              },
+                                              trailing: _language
+                                                          .getLanguage() ==
+                                                      "AR"
+                                                  ? const Icon(
+                                                      Icons.add_photo_alternate,
+                                                      color: Colors.black,
+                                                    )
+                                                  : null,
+                                              leading: _language
+                                                          .getLanguage() !=
+                                                      "AR"
+                                                  ? const Icon(
+                                                      Icons.add_photo_alternate,
+                                                      color: Colors.black,
+                                                    )
+                                                  : null,
+                                              title: Align(
+                                                alignment:
+                                                    _language.getLanguage() ==
+                                                            "AR"
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                child: Text(
+                                                  _language.tProfilEditPhoto(),
+                                                  style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 13),
+                                                ),
                                               ),
                                             ),
-                                            onPressed: () {
-                                              uploadImage().then(
-                                                (value) {
-                                                  Navigator.pop(context);
-                                                },
-                                              );
-                                            },
-                                            icon: const Icon(
-                                              Icons.edit,
-                                              color: Colors.black,
-                                            ),
-                                            label: const Text(
-                                              "Edit photo",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            )),
+                                          )
+                                        ],
                                       ),
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: TextButton.icon(
-                                            style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty
-                                                      .resolveWith<Color>(
-                                                (Set<MaterialState> states) {
-                                                  return Colors.transparent;
-                                                },
-                                              ),
-                                            ),
-                                            onPressed: () {
-                                              //edit username show dialog
-                                              showDialog(
-                                                barrierDismissible: false,
-                                                context: context,
-                                                builder: (context) {
-                                                  return BackdropFilter(
-                                                    filter: ImageFilter.blur(
-                                                        sigmaX: 10, sigmaY: 10),
-                                                    child: AlertDialog(
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          15.0)),
-                                                      content: Column(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: const [
-                                                              Text(
-                                                                "Enter username",
-                                                                style: TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold),
-                                                              )
-                                                            ],
-                                                          ),
-                                                          Form(
-                                                              key: _formKey,
-                                                              child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .only(
-                                                                        top: 15,
-                                                                        right:
-                                                                            10,
-                                                                        left:
-                                                                            10),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            _language.getLanguage() == "AR"
+                                                ? MainAxisAlignment.end
+                                                : MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: ListTile(
+                                              onTap: () {
+                                                //edit username show dialog
+                                                showDialog(
+                                                  barrierDismissible: false,
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return BackdropFilter(
+                                                      filter: ImageFilter.blur(
+                                                          sigmaX: 10,
+                                                          sigmaY: 10),
+                                                      child: AlertDialog(
+                                                        shape: RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        15.0)),
+                                                        content: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Text(
+                                                                  _language
+                                                                      .tProfilEnterUserName(),
+                                                                  style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                )
+                                                              ],
+                                                            ),
+                                                            Form(
+                                                                key: _formKey,
                                                                 child: Padding(
                                                                   padding: const EdgeInsets
                                                                           .only(
-                                                                      top: 10),
+                                                                      top: 15,
+                                                                      right: 10,
+                                                                      left: 10),
                                                                   child:
-                                                                      TextFormField(
-                                                                    decoration:
-                                                                        InputDecoration(
-                                                                      fillColor:
-                                                                          Colors
-                                                                              .white,
-                                                                      filled:
-                                                                          true,
-                                                                      contentPadding:
-                                                                          const EdgeInsets.fromLTRB(
-                                                                              20,
-                                                                              10,
-                                                                              20,
-                                                                              10),
-                                                                      focusedBorder: OutlineInputBorder(
-                                                                          borderRadius: BorderRadius.circular(
-                                                                              100.0),
-                                                                          borderSide:
-                                                                              const BorderSide(color: Colors.grey)),
-                                                                      enabledBorder: OutlineInputBorder(
-                                                                          borderRadius: BorderRadius.circular(
-                                                                              100.0),
-                                                                          borderSide:
-                                                                              BorderSide(color: Colors.grey.shade400)),
-                                                                      errorBorder: OutlineInputBorder(
-                                                                          borderRadius: BorderRadius.circular(
-                                                                              100.0),
-                                                                          borderSide: const BorderSide(
-                                                                              color: Colors.red,
-                                                                              width: 2.0)),
-                                                                      focusedErrorBorder: OutlineInputBorder(
-                                                                          borderRadius: BorderRadius.circular(
-                                                                              100.0),
-                                                                          borderSide: const BorderSide(
-                                                                              color: Colors.red,
-                                                                              width: 2.0)),
+                                                                      Padding(
+                                                                    padding: const EdgeInsets
+                                                                            .only(
+                                                                        top:
+                                                                            10),
+                                                                    child:
+                                                                        TextFormField(
+                                                                      decoration:
+                                                                          InputDecoration(
+                                                                        fillColor:
+                                                                            Colors.white,
+                                                                        filled:
+                                                                            true,
+                                                                        contentPadding: const EdgeInsets.fromLTRB(
+                                                                            20,
+                                                                            10,
+                                                                            20,
+                                                                            10),
+                                                                        focusedBorder: OutlineInputBorder(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(100.0),
+                                                                            borderSide: const BorderSide(color: Colors.grey)),
+                                                                        enabledBorder: OutlineInputBorder(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(100.0),
+                                                                            borderSide: BorderSide(color: Colors.grey.shade400)),
+                                                                        errorBorder: OutlineInputBorder(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(100.0),
+                                                                            borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                        focusedErrorBorder: OutlineInputBorder(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(100.0),
+                                                                            borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                      ),
+                                                                      keyboardType:
+                                                                          TextInputType
+                                                                              .name,
+                                                                      onChanged:
+                                                                          updateText,
+                                                                      controller:
+                                                                          _usernameController,
+                                                                      validator:
+                                                                          (value) {
+                                                                        if (value!
+                                                                            .isEmpty) {
+                                                                          return _language
+                                                                              .tProfilEnterUserName();
+                                                                        }
+                                                                        return null;
+                                                                      },
                                                                     ),
-                                                                    keyboardType:
-                                                                        TextInputType
-                                                                            .name,
-                                                                    onChanged:
-                                                                        updateText,
-                                                                    controller:
-                                                                        _usernameController,
-                                                                    validator:
-                                                                        (value) {
-                                                                      if (value!
-                                                                          .isEmpty) {
-                                                                        return "Enter username";
-                                                                      }
-                                                                      return null;
-                                                                    },
                                                                   ),
+                                                                )),
+                                                            Row(
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
+                                                              children: [
+                                                                Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .only(
+                                                                      left: 5,
+                                                                      right: 40,
+                                                                      top: 15),
+                                                                  child:
+                                                                      TextButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            Navigator.pop(context);
+                                                                          },
+                                                                          child:
+                                                                              Text(
+                                                                            _language.tProfilButtonCancel(),
+                                                                            style:
+                                                                                const TextStyle(color: Colors.black),
+                                                                          )),
                                                                 ),
-                                                              )),
-                                                          Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .only(
-                                                                        left: 5,
-                                                                        right:
-                                                                            40,
-                                                                        top:
-                                                                            15),
-                                                                child:
-                                                                    TextButton(
-                                                                        onPressed:
-                                                                            () {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                        },
-                                                                        child:
-                                                                            const Text(
-                                                                          "Cancel",
-                                                                          style:
-                                                                              TextStyle(color: Colors.black),
-                                                                        )),
-                                                              ),
-                                                              Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                            .only(
-                                                                        right:
-                                                                            5,
-                                                                        left:
-                                                                            40,
-                                                                        top:
-                                                                            15),
-                                                                child:
-                                                                    TextButton(
-                                                                        onPressed:
-                                                                            () {
-                                                                          if (_formKey
-                                                                              .currentState!
-                                                                              .validate()) {
-                                                                            setState(() {
-                                                                              // _usernameController.text =
-                                                                              //     "";
-                                                                              Navigator.of(context).pop(updatedText);
-                                                                            });
-                                                                          }
-                                                                        },
-                                                                        child:
-                                                                            const Text(
-                                                                          "Save",
-                                                                          style:
-                                                                              TextStyle(color: Colors.black),
-                                                                        )),
-                                                              )
-                                                            ],
-                                                          )
-                                                        ],
+                                                                Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .only(
+                                                                      right: 5,
+                                                                      left: 40,
+                                                                      top: 15),
+                                                                  child:
+                                                                      TextButton(
+                                                                          onPressed:
+                                                                              () {
+                                                                            if (_formKey.currentState!.validate()) {
+                                                                              setState(() {
+                                                                                // _usernameController.text =
+                                                                                //     "";
+                                                                                Navigator.of(context).pop(updatedText);
+                                                                              });
+                                                                            }
+                                                                          },
+                                                                          child:
+                                                                              Text(
+                                                                            _language.tProfilButtonSave(),
+                                                                            style:
+                                                                                const TextStyle(color: Colors.black),
+                                                                          )),
+                                                                )
+                                                              ],
+                                                            )
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            icon: const Icon(
-                                              Icons.edit_note,
-                                              color: Colors.black,
-                                            ),
-                                            label: const Text(
-                                              "Edit username",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            )),
-                                      ),
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: TextButton.icon(
-                                            style: ButtonStyle(
-                                              overlayColor:
-                                                  MaterialStateProperty
-                                                      .resolveWith<Color>(
-                                                (Set<MaterialState> states) {
-                                                  return Colors.transparent;
-                                                },
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              trailing:
+                                                  _language.getLanguage() ==
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.edit,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                              leading:
+                                                  _language.getLanguage() !=
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.edit,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                              title: Align(
+                                                alignment:
+                                                    _language.getLanguage() ==
+                                                            "AR"
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                child: Text(
+                                                  _language
+                                                      .tProfilEditUsername(),
+                                                  style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 13),
+                                                ),
                                               ),
                                             ),
-                                            onPressed: () {
-                                              authProv.setLoginState(false);
-                                              Navigator.pushReplacement(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const Home(),
-                                                  ));
-                                            },
-                                            icon: const Icon(
-                                              Icons.logout,
-                                              color: Colors.black,
+                                          )
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            _language.getLanguage() == "AR"
+                                                ? MainAxisAlignment.end
+                                                : MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: ListTile(
+                                              onTap: () {
+                                                authProv.setLoginState(false);
+                                                Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const Home(),
+                                                    ));
+                                              },
+                                              trailing:
+                                                  _language.getLanguage() ==
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.logout,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                              leading:
+                                                  _language.getLanguage() !=
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.logout,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                              title: Align(
+                                                alignment:
+                                                    _language.getLanguage() ==
+                                                            "AR"
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                child: Text(
+                                                  _language.tProfilLogout(),
+                                                  style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 13),
+                                                ),
+                                              ),
                                             ),
-                                            label: const Text(
-                                              "LogOut",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            )),
+                                          )
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -915,7 +1146,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textBussButton,
+                    _FloatButtonPressed
+                        ? _language.tHomeFilterBusinessCard()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "home" ||
                                 _currentState == "uploadFile" &&
@@ -946,8 +1179,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("businessCard");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -975,7 +1208,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textPassButton,
+                    _FloatButtonPressed ? _language.tHomeFilterPassport() : "",
                     style: TextStyle(
                         color: _currentState == "home" ||
                                 _currentState == "uploadFile" &&
@@ -1007,8 +1240,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("passport");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1038,7 +1271,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textInvoiceButton,
+                    _FloatButtonPressed ? _language.tHomeFilterInvoice() : "",
                     style: TextStyle(
                         color: _currentState == "home" ||
                                 _currentState == "uploadFile" &&
@@ -1070,8 +1303,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1101,7 +1334,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textIdButton,
+                    _FloatButtonPressed
+                        ? _language.tHomeFilterIdDocument()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "home" ||
                                 _currentState == "uploadFile" &&
@@ -1132,8 +1367,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("idDocument");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1178,16 +1413,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     setState(() {
                       _FloatButtonPressed = !_FloatButtonPressed;
                       if (_FloatButtonPressed) {
-                        _textBussButton = "business card";
-                        _textPassButton = "Passport";
-                        _textIdButton = "id document";
-                        _textInvoiceButton = "Invoice";
                         _alignement1 = Alignment.centerLeft;
                         _alignement2 = Alignment.topCenter;
                         _alignement3 = Alignment.centerRight;
                       } else {
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       }
@@ -1236,7 +1465,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textBussButton,
+                    _FloatButtonIdPressed
+                        ? _language.tHomeFilterBusinessCard()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1270,8 +1501,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1306,7 +1537,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textPassButton,
+                    _FloatButtonIdPressed
+                        ? _language.tHomeFilterPassport()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1340,8 +1573,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1378,7 +1611,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textInvoiceButton,
+                    _FloatButtonIdPressed ? _language.tHomeFilterInvoice() : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1412,8 +1645,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1450,7 +1683,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textIdButton,
+                    _FloatButtonIdPressed
+                        ? _language.tHomeFilterIdDocument()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1485,8 +1720,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
                         _FloatButtonIdPressed = !_FloatButtonIdPressed;
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1556,16 +1791,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _FloatButtonIdPressed = false;
                       } else if (_FloatButtonIdPressed &&
                           camProv.getGenericState() == true) {
-                        _textBussButton = "business card";
-                        _textPassButton = "Passport";
-                        _textIdButton = "id document";
-                        _textInvoiceButton = "Invoice";
                         _alignement1 = Alignment.centerLeft;
                         _alignement2 = Alignment.topCenter;
                         _alignement3 = Alignment.centerRight;
                       } else {
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       }
@@ -1624,7 +1853,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textBussButton,
+                    _FloatButtonPassPressed
+                        ? _language.tHomeFilterBusinessCard()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1658,8 +1889,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1695,7 +1926,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textPassButton,
+                    _FloatButtonPassPressed
+                        ? _language.tHomeFilterPassport()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1731,8 +1964,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _currentState = "scanPass";
                         // _textBottomBar = "Scan Pass";
                         _FloatButtonPassPressed = !_FloatButtonPassPressed;
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1769,7 +2002,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textInvoiceButton,
+                    _FloatButtonPassPressed
+                        ? _language.tHomeFilterInvoice()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1803,8 +2038,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1841,7 +2076,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textIdButton,
+                    _FloatButtonPassPressed
+                        ? _language.tHomeFilterIdDocument()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -1875,8 +2112,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -1948,16 +2185,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _FloatButtonPassPressed = false;
                       } else if (_FloatButtonPassPressed &&
                           camProv.getGenericState() == true) {
-                        _textBussButton = "business card";
-                        _textPassButton = "Passport";
-                        _textIdButton = "id document";
-                        _textInvoiceButton = "Invoice";
                         _alignement1 = Alignment.centerLeft;
                         _alignement2 = Alignment.topCenter;
                         _alignement3 = Alignment.centerRight;
                       } else {
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       }
@@ -2016,7 +2247,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textBussButton,
+                    _FloatButtonCardPressed
+                        ? _language.tHomeFilterBusinessCard()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2051,8 +2284,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         _FloatButtonCardPressed = !_FloatButtonCardPressed;
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2088,7 +2321,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textPassButton,
+                    _FloatButtonCardPressed
+                        ? _language.tHomeFilterPassport()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2122,8 +2357,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2160,7 +2395,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textInvoiceButton,
+                    _FloatButtonCardPressed
+                        ? _language.tHomeFilterInvoice()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2194,8 +2431,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2232,7 +2469,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textIdButton,
+                    _FloatButtonCardPressed
+                        ? _language.tHomeFilterIdDocument()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2266,8 +2505,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2339,16 +2578,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _FloatButtonCardPressed = false;
                       } else if (_FloatButtonCardPressed &&
                           camProv.getGenericState() == true) {
-                        _textBussButton = "business card";
-                        _textPassButton = "Passport";
-                        _textIdButton = "id document";
-                        _textInvoiceButton = "Invoice";
                         _alignement1 = Alignment.centerLeft;
                         _alignement2 = Alignment.topCenter;
                         _alignement3 = Alignment.centerRight;
                       } else {
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       }
@@ -2405,7 +2638,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textBussButton,
+                    _FloatButtonInvoicePressed
+                        ? _language.tHomeFilterBusinessCard()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2439,8 +2674,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2476,7 +2711,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textPassButton,
+                    _FloatButtonInvoicePressed
+                        ? _language.tHomeFilterPassport()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2510,8 +2747,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2548,7 +2785,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textInvoiceButton,
+                    _FloatButtonInvoicePressed
+                        ? _language.tHomeFilterInvoice()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2584,8 +2823,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _currentState = "scanInvoice";
                         _FloatButtonInvoicePressed =
                             !_FloatButtonInvoicePressed;
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2622,7 +2861,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    _textIdButton,
+                    _FloatButtonInvoicePressed
+                        ? _language.tHomeFilterIdDocument()
+                        : "",
                     style: TextStyle(
                         color: _currentState == "scanId" ||
                                 _currentState == "scanPass" ||
@@ -2656,8 +2897,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setImagePath("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
+                        // _textBussButton = _textPassButton =
+                        //     _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       });
@@ -2730,16 +2971,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         _FloatButtonInvoicePressed = false;
                       } else if (_FloatButtonInvoicePressed &&
                           camProv.getGenericState() == true) {
-                        _textBussButton = "business card";
-                        _textPassButton = "Passport";
-                        _textIdButton = "id document";
-                        _textInvoiceButton = "Invoice";
                         _alignement1 = Alignment.centerLeft;
                         _alignement2 = Alignment.topCenter;
                         _alignement3 = Alignment.centerRight;
                       } else {
-                        _textBussButton = _textPassButton =
-                            _textIdButton = _textInvoiceButton = "";
                         _alignement1 = _alignement2 =
                             _alignement3 = Alignment.bottomCenter;
                       }
@@ -2782,7 +3017,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     String? ImageUploadedPath = camProv.getPathUploadImage();
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(top: 30),
+        padding: const EdgeInsets.only(top: 50),
         child: SizedBox(
           width: 375,
           height: 812,
@@ -2806,10 +3041,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             color: Color(0xff41B072),
                             borderRadius:
                                 BorderRadius.all(Radius.circular(10))),
-                        child: const Tab(
+                        child: Tab(
                           child: Text(
-                            "Favorite files",
-                            style: TextStyle(color: Colors.white),
+                            _language.tHomeFavoriteFiles(),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                       ),
@@ -2826,10 +3061,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                 top: BorderSide(color: Color(0xff41B072)),
                                 left: BorderSide(color: Color(0xff41B072)),
                                 right: BorderSide(color: Color(0xff41B072)))),
-                        child: const Tab(
+                        child: Tab(
                           child: Text(
-                            "All files",
-                            style: TextStyle(color: Color(0xff41B072)),
+                            _language.tHomeAllFiles(),
+                            style: const TextStyle(color: Color(0xff41B072)),
                           ),
                         ),
                       ),
@@ -2852,9 +3087,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    const Text(
-                                      "All Result()",
-                                      style: TextStyle(
+                                    Text(
+                                      "${_language.tHomeAllResult()}()",
+                                      style: const TextStyle(
                                           fontSize: 10,
                                           color: Color(0xff4A4A4A),
                                           fontWeight: FontWeight.bold),
@@ -2903,10 +3138,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                   color: Colors
                                                                       .black,
                                                                 )),
-                                                            title: const Center(
+                                                            title: Center(
                                                               child: Text(
-                                                                "Filter",
-                                                                style: TextStyle(
+                                                                _language
+                                                                    .tHomeFilter(),
+                                                                style: const TextStyle(
                                                                     fontSize:
                                                                         17,
                                                                     fontWeight:
@@ -2920,13 +3156,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                   splashFactory:
                                                                       NoSplash
                                                                           .splashFactory),
-                                                              child: const Text(
-                                                                "Clear all",
-                                                                style: TextStyle(
+                                                              child: Text(
+                                                                _language
+                                                                    .tHomeFilterClearAll(),
+                                                                style: const TextStyle(
                                                                     color: Colors
                                                                         .black,
                                                                     fontSize:
-                                                                        15),
+                                                                        15,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
                                                               ),
                                                               onPressed: () {
                                                                 setState(() {
@@ -2941,19 +3181,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                             ),
                                                           ),
                                                           Row(
-                                                            children: const [
+                                                            mainAxisAlignment: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? MainAxisAlignment
+                                                                    .end
+                                                                : MainAxisAlignment
+                                                                    .start,
+                                                            children: [
                                                               Padding(
-                                                                padding: EdgeInsets
-                                                                    .only(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .only(
                                                                         left:
                                                                             15,
                                                                         bottom:
                                                                             5,
-                                                                        top:
-                                                                            20),
+                                                                        top: 20,
+                                                                        right:
+                                                                            15),
                                                                 child: Text(
-                                                                  "Document type",
-                                                                  style: TextStyle(
+                                                                  _language
+                                                                      .tHomeFilterDocumentType(),
+                                                                  style: const TextStyle(
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .bold),
@@ -2964,126 +3214,213 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                        .only(
-                                                                    left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxValue1,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxValue1 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Id document"),
-                                                                ]),
+                                                                    .only(
+                                                              left: 7,
+                                                            ),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterIdDocument()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue1,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue1 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue1,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue1 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterIdDocument()),
+                                                                      ]),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                              left: 7,
+                                                            ),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterBusinessCard()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue2,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue2 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue2,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue2 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterBusinessCard()),
+                                                                      ]),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                              left: 7,
+                                                            ),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterPassport()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue3,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue3 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue3,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue3 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterPassport()),
+                                                                      ]),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
                                                                         .only(
                                                                     left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxValue2,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxValue2 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Business card"),
-                                                                ]),
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .only(
-                                                                    left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxValue3,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxValue3 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Passport"),
-                                                                ]),
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .only(
-                                                                    left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxValue4,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxValue4 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Invoice"),
-                                                                ]),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterInvoice()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue4,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue4 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxValue4,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxValue4 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterInvoice()),
+                                                                      ]),
                                                           )
                                                         ],
                                                       ),
@@ -3101,12 +3438,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           overlayColor:
                                               MaterialStatePropertyAll(
                                                   Colors.transparent)),
-                                      label: const Text(
-                                        "Filtred by",
-                                        style: TextStyle(
-                                          color: Color(0xff4A4A4A),
-                                          fontSize: 10,
-                                        ),
+                                      label: Text(
+                                        _language.tHomeFiltredBy(),
+                                        style: const TextStyle(
+                                            color: Color(0xff4A4A4A),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     )
                                   ]),
@@ -3224,9 +3561,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    const Text(
-                                      "All Result()",
-                                      style: TextStyle(
+                                    Text(
+                                      "${_language.tHomeAllResult()}()",
+                                      style: const TextStyle(
                                           fontSize: 10,
                                           color: Color(0xff4A4A4A),
                                           fontWeight: FontWeight.bold),
@@ -3275,10 +3612,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                   color: Colors
                                                                       .black,
                                                                 )),
-                                                            title: const Center(
+                                                            title: Center(
                                                               child: Text(
-                                                                "Filter",
-                                                                style: TextStyle(
+                                                                _language
+                                                                    .tHomeFilter(),
+                                                                style: const TextStyle(
                                                                     fontSize:
                                                                         17,
                                                                     fontWeight:
@@ -3292,9 +3630,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                   splashFactory:
                                                                       NoSplash
                                                                           .splashFactory),
-                                                              child: const Text(
-                                                                "Clear all",
-                                                                style: TextStyle(
+                                                              child: Text(
+                                                                _language
+                                                                    .tHomeFilterClearAll(),
+                                                                style: const TextStyle(
                                                                     color: Colors
                                                                         .black,
                                                                     fontSize:
@@ -3313,19 +3652,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                             ),
                                                           ),
                                                           Row(
-                                                            children: const [
+                                                            mainAxisAlignment: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? MainAxisAlignment
+                                                                    .end
+                                                                : MainAxisAlignment
+                                                                    .start,
+                                                            children: [
                                                               Padding(
-                                                                padding: EdgeInsets
-                                                                    .only(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                            .only(
                                                                         left:
                                                                             15,
                                                                         bottom:
                                                                             5,
-                                                                        top:
-                                                                            20),
+                                                                        top: 20,
+                                                                        right:
+                                                                            15),
                                                                 child: Text(
-                                                                  "Document type",
-                                                                  style: TextStyle(
+                                                                  _language
+                                                                      .tHomeFilterDocumentType(),
+                                                                  style: const TextStyle(
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .bold),
@@ -3338,124 +3687,208 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                 const EdgeInsets
                                                                         .only(
                                                                     left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxAllFiles1,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxAllFiles1 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Id document"),
-                                                                ]),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterIdDocument()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles1,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles1 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles1,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles1 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterIdDocument()),
+                                                                      ]),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
                                                                         .only(
                                                                     left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxAllFiles2,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxAllFiles2 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Business card"),
-                                                                ]),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterBusinessCard()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles2,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles2 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles2,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles2 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterBusinessCard()),
+                                                                      ]),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
                                                                         .only(
                                                                     left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxAllFiles3,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxAllFiles3 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Passport"),
-                                                                ]),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterPassport()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles3,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles3 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles3,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles3 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterPassport()),
+                                                                      ]),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
                                                                         .only(
                                                                     left: 7),
-                                                            child: Row(
-                                                                children: [
-                                                                  FormField(
-                                                                    builder:
-                                                                        (state) {
-                                                                      return Checkbox(
-                                                                        activeColor:
-                                                                            const Color(0xff41B072),
-                                                                        value:
-                                                                            checkboxAllFiles4,
-                                                                        onChanged:
-                                                                            (value) {
-                                                                          setState(
-                                                                              () {
-                                                                            checkboxAllFiles4 =
-                                                                                value!;
-                                                                            state.didChange(value);
-                                                                          });
-                                                                        },
-                                                                      );
-                                                                    },
-                                                                  ),
-                                                                  const Text(
-                                                                      "Invoice"),
-                                                                ]),
+                                                            child: _language
+                                                                        .getLanguage() ==
+                                                                    "AR"
+                                                                ? Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .end,
+                                                                    children: [
+                                                                        Text(_language
+                                                                            .tHomeFilterInvoice()),
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles4,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles4 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ])
+                                                                : Row(
+                                                                    children: [
+                                                                        FormField(
+                                                                          builder:
+                                                                              (state) {
+                                                                            return Checkbox(
+                                                                              activeColor: const Color(0xff41B072),
+                                                                              value: checkboxAllFiles4,
+                                                                              onChanged: (value) {
+                                                                                setState(() {
+                                                                                  checkboxAllFiles4 = value!;
+                                                                                  state.didChange(value);
+                                                                                });
+                                                                              },
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        Text(_language
+                                                                            .tHomeFilterInvoice()),
+                                                                      ]),
                                                           )
                                                         ],
                                                       ),
@@ -3473,12 +3906,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           overlayColor:
                                               MaterialStatePropertyAll(
                                                   Colors.transparent)),
-                                      label: const Text(
-                                        "Filtred by",
-                                        style: TextStyle(
-                                          color: Color(0xff4A4A4A),
-                                          fontSize: 10,
-                                        ),
+                                      label: Text(
+                                        _language.tHomeFiltredBy(),
+                                        style: const TextStyle(
+                                            color: Color(0xff4A4A4A),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     )
                                   ]),

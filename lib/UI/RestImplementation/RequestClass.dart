@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart' show ClientException;
 
 class RequestClass {
-  void postRequestIdDocument(String fileData, String? currentState) async {
+  void extractPostRequest(String fileData, String? currentState) async {
     Uri url;
     try {
       if (currentState == "idDocument") {

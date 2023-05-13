@@ -83,7 +83,6 @@ class _GenericFormState extends State<GenericForm> {
         File('${directory.path}/Extracted Information${DateTime.now()}.pdf');
     final bytes = await pdf.save();
     await file.writeAsBytes(bytes);
-
     FolderFileSaver.saveFileToFolderExt(file.path);
   }
 
@@ -153,6 +152,32 @@ class _GenericFormState extends State<GenericForm> {
       );
     }
     return Container();
+  }
+
+  int currentProgress = 0;
+  void updateProgress() {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (currentProgress < 100) {
+        currentProgress += 10;
+
+        service.showNotification(
+            id: 0,
+            title: "File Download",
+            body: "",
+            p: currentProgress,
+            showProgress: true);
+      } else {
+        timer.cancel();
+        service.showNotification(
+            id: 0,
+            title: ' Download completed',
+            body: "",
+            p: 0,
+            showProgress: false);
+        service.onDidReceivedLocalNotifications(
+            0, "test", "", "Download Completed");
+      }
+    });
   }
 
   Widget formView() {
@@ -430,46 +455,36 @@ class _GenericFormState extends State<GenericForm> {
                           position: const RelativeRect.fromLTRB(150, 75, 35, 0),
                           items: [
                             PopupMenuItem(
-                                child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.file_download_outlined),
-                                const SizedBox(width: 7),
-                                TextButton(
-                                  child: const Text("Download File",
-                                      style: TextStyle(color: Colors.black)),
-                                  onPressed: () async {
-                                    saveScreenshotToPdf();
-                                    await Future.delayed(
-                                      const Duration(seconds: 2),
-                                      () {
-                                        service.showNotification(
-                                            id: 0,
-                                            title: "File downloaded",
-                                            body: "");
-                                      },
-                                    );
+                                child: TextButton.icon(
+                              label: const Text("Download File",
+                                  style: TextStyle(color: Colors.black)),
+                              onPressed: () async {
+                                saveScreenshotToPdf();
+                                await Future.delayed(
+                                  const Duration(seconds: 2),
+                                  () {
+                                    updateProgress();
                                   },
-                                )
-                              ],
+                                );
+                              },
+                              icon: const Padding(
+                                padding: EdgeInsets.only(right: 7),
+                                child: Icon(Icons.file_download_outlined),
+                              ),
                             )),
                             PopupMenuItem(
-                                child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.ios_share_rounded),
-                                const SizedBox(width: 7),
-                                TextButton(
-                                  onPressed: () {
-                                    shareWidgets(
-                                        globalKey: _widgetScreenshotKey);
-                                  },
-                                  child: const Text(
-                                    "Share",
-                                    style: TextStyle(color: Colors.black),
-                                  ),
-                                )
-                              ],
+                                child: TextButton.icon(
+                              onPressed: () {
+                                shareWidgets(globalKey: _widgetScreenshotKey);
+                              },
+                              label: const Text(
+                                "Share",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              icon: const Padding(
+                                padding: EdgeInsets.only(right: 7),
+                                child: Icon(Icons.ios_share_rounded),
+                              ),
                             )),
                           ]);
                     },

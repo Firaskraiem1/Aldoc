@@ -1,4 +1,6 @@
-// ignore_for_file: unused_local_variable, camel_case_types, unused_field
+// ignore_for_file: unused_local_variable, camel_case_types, unused_field, unrelated_type_equality_checks
+
+import 'dart:async';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -10,25 +12,46 @@ class local_notification {
         AndroidInitializationSettings("@drawable/ic_stat_cloud_download");
     const InitializationSettings settings =
         InitializationSettings(android: androidInitializationSettings);
-    await _loaclNotifiactionService.initialize(settings);
+    await _loaclNotifiactionService.initialize(
+      settings,
+      onDidReceiveNotificationResponse: (details) =>
+          onDidReceivedLocalNotifications(
+              0, "test", "", "external_storage_action"),
+    );
   }
 
-  Future<NotificationDetails> _notificationDetails() async {
-    const AndroidNotificationDetails androidNotificationDetails =
+  Future<NotificationDetails> _notificationDetails(
+      int p, bool showProgress) async {
+    AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails("channel_id", "channel_name",
             channelDescription: "description",
             importance: Importance.max,
             priority: Priority.max,
-            playSound: true);
-    return const NotificationDetails(android: androidNotificationDetails);
+            showProgress: showProgress ? true : false,
+            progress: p,
+            maxProgress: 100,
+            ongoing: true,
+            channelAction: AndroidNotificationChannelAction.createIfNotExists,
+            enableVibration: false,
+            playSound: false);
+    return NotificationDetails(android: androidNotificationDetails);
   }
 
   Future<void> showNotification(
-      {required id, required title, required body}) async {
-    final details = await _notificationDetails();
-    await _loaclNotifiactionService.show(id, title, body, details);
+      {required id,
+      required title,
+      required body,
+      required int p,
+      required bool showProgress}) async {
+    final details = await _notificationDetails(p, showProgress);
+    await _loaclNotifiactionService.show(id, title, body, details,
+        payload: "external_storage_action");
   }
 
   void onDidReceivedLocalNotifications(
-      int id, String? title, String? body, String? payload) {}
+      int id, String? title, String? body, String? payload) async {
+    if (payload != null) {
+      if (payload == "external_storage_action") {}
+    }
+  }
 }
