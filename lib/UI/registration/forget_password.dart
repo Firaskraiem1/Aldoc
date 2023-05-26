@@ -116,9 +116,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       : TextAlign.start,
                                   controller: email,
                                   decoration: ThemeHelper().textInputDecoration(
-                                      _language.tLoginEmail(),
-                                      _language.tLoginEmailMessage(),
-                                      Icons.email),
+                                      _language.tLoginEmail(), Icons.email),
                                   validator: (val) {
                                     if (val!.isEmpty) {
                                       return _language.tLoginEmailMessage();

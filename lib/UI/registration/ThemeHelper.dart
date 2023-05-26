@@ -5,20 +5,19 @@ import 'package:hexcolor/hexcolor.dart';
 final Language _language = Language();
 
 class ThemeHelper {
-  InputDecoration textInputDecoration(
-      [String lableText = "", String hintText = "", IconData? ic]) {
+  InputDecoration textInputDecoration([String hintText = "", IconData? ic]) {
     return InputDecoration(
       suffixIcon:
           _language.getLanguage() != "AR" ? Icon(ic, color: Colors.grey) : null,
       prefixIcon:
           _language.getLanguage() == "AR" ? Icon(ic, color: Colors.grey) : null,
       suffixIconColor: Colors.grey,
-      label: Align(
-          alignment: _language.getLanguage() == "AR"
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          child: Text(lableText)),
-      labelStyle: const TextStyle(color: Colors.black),
+      // label: Align(
+      //     alignment: _language.getLanguage() == "AR"
+      //         ? Alignment.centerRight
+      //         : Alignment.centerLeft,
+      //     child: Text(lableText)),
+      // labelStyle: const TextStyle(color: Colors.black),
       hintText: hintText,
       fillColor: Colors.white,
       filled: true,

@@ -43,6 +43,46 @@ class Language with ChangeNotifier {
     }
   }
 
+  String tDrawerAnalytics() {
+    if (getLanguage() == "AR") {
+      return "تحليل";
+    } else if (getLanguage() == "FR") {
+      return "Analyse ";
+    } else {
+      return "Analytics";
+    }
+  }
+
+  String tDrawerNotifications() {
+    if (getLanguage() == "AR") {
+      return "اعلام";
+    } else if (getLanguage() == "FR") {
+      return "Notification ";
+    } else {
+      return "Notification";
+    }
+  }
+
+  String tDrawerPayment() {
+    if (getLanguage() == "AR") {
+      return "دفع";
+    } else if (getLanguage() == "FR") {
+      return "Paiement ";
+    } else {
+      return "Payment";
+    }
+  }
+
+  String tDrawerContact() {
+    if (getLanguage() == "AR") {
+      return "اتصل بنا";
+    } else if (getLanguage() == "FR") {
+      return "Contactez-nous ";
+    } else {
+      return "Contact us";
+    }
+  }
+
   String tHomeFavoriteFiles() {
     if (getLanguage() == "AR") {
       return "الملفات المفضلة";
@@ -173,6 +213,16 @@ class Language with ChangeNotifier {
     }
   }
 
+  String tProfilUserInformation() {
+    if (getLanguage() == "AR") {
+      return "معلومات المستخدم";
+    } else if (getLanguage() == "FR") {
+      return "Informations sur l’utilisateur";
+    } else {
+      return "User information";
+    }
+  }
+
   String tProfilEditUsername() {
     if (getLanguage() == "AR") {
       return "تعديل اسم المستخدم";
@@ -203,6 +253,16 @@ class Language with ChangeNotifier {
     }
   }
 
+  String tProfilEditPassword() {
+    if (getLanguage() == "AR") {
+      return " تغيير كلمة المرور";
+    } else if (getLanguage() == "FR") {
+      return "Modifier le mot de passe";
+    } else {
+      return "Change password";
+    }
+  }
+
   String tProfilEnterUserName() {
     if (getLanguage() == "AR") {
       return "أدخل اسم المستخدم";
@@ -213,6 +273,146 @@ class Language with ChangeNotifier {
     }
   }
 
+  String tShowDocumentDelete() {
+    if (getLanguage() == "AR") {
+      return "هل أنت متأكد من أنك\nستحذف هذا المستند؟";
+    } else if (getLanguage() == "FR") {
+      return "   Êtes-vous sûre de\nsupprimer ce document?";
+    } else {
+      return " Are you sure you will\ndelete this document?";
+    }
+  }
+
+  String tProfilOldPassword() {
+    if (getLanguage() == "AR") {
+      return "أدخل كلمة المرور القديمة";
+    } else if (getLanguage() == "FR") {
+      return "Entrez votre ancien mot de passe";
+    } else {
+      return "Enter your old password";
+    }
+  }
+
+  String tProfilNewPassword() {
+    if (getLanguage() == "AR") {
+      return "أدخل كلمة المرور الجديدة";
+    } else if (getLanguage() == "FR") {
+      return "Entrez votre nouveau mot de passe";
+    } else {
+      return "Enter your new password";
+    }
+  }
+
+  String tProfilConfirmNewPassword() {
+    if (getLanguage() == "AR") {
+      return "أدخل كلمة المرور الجديدة";
+    } else if (getLanguage() == "FR") {
+      return "Entrez votre nouveau mot de passe";
+    } else {
+      return "Enter your confirm password";
+    }
+  }
+
+  String tCaptureError() {
+    if (getLanguage() == "AR") {
+      return "فشل الاتصال بالمضيف";
+    } else if (getLanguage() == "FR") {
+      return "Échec de la connexion à l’hôte";
+    } else {
+      return "Failed to connect to host";
+    }
+  }
+
+  String tLoginSuccesMsg() {
+    if (getLanguage() == "AR") {
+      return "تم تسجيل الدخول بنجاح";
+    } else if (getLanguage() == "FR") {
+      return "Connexion réussie";
+    } else {
+      return "Login successfully";
+    }
+  }
+
+  String tRegisterSuccesMsg() {
+    if (getLanguage() == "AR") {
+      return "سجل بنجاح";
+    } else if (getLanguage() == "FR") {
+      return "Inscrivez-vous avec succès";
+    } else {
+      return "register successfully";
+    }
+  }
+
+  String tDeleteSuccesMsg() {
+    if (getLanguage() == "AR") {
+      return "تم حذف المستند بنجاح";
+    } else if (getLanguage() == "FR") {
+      return "Suppression de document réussie";
+    } else {
+      return "Document delete successfully";
+    }
+  }
+
+  String tErrorMsg() {
+    if (getLanguage() == "AR") {
+      return ".حدث خطأ ما ، حاول مرة أخرى";
+    } else if (getLanguage() == "FR") {
+      return "Quelque chose s’est mal passé, essayez à nouveau.";
+    } else {
+      return "Something went wrong, try again.";
+    }
+  }
+
+  String tLoginOrText() {
+    if (getLanguage() == "AR") {
+      return "أو";
+    } else if (getLanguage() == "FR") {
+      return "ou";
+    } else {
+      return "or";
+    }
+  }
+
+  String tLoginStartDemo() {
+    if (getLanguage() == "AR") {
+      return "بدء العرض التوضيحي ";
+    } else if (getLanguage() == "FR") {
+      return "Démarrer la démo";
+    } else {
+      return "Start the demo";
+    }
+  }
+
+  String tProfilUpdatePwdSuccesMsg() {
+    if (getLanguage() == "AR") {
+      return "تم تحديث كلمة المرور ";
+    } else if (getLanguage() == "FR") {
+      return "Mot de passe mis à jour";
+    } else {
+      return "password is updated ";
+    }
+  }
+
+  String tUploadErrorSelect() {
+    if (getLanguage() == "AR") {
+      return "حدد الملف";
+    } else if (getLanguage() == "FR") {
+      return "Sélectionner un fichier";
+    } else {
+      return "select file";
+    }
+  }
+
+  String tProfilchangeYourPassword() {
+    if (getLanguage() == "AR") {
+      return "تغيير كلمة المرور الخاصة بك";
+    } else if (getLanguage() == "FR") {
+      return "Modifier votre mot de passe";
+    } else {
+      return "Change your password";
+    }
+  }
+
   String tProfilButtonSave() {
     if (getLanguage() == "AR") {
       return "حفظ";
@@ -220,6 +420,16 @@ class Language with ChangeNotifier {
       return "enregistrer";
     } else {
       return "Save";
+    }
+  }
+
+  String tbouttonshowDocSave() {
+    if (getLanguage() == "AR") {
+      return "موافق";
+    } else if (getLanguage() == "FR") {
+      return "D’accord";
+    } else {
+      return "ok";
     }
   }
 
@@ -400,6 +610,16 @@ class Language with ChangeNotifier {
       return "Entrez votre mot de passe de confirmation";
     } else {
       return "Enter your confirm password";
+    }
+  }
+
+  String tRegisterConfirmPasswordErrorMessage() {
+    if (getLanguage() == "AR") {
+      return "ليست نفس كلمة المرور";
+    } else if (getLanguage() == "FR") {
+      return "pas le même mot de passe";
+    } else {
+      return "not the same password";
     }
   }
 
@@ -610,6 +830,186 @@ class Language with ChangeNotifier {
       return "Entrez le nouveau mot de passe .";
     } else {
       return "Enter the new password .";
+    }
+  }
+
+  String tUploadChooseTypeFile() {
+    if (getLanguage() == "AR") {
+      return "اختر نوع المستند الخاص بك";
+    } else if (getLanguage() == "FR") {
+      return "Choisissez votre type de document";
+    } else {
+      return "Choose your doc type";
+    }
+  }
+
+  String tGenericFormSaveMsg() {
+    if (getLanguage() == "AR") {
+      return "تم حفظ الملف";
+    } else if (getLanguage() == "FR") {
+      return "Fichier enregistré";
+    } else {
+      return "File saved";
+    }
+  }
+
+  String tDrawerAnalyticsText1() {
+    if (getLanguage() == "AR") {
+      return "الملفات المعالجة";
+    } else if (getLanguage() == "FR") {
+      return "FICHIERS TRAITÉS";
+    } else {
+      return "PROCESSED FILES";
+    }
+  }
+
+  String tDrawerAnalyticsText2() {
+    if (getLanguage() == "AR") {
+      return "منذ الشهر الماضي";
+    } else if (getLanguage() == "FR") {
+      return "Depuis le mois dernier";
+    } else {
+      return "Since last month";
+    }
+  }
+
+  String tDrawerAnalyticsText3() {
+    if (getLanguage() == "AR") {
+      return "الملفات المتبقية";
+    } else if (getLanguage() == "FR") {
+      return "DOSSIERS RESTANTS";
+    } else {
+      return "FILES REMAINED";
+    }
+  }
+
+  String tDrawerAnalyticsText4() {
+    if (getLanguage() == "AR") {
+      return "منذ الأسبوع الماضي";
+    } else if (getLanguage() == "FR") {
+      return "Depuis la semaine dernière";
+    } else {
+      return "Since last week";
+    }
+  }
+
+  String tGenericFormDownloadNotification() {
+    if (getLanguage() == "AR") {
+      return "تنزيل الملف";
+    } else if (getLanguage() == "FR") {
+      return "Téléchargement de fichier";
+    } else {
+      return "File Download";
+    }
+  }
+
+  String tGenericFormFileName() {
+    if (getLanguage() == "AR") {
+      return "اسم الملف";
+    } else if (getLanguage() == "FR") {
+      return "Nom de fichier";
+    } else {
+      return "File Name";
+    }
+  }
+
+  String tGenericFormFileNameMsgError1() {
+    if (getLanguage() == "AR") {
+      return "أدخل اسم الملف";
+    } else if (getLanguage() == "FR") {
+      return "Entrez le nom du fichier";
+    } else {
+      return "Enter file name";
+    }
+  }
+
+  String tGenericFormFileNameMsgError2() {
+    if (getLanguage() == "AR") {
+      return "اسم الملف موجود بالفعل";
+    } else if (getLanguage() == "FR") {
+      return "Le nom de fichier existe déjà";
+    } else {
+      return "File name already exists";
+    }
+  }
+
+  String tGenericFormDownloadFileText() {
+    if (getLanguage() == "AR") {
+      return "تحميل";
+    } else if (getLanguage() == "FR") {
+      return "Télécharger";
+    } else {
+      return "Download";
+    }
+  }
+
+  String tGenericFormDownloadCompletedNotification() {
+    if (getLanguage() == "AR") {
+      return "اكتمل التنزيل";
+    } else if (getLanguage() == "FR") {
+      return "Téléchargement terminé";
+    } else {
+      return "Download completed";
+    }
+  }
+
+  String tGenericFormShareText() {
+    if (getLanguage() == "AR") {
+      return "مشاركة";
+    } else if (getLanguage() == "FR") {
+      return "Partager";
+    } else {
+      return "Share";
+    }
+  }
+
+  String tUnderConstructionText() {
+    if (getLanguage() == "AR") {
+      return "قيد الإنشاء";
+    } else if (getLanguage() == "FR") {
+      return "En construction";
+    } else {
+      return "Under Construction";
+    }
+  }
+
+  String tDrawerAnalyticsText5() {
+    if (getLanguage() == "AR") {
+      return "مبيعات";
+    } else if (getLanguage() == "FR") {
+      return "Ventes";
+    } else {
+      return "Sales";
+    }
+  }
+
+  String tDrawerAnalyticsText6() {
+    if (getLanguage() == "AR") {
+      return "منذ الأمس";
+    } else if (getLanguage() == "FR") {
+      return "Depuis hier";
+    } else {
+      return "Since yesterday";
+    }
+  }
+
+  String tDrawerAnalyticsText7() {
+    if (getLanguage() == "AR") {
+      return "اداء";
+    } else if (getLanguage() == "FR") {
+      return "PERFORMANCE";
+    } else {
+      return "PERFORMANCE";
+    }
+  }
+
+  String tCrop() {
+    if (getLanguage() == "AR") {
+      return "";
+    } else if (getLanguage() == "FR") {
+      return "Rogner";
+    } else {
+      return "Cropper";
     }
   }
 }

@@ -141,17 +141,16 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                                     color: Colors.grey,
                                                   ))
                                         : null,
-                                    label: Align(
-                                        alignment:
-                                            _language.getLanguage() == "AR"
-                                                ? Alignment.centerRight
-                                                : Alignment.centerLeft,
-                                        child:
-                                            Text(_language.tLoginPassword())),
-                                    labelStyle:
-                                        const TextStyle(color: Colors.black),
-                                    hintText:
-                                        _language.tAddNewPasswordMessage1(),
+                                    // label: Align(
+                                    //     alignment:
+                                    //         _language.getLanguage() == "AR"
+                                    //             ? Alignment.centerRight
+                                    //             : Alignment.centerLeft,
+                                    //     child:
+                                    //         Text(_language.tLoginPassword())),
+                                    // labelStyle:
+                                    //     const TextStyle(color: Colors.black),
+                                    hintText: _language.tLoginPassword(),
                                     fillColor: Colors.white,
                                     filled: true,
                                     contentPadding: const EdgeInsets.fromLTRB(
@@ -233,17 +232,17 @@ class _AddNewPasswordState extends State<AddNewPassword> {
                                                     color: Colors.grey,
                                                   ))
                                         : null,
-                                    label: Align(
-                                        alignment:
-                                            _language.getLanguage() == "AR"
-                                                ? Alignment.centerRight
-                                                : Alignment.centerLeft,
-                                        child: Text(_language
-                                            .tRegisterConfirmPassword())),
-                                    labelStyle:
-                                        const TextStyle(color: Colors.black),
+                                    // label: Align(
+                                    //     alignment:
+                                    //         _language.getLanguage() == "AR"
+                                    //             ? Alignment.centerRight
+                                    //             : Alignment.centerLeft,
+                                    //     child: Text(_language
+                                    //         .tRegisterConfirmPassword())),
+                                    // labelStyle:
+                                    //     const TextStyle(color: Colors.black),
                                     hintText:
-                                        _language.tAddNewPasswordMessage1(),
+                                        _language.tRegisterConfirmPassword(),
                                     fillColor: Colors.white,
                                     filled: true,
                                     contentPadding: const EdgeInsets.fromLTRB(

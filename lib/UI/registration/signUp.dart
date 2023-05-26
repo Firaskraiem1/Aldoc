@@ -1,10 +1,16 @@
 // ignore_for_file: override_on_non_overriding_member
 
+import 'dart:convert';
+
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/provider/Language.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -21,6 +27,18 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool iSobscureText1 = true;
   bool iSobscureText2 = true;
   final Language _language = Language();
+  TextEditingController _firstName = TextEditingController();
+  TextEditingController _lastName = TextEditingController();
+  TextEditingController _email = TextEditingController();
+  TextEditingController _password = TextEditingController();
+  TextEditingController _confirmPassword = TextEditingController();
+  TextEditingController _organization = TextEditingController();
+  RequestClass requestClass = RequestClass();
+  Map<String, dynamic>? input;
+  Map<String, dynamic>? transformedData;
+  String? jsonString;
+  String? encrypt;
+  String? registerResponse;
   @override
   void initState() {
     super.initState();
@@ -40,6 +58,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     ]);
   }
 
+  bool _isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,13 +125,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _firstName,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
                               decoration: ThemeHelper().textInputDecoration(
-                                  _language.tRegisterFirstName(),
-                                  _language.tRegisterFirstNameMessage(),
-                                  Icons.person),
+                                  _language.tRegisterFirstName(), Icons.person),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return _language.tRegisterFirstNameMessage();
@@ -126,13 +144,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _lastName,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
                               decoration: ThemeHelper().textInputDecoration(
-                                  _language.tRegisterLastName(),
-                                  _language.tRegisterLastNameMessage(),
-                                  Icons.person),
+                                  _language.tRegisterLastName(), Icons.person),
                               validator: (val) {
                                 if (val!.isEmpty) {
                                   return _language.tRegisterLastNameMessage();
@@ -146,13 +163,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _email,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
                               decoration: ThemeHelper().textInputDecoration(
-                                  _language.tLoginEmail(),
-                                  _language.tLoginEmailMessage(),
-                                  Icons.email),
+                                  _language.tLoginEmail(), Icons.email),
                               keyboardType: TextInputType.emailAddress,
                               validator: (val) {
                                 if (val!.isEmpty) {
@@ -171,6 +187,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _password,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
@@ -211,15 +228,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                                 color: Colors.grey,
                                               ))
                                     : null,
-                                label: Align(
-                                    alignment: _language.getLanguage() == "AR"
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Text(
-                                        _language.tAddNewPasswordMessage1())),
-                                labelStyle:
-                                    const TextStyle(color: Colors.black),
-                                hintText: _language.tAddNewPasswordMessage1(),
+                                // label: Align(
+                                //     alignment: _language.getLanguage() == "AR"
+                                //         ? Alignment.centerRight
+                                //         : Alignment.centerLeft,
+                                //     child: Text(_language.tLoginPassword())),
+                                // labelStyle:
+                                //     const TextStyle(color: Colors.black),
+                                hintText: _language.tLoginPassword(),
                                 fillColor: Colors.white,
                                 filled: true,
                                 contentPadding:
@@ -243,7 +259,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               ),
                               validator: (val) {
                                 if (val!.isEmpty) {
-                                  return _language.tAddNewPasswordMessage1();
+                                  return _language.tLoginPasswordMessage();
                                 }
                                 return null;
                               },
@@ -254,6 +270,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _confirmPassword,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
@@ -294,16 +311,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                                 color: Colors.grey,
                                               ))
                                     : null,
-                                label: Align(
-                                    alignment: _language.getLanguage() == "AR"
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Text(
-                                        _language.tRegisterConfirmPassword())),
-                                labelStyle:
-                                    const TextStyle(color: Colors.black),
-                                hintText:
-                                    _language.tRegisterConfirmPasswordMessage(),
+                                // label: Align(
+                                //     alignment: _language.getLanguage() == "AR"
+                                //         ? Alignment.centerRight
+                                //         : Alignment.centerLeft,
+                                //     child: Text(
+                                //         _language.tRegisterConfirmPassword())),
+                                // labelStyle:
+                                //     const TextStyle(color: Colors.black),
+                                hintText: _language.tRegisterConfirmPassword(),
                                 fillColor: Colors.white,
                                 filled: true,
                                 contentPadding:
@@ -329,6 +345,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 if (val!.isEmpty) {
                                   return _language
                                       .tRegisterConfirmPasswordMessage();
+                                } else if (_confirmPassword.text !=
+                                    _password.text) {
+                                  return _language
+                                      .tRegisterConfirmPasswordErrorMessage();
                                 }
                                 return null;
                               },
@@ -339,12 +359,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             decoration:
                                 ThemeHelper().inputBoxDecorationShaddow(),
                             child: TextFormField(
+                              controller: _organization,
                               textAlign: _language.getLanguage() == "AR"
                                   ? TextAlign.end
                                   : TextAlign.start,
                               decoration: ThemeHelper().textInputDecoration(
                                   _language.tRegisterOrganization(),
-                                  _language.tRegisterOrganizationMessage(),
                                   Icons.corporate_fare),
                               validator: (val) {
                                 if (val!.isEmpty) {
@@ -427,29 +447,86 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           const SizedBox(height: 20.0),
                           Container(
+                            width: 175,
                             decoration:
                                 ThemeHelper().buttonBoxDecoration(context),
                             child: ElevatedButton(
                               style: ThemeHelper().buttonStyle(),
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(40, 10, 40, 10),
-                                child: Text(
-                                  _language.tRegisterButton().toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const LoginPage(),
-                                      ));
+                              child: _isLoading
+                                  ? LoadingAnimationWidget.inkDrop(
+                                      color: Colors.white, size: 30)
+                                  : Text(
+                                      _language.tRegisterButton().toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                              onPressed: () async {
+                                var connectivityResult =
+                                    await Connectivity().checkConnectivity();
+                                if (connectivityResult ==
+                                        ConnectivityResult.mobile ||
+                                    connectivityResult ==
+                                        ConnectivityResult.wifi) {
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() {
+                                      _isLoading = true;
+                                    });
+                                    input = ({
+                                      'password': _password.text.toString(),
+                                      'email': _email.text.toString(),
+                                      'first_name': _firstName.text.toString(),
+                                      'last_name': _lastName.text.toString(),
+                                      'role': 'user',
+                                      'organization_name':
+                                          _organization.text.toString()
+                                    });
+                                    transformedData = {};
+                                    input!.forEach((key, value) {
+                                      transformedData![key] = value.toString();
+                                    });
+                                    jsonString = jsonEncode(transformedData);
+                                    debugPrint("$jsonString**************");
+                                    encrypt = requestClass
+                                        .encryptRegisterInput(jsonString);
+                                    debugPrint("$encrypt**************");
+                                    requestClass
+                                        .registerPostRequest(encrypt)
+                                        .then(
+                                      (value) {
+                                        registerResponse =
+                                            requestClass.registerResponseBody();
+                                        debugPrint(
+                                            "************$registerResponse");
+                                        if (registerResponse != null) {
+                                          Fluttertoast.showToast(
+                                              msg: _language
+                                                  .tRegisterSuccesMsg(),
+                                              backgroundColor: Colors.grey);
+                                          Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginPage(),
+                                              ));
+                                        } else {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      },
+                                    );
+                                  } else {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                  }
+                                } else {
+                                  Fluttertoast.showToast(
+                                      msg: _language.tCaptureError(),
+                                      backgroundColor: Colors.grey);
                                 }
                               },
                             ),

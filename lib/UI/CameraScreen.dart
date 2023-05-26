@@ -1,12 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:aldoc/UI/GenericForm.dart';
 import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
+import 'package:aldoc/UI/registration/signIn.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
+import 'package:aldoc/provider/filesProvider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:rive/rive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -21,11 +28,25 @@ class _CameraScreenState extends State<CameraScreen>
   CameraController? cameraController;
   XFile? image;
   RequestClass requestClass = RequestClass();
+  final Language _language = Language();
   // image croped Path (ronger)
   String? cropPath;
+  bool? loginState;
+  String? userId;
+  String? taskId;
+  String? token;
   @override
   void initState() {
     super.initState();
+    SharedPreferences.getInstance().then(
+      (value) {
+        setState(() {
+          loginState = value.getBool("loginState");
+          userId = value.getString("userId");
+          token = value.getString("token");
+        });
+      },
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -89,9 +110,16 @@ class _CameraScreenState extends State<CameraScreen>
     await cameraController?.setFlashMode(FlashMode.off);
   }
 
+  String? p;
+  String? getResponse;
+  Map<String, dynamic>? data;
+  Map<String, dynamic>? data1;
+  String? postResponse;
+  String? extractResultResponse;
   @override
   Widget build(BuildContext context) {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     bool stateCamera = camProv.getCameraState();
     bool stateFlash = camProv.getFlashState();
     if (cameraController == null || !cameraController!.value.isInitialized) {
@@ -123,20 +151,120 @@ class _CameraScreenState extends State<CameraScreen>
               AndroidUiSettings(
                   activeControlsWidgetColor: const Color(0xff41B072),
                   backgroundColor: const Color(0xffF8FBFA),
-                  toolbarTitle: 'Cropper',
+                  toolbarTitle: _language.tCrop(),
                   toolbarColor: const Color(0xffF8FBFA),
                   toolbarWidgetColor: Colors.black,
                   initAspectRatio: CropAspectRatioPreset.original,
                   lockAspectRatio: false),
             ],
           );
-          if (croppedFile != null) {
+          if (croppedFile != null &&
+              (loginState == null || loginState == false)) {
             cropPath = croppedFile.path;
-            camProv.setImagePath(croppedFile.path.toString());
-            // post request //
-            requestClass.extractPostRequest(
-                croppedFile.path.toString(), camProv.getCurrentState());
-            camProv.removeAppBar(true);
+            if (cropPath != null) {
+              List<int> imageBytes = await croppedFile.readAsBytes();
+              camProv.setImagePath(croppedFile.path.toString());
+              // post request //
+              requestClass
+                  .extractPostRequest(imageBytes, croppedFile.path.toString(),
+                      camProv.getCurrentState())
+                  .then(
+                (value) async {
+                  postResponse = requestClass.postResponseBody();
+                  filesProv
+                      .setResponseStatus(requestClass.postResponseStatus());
+                  if (postResponse != null) {
+                    data = await jsonDecode(postResponse!);
+                    p = data!["Preprocessed_file_id"].toString();
+                    requestClass.getImageRequest(p).whenComplete(
+                      () {
+                        getResponse = requestClass.getResponseBody();
+                        if (getResponse != null &&
+                            requestClass.postResponseStatus() != 500) {
+                          camProv.setImagePath(getResponse!);
+                          filesProv.setResponse(postResponse);
+                          filesProv.setResponseState(true);
+                        }
+                      },
+                    );
+                  }
+                },
+              );
+              camProv.removeAppBar(true);
+            }
+          } else if (croppedFile != null && loginState == true) {
+            cropPath = croppedFile.path;
+            if (cropPath != null) {
+              List<int> imageBytes = await croppedFile.readAsBytes();
+              camProv.setImagePath(croppedFile.path.toString());
+              requestClass
+                  .extractPostRequestConnectedUser(
+                      imageBytes,
+                      croppedFile.path.toString(),
+                      userId,
+                      camProv.getCurrentState(),
+                      token)
+                  .whenComplete(
+                () async {
+                  postResponse = requestClass.postConnectdResponseBody();
+                  filesProv.setResponseStatus(
+                      requestClass.postConnectedResponseStatus());
+                  debugPrint(postResponse);
+                  if (postResponse != null &&
+                      requestClass.postConnectedResponseStatus() == 200) {
+                    data = await jsonDecode(postResponse!);
+                    var duration = const Duration(seconds: 15);
+
+                    sleep(duration);
+                    taskId = data!["task_id"].toString();
+                    debugPrint("taskId:$taskId");
+                    debugPrint("token :$token");
+                    requestClass
+                        .userConnectedExtractResult(taskId, token)
+                        .whenComplete(
+                      () async {
+                        extractResultResponse =
+                            requestClass.extractResultResponseBody();
+                        if (extractResultResponse != null &&
+                            requestClass.extractResultResponseStatus() == 200) {
+                          data1 = await jsonDecode(extractResultResponse!);
+                          p = data1!["document"]["Preprocessed_file_id"]
+                              .toString();
+                          requestClass
+                              .getImageConnectedUserRequest(p, userId, token)
+                              .whenComplete(
+                            () {
+                              getResponse = requestClass
+                                  .getUserConnectedImageResponseBody();
+                              if (getResponse != null &&
+                                  requestClass.postConnectedResponseStatus() !=
+                                      500) {
+                                camProv.setImagePath(getResponse!);
+                                filesProv.setResponse(extractResultResponse);
+                                filesProv.setResponseState(true);
+                                filesProv.setResponseStatus(
+                                    requestClass.postConnectedResponseStatus());
+
+                                debugPrint(
+                                    "${camProv.getPathUploadImage()}+${filesProv.getResponse()}+ ${filesProv.getResponseState()}");
+                              }
+                            },
+                          );
+                        }
+                      },
+                    );
+                  } else if (requestClass.postConnectedResponseStatus() ==
+                      401) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ));
+                  }
+                },
+              );
+              camProv.removeAppBar(true);
+            }
           } else {
             camProv.setGenericState(false);
           }
@@ -154,20 +282,122 @@ class _CameraScreenState extends State<CameraScreen>
               AndroidUiSettings(
                   activeControlsWidgetColor: const Color(0xff41B072),
                   backgroundColor: const Color(0xffF8FBFA),
-                  toolbarTitle: 'Cropper',
+                  toolbarTitle: _language.tCrop(),
                   toolbarColor: const Color(0xffF8FBFA),
                   toolbarWidgetColor: Colors.black,
                   initAspectRatio: CropAspectRatioPreset.original,
                   lockAspectRatio: false),
             ],
           );
-          if (croppedFile != null) {
+          if (croppedFile != null &&
+              (loginState == null || loginState == false)) {
             cropPath = croppedFile.path;
-            camProv.setImagePath(croppedFile.path.toString());
-            // post request //
-            requestClass.extractPostRequest(
-                croppedFile.path.toString(), camProv.getCurrentState());
-            camProv.removeAppBar(true);
+            if (cropPath != null) {
+              List<int> imageBytes = await croppedFile.readAsBytes();
+              camProv.setImagePath(croppedFile.path.toString());
+              // post request //
+              requestClass
+                  .extractPostRequest(imageBytes, croppedFile.path.toString(),
+                      camProv.getCurrentState())
+                  .then(
+                (value) async {
+                  postResponse = requestClass.postResponseBody();
+                  filesProv
+                      .setResponseStatus(requestClass.postResponseStatus());
+                  if (postResponse != null) {
+                    data = await jsonDecode(postResponse!);
+                    p = data!["Preprocessed_file_id"].toString();
+                    requestClass.getImageRequest(p).whenComplete(
+                      () {
+                        getResponse = requestClass.getResponseBody();
+                        if (getResponse != null &&
+                            requestClass.postResponseStatus() != 500) {
+                          camProv.setImagePath(getResponse!);
+                          filesProv.setResponse(postResponse);
+                          filesProv.setResponseState(true);
+                          debugPrint(
+                              "${camProv.getPathImage()}+${filesProv.getResponse()}+ ${filesProv.getResponseState()}");
+                        }
+                      },
+                    );
+                  }
+                },
+              );
+              camProv.removeAppBar(true);
+            }
+          } else if (croppedFile != null && loginState == true) {
+            cropPath = croppedFile.path;
+            if (cropPath != null) {
+              List<int> imageBytes = await croppedFile.readAsBytes();
+              camProv.setImagePath(croppedFile.path.toString());
+              requestClass
+                  .extractPostRequestConnectedUser(
+                      imageBytes,
+                      croppedFile.path.toString(),
+                      userId,
+                      camProv.getCurrentState(),
+                      token)
+                  .whenComplete(
+                () async {
+                  postResponse = requestClass.postConnectdResponseBody();
+                  filesProv.setResponseStatus(
+                      requestClass.postConnectedResponseStatus());
+                  debugPrint(postResponse);
+                  if (postResponse != null &&
+                      requestClass.postConnectedResponseStatus() == 200) {
+                    data = await jsonDecode(postResponse!);
+                    var duration = const Duration(seconds: 15);
+
+                    sleep(duration);
+                    taskId = data!["task_id"].toString();
+                    debugPrint("taskId:$taskId");
+                    debugPrint("token :$token");
+                    requestClass
+                        .userConnectedExtractResult(taskId, token)
+                        .whenComplete(
+                      () async {
+                        extractResultResponse =
+                            requestClass.extractResultResponseBody();
+                        if (extractResultResponse != null &&
+                            requestClass.extractResultResponseStatus() == 200) {
+                          data1 = await jsonDecode(extractResultResponse!);
+                          p = data1!["document"]["Preprocessed_file_id"]
+                              .toString();
+                          requestClass
+                              .getImageConnectedUserRequest(p, userId, token)
+                              .whenComplete(
+                            () {
+                              getResponse = requestClass
+                                  .getUserConnectedImageResponseBody();
+                              if (getResponse != null &&
+                                  requestClass.postConnectedResponseStatus() !=
+                                      500) {
+                                camProv.setImagePath(getResponse!);
+                                filesProv.setResponse(extractResultResponse);
+                                filesProv.setResponseState(true);
+                                filesProv.setResponseStatus(
+                                    requestClass.postConnectedResponseStatus());
+
+                                debugPrint(
+                                    "${camProv.getPathUploadImage()}+${filesProv.getResponse()}+ ${filesProv.getResponseState()}");
+                              }
+                            },
+                          );
+                        }
+                      },
+                    );
+                  } else if (requestClass.postConnectedResponseStatus() ==
+                      401) {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginPage(),
+                        ));
+                  }
+                },
+              );
+              camProv.removeAppBar(true);
+            }
           } else {
             camProv.setGenericState(false);
           }
@@ -293,7 +523,7 @@ class _CameraScreenState extends State<CameraScreen>
             padding: const EdgeInsets.only(left: 30, right: 30),
             child: Container(
                 width: 400,
-                height: 400,
+                height: 280,
                 color: const Color.fromARGB(52, 253, 224, 224),
                 child: Stack(
                   children: [

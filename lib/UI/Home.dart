@@ -1,11 +1,14 @@
-// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable, override_on_non_overriding_member, prefer_typing_uninitialized_variables, avoid_print
+// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable, override_on_non_overriding_member, prefer_typing_uninitialized_variables, avoid_print, use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:aldoc/UI/CameraScreen.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
+import 'package:aldoc/UI/showDocument.dart';
 import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/authProvider.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
@@ -13,11 +16,11 @@ import 'package:aldoc/provider/filesProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
@@ -39,6 +42,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   Alignment _alignement2 = Alignment.topCenter;
   Alignment _alignement3 = Alignment.centerRight;
   final Language _language = Language();
+  String? userId;
+  String? token;
+  String? firstName;
+  String? lastName;
+  String? email;
+  String? organization;
+  String? password;
+  String? apiKey;
+  bool? loginState;
+  String? username;
+  String? imageProfilPath;
 ////
 ////methodes
 
@@ -48,6 +62,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     setState(
       () => _language.getLanguage(),
     );
+    SharedPreferences.getInstance().then(
+      (value) {
+        setState(() {
+          token = value.getString("token");
+          firstName = value.getString("firstName");
+          lastName = value.getString("lastName");
+          loginState = value.getBool("loginState");
+          username = value.getString("username");
+          imageProfilPath = value.getString("imageProfilPath");
+          userId = value.getString("userId");
+        });
+      },
+    ).whenComplete(() => readProducts(5, ""));
+    _loading1 = _loading2 = false;
     _currentState = "home";
     _alignement1 = Alignment.bottomCenter;
     _alignement2 = Alignment.bottomCenter;
@@ -79,13 +107,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool checkboxAllFiles4 = false;
   bool showLanguageDemoPage = false;
   bool showLanguageProfilPage = false;
-  final creationTime = DateTime.now().minute;
-  var time;
-  Future<void> fetchData() async {
-    setState(() {
-      time = DateTime.now().minute - creationTime;
-    });
-  }
+  RequestClass requestClass = RequestClass();
 
   final RefreshController _refreshControllerAllFiles =
       RefreshController(initialRefresh: false);
@@ -137,6 +159,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<void> uploadImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     try {
       FilePickerResult? resultFile = await FilePicker.platform.pickFiles(
           type: FileType.custom,
@@ -150,6 +173,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ///////////////////////
         image = resultFile.files.first;
         upload_image = File(image!.path.toString());
+        imageProfilPath = upload_image!.path;
+        prefs.setString("imageProfilPath", upload_image!.path);
       } else {}
     } catch (e) {
       print(e);
@@ -177,183 +202,313 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       //Fin appBar
       //////////////////////////////////////////////////////////////////////////
       //drawer
-      drawer: _currentState == "home" || _currentState == "uploadFile"
+      //  _currentState == "home" ||
+      //         _currentState == "uploadFile" &&
+      drawer: loginState == false || loginState == null
           ? ScrollConfiguration(
               behavior: MyScrollBehavior(),
               child: Drawer(
                 //Color(0xff41B072)
                 backgroundColor: const Color(0xffF8FBFA),
-                child: ListView(children: [
-                  const DrawerHeader(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage("assets/aldoc.png"))),
-                    child: null,
-                  ),
-                  TextButton.icon(
-                      style: ButtonStyle(
-                        overlayColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            return Colors.transparent;
-                          },
-                        ),
+                child: ListView(
+                    padding: const EdgeInsets.only(top: 50, bottom: 20),
+                    children: [
+                      const DrawerHeader(
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage("assets/aldoc.png"))),
+                        child: null,
                       ),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
-                            ));
-                      },
-                      icon: const Padding(
-                        padding: EdgeInsets.only(right: 20),
-                        child: Icon(
-                          Icons.login,
-                          color: Colors.black,
+                      ListTile(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ));
+                        },
+                        leading: const Padding(
+                          padding: EdgeInsets.only(left: 50),
+                          child: Icon(
+                            Icons.login,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
-                      label: Text(
-                        _language.tDrawerLogin(),
-                        style: const TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      )),
-                  TextButton.icon(
-                      style: ButtonStyle(
-                        overlayColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            return Colors.transparent;
-                          },
-                        ),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          showLanguageDemoPage = !showLanguageDemoPage;
-                        });
-                      },
-                      icon: Padding(
-                        padding: const EdgeInsets.only(left: 12, right: 10),
-                        child: showLanguageDemoPage
-                            ? const Icon(
-                                Icons.arrow_drop_up_sharp,
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerLogin(),
+                            style: const TextStyle(
                                 color: Colors.black,
-                              )
-                            : const Icon(
-                                Icons.arrow_drop_down_sharp,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            showLanguageDemoPage = !showLanguageDemoPage;
+                          });
+                        },
+                        leading: Padding(
+                          padding: const EdgeInsets.only(left: 50),
+                          child: showLanguageDemoPage
+                              ? const Icon(
+                                  Icons.arrow_drop_up_sharp,
+                                  color: Colors.black,
+                                )
+                              : const Icon(
+                                  Icons.arrow_drop_down_sharp,
+                                  color: Colors.black,
+                                ),
+                        ),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerLanguage(),
+                            style: const TextStyle(
                                 color: Colors.black,
-                              ),
-                      ),
-                      label: Text(
-                        _language.tDrawerLanguage(),
-                        style: const TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      )),
-                  showLanguageDemoPage
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 50),
-                                child: TextButton(
-                                    style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty
-                                          .resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          return Colors.transparent;
-                                        },
-                                      ),
-                                    ),
-                                    onPressed: () async {
-                                      SharedPreferences pref =
-                                          await SharedPreferences.getInstance();
-                                      pref.setString('language', "AR");
-                                      _language.setLanguage("AR");
-                                      setState(() {
-                                        showLanguageDemoPage = false;
-                                      });
-                                    },
-                                    child: const Text(
-                                      "AR",
-                                      style: TextStyle(color: Colors.black),
-                                    )),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 50),
-                                child: TextButton(
-                                    style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty
-                                          .resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          return Colors.transparent;
-                                        },
-                                      ),
-                                    ),
-                                    onPressed: () async {
-                                      SharedPreferences pref =
-                                          await SharedPreferences.getInstance();
-                                      pref.setString('language', "FR");
-                                      _language.setLanguage("FR");
-                                      setState(() {
-                                        showLanguageDemoPage = false;
-                                      });
-                                    },
-                                    child: const Text(
-                                      "FR",
-                                      style: TextStyle(color: Colors.black),
-                                    )),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 50),
-                                child: TextButton(
-                                    style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty
-                                          .resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          return Colors.transparent;
-                                        },
-                                      ),
-                                    ),
-                                    onPressed: () async {
-                                      SharedPreferences pref =
-                                          await SharedPreferences.getInstance();
-                                      pref.setString('language', "EN");
-                                      _language.setLanguage("EN");
-                                      setState(() {
-                                        showLanguageDemoPage = false;
-                                      });
-                                    },
-                                    child: const Text(
-                                      "EN",
-                                      style: TextStyle(color: Colors.black),
-                                    )),
-                              ),
-                            ])
-                      : const SizedBox(),
-                  TextButton.icon(
-                      style: ButtonStyle(
-                        overlayColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            return Colors.transparent;
-                          },
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
-                      onPressed: () {},
-                      icon: const Padding(
-                        padding: EdgeInsets.only(right: 18),
-                        child: Icon(
-                          Icons.info,
-                          color: Colors.black,
+                      showLanguageDemoPage
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 50, right: 50),
+                                    child: TextButton(
+                                        style: ButtonStyle(
+                                          overlayColor: MaterialStateProperty
+                                              .resolveWith<Color>(
+                                            (Set<MaterialState> states) {
+                                              return Colors.transparent;
+                                            },
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          SharedPreferences pref =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          pref.setString('language', "AR");
+                                          _language.setLanguage("AR");
+                                          setState(() {
+                                            showLanguageDemoPage = false;
+                                          });
+                                        },
+                                        child: const Text(
+                                          "AR",
+                                          style: TextStyle(color: Colors.black),
+                                        )),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 50, right: 50),
+                                    child: TextButton(
+                                        style: ButtonStyle(
+                                          overlayColor: MaterialStateProperty
+                                              .resolveWith<Color>(
+                                            (Set<MaterialState> states) {
+                                              return Colors.transparent;
+                                            },
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          SharedPreferences pref =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          pref.setString('language', "FR");
+                                          _language.setLanguage("FR");
+                                          setState(() {
+                                            showLanguageDemoPage = false;
+                                          });
+                                        },
+                                        child: const Text(
+                                          "FR",
+                                          style: TextStyle(color: Colors.black),
+                                        )),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 50, right: 50),
+                                    child: TextButton(
+                                        style: ButtonStyle(
+                                          overlayColor: MaterialStateProperty
+                                              .resolveWith<Color>(
+                                            (Set<MaterialState> states) {
+                                              return Colors.transparent;
+                                            },
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          SharedPreferences pref =
+                                              await SharedPreferences
+                                                  .getInstance();
+                                          pref.setString('language', "EN");
+                                          _language.setLanguage("EN");
+                                          setState(() {
+                                            showLanguageDemoPage = false;
+                                          });
+                                        },
+                                        child: const Text(
+                                          "EN",
+                                          style: TextStyle(color: Colors.black),
+                                        )),
+                                  ),
+                                ])
+                          : const SizedBox(),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            _currentState = "UnderConstruction";
+                          });
+                        },
+                        leading: const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: Icon(
+                              Icons.edit_note,
+                              color: Colors.black,
+                            )),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerContact(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
-                      label: Text(
-                        _language.tDrawerAbout(),
-                        style: const TextStyle(
-                            color: Colors.black, fontWeight: FontWeight.bold),
-                      )),
-                ]),
+                      ListTile(
+                        onTap: () {},
+                        leading: const Padding(
+                          padding: EdgeInsets.only(left: 50),
+                          child: Icon(
+                            Icons.info,
+                            color: Colors.black,
+                          ),
+                        ),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerAbout(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ]),
               ),
             )
-          : null,
+          : ScrollConfiguration(
+              behavior: MyScrollBehavior(),
+              child: Drawer(
+                //Color(0xff41B072)
+                backgroundColor: const Color(0xffF8FBFA),
+                child: ListView(
+                    padding: const EdgeInsets.only(top: 50, bottom: 20),
+                    children: [
+                      const DrawerHeader(
+                        decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: AssetImage("assets/aldoc.png"))),
+                        child: null,
+                      ),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            _currentState = "Analytics";
+                          });
+                        },
+                        leading: const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: Icon(
+                              Icons.analytics,
+                              color: Colors.black,
+                            )),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerAnalytics(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            _currentState = "UnderConstruction";
+                          });
+                        },
+                        leading: const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: Icon(
+                              Icons.notifications,
+                              color: Colors.black,
+                            )),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerNotifications(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            _currentState = "UnderConstruction";
+                          });
+                        },
+                        leading: const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: Icon(
+                              Icons.account_balance_wallet,
+                              color: Colors.black,
+                            )),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerPayment(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      ListTile(
+                        onTap: () {
+                          setState(() {
+                            _currentState = "UnderConstruction";
+                          });
+                        },
+                        leading: const Padding(
+                            padding: EdgeInsets.only(left: 50),
+                            child: Icon(
+                              Icons.edit_note,
+                              color: Colors.black,
+                            )),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: Text(
+                            _language.tDrawerContact(),
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ]),
+              ),
+            ),
       //fin drawer
       //////////////////////////////////////////////////////////////////////////
       // float action button
@@ -413,17 +568,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     final authProv = Provider.of<authProvider>(context);
     final camProv = Provider.of<cameraProvider>(context);
     String? currentState = camProv.getCurrentState();
-    bool loginState = authProv.getLoginState();
+    // bool loginState = authProv.getLoginState();
     if (_currentState != "scanId" &&
-        _currentState != "scanCard" &&
-        _currentState != "scanPass" &&
-        _currentState != "scanInvoice" &&
-        currentState != "uploadFile" &&
-        loginState == false) {
+            _currentState != "scanCard" &&
+            _currentState != "scanPass" &&
+            _currentState != "scanInvoice" &&
+            currentState != "uploadFile" &&
+            loginState == false ||
+        loginState == null) {
       return PreferredSize(
-        preferredSize: Size(MediaQuery.of(context).size.width, 50),
+        preferredSize: Size(MediaQuery.of(context).size.width, 80),
         child: Padding(
-          padding: const EdgeInsets.only(top: 30, bottom: 25),
+          padding: const EdgeInsets.only(top: 30),
           child: ListTile(
             leading: IconButton(
               onPressed: () {
@@ -523,19 +679,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         ),
                       ],
                     ),
-                    // Column(
-                    //   mainAxisSize: MainAxisSize.min,
-                    //   children: [
-                    //     Padding(
-                    //       padding: const EdgeInsets.only(
-                    //           left: 25, right: 25, top: 40), // padding of text
-                    //       child: Text(
-                    //         _textBottomBar,
-                    //         style: const TextStyle(color: Colors.white),
-                    //       ),
-                    //     )
-                    //   ],
-                    // ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -553,6 +696,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           _FloatButtonInvoicePressed = false;
                               // _textBussButton = _textPassButton =
                               //     _textIdButton = _textInvoiceButton = "";
+
                               _alignement1 = _alignement2 =
                                   _alignement3 = Alignment.bottomCenter;
                               camProv.setGenericState(false);
@@ -576,7 +720,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     final camProv = Provider.of<cameraProvider>(context);
     bool removeAppBar = camProv.getRemoveAppBar();
     bool stateFlash = camProv.getFlashState();
-    if (removeAppBar == false && _currentState != "uploadFile") {
+    String? currentState = camProv.getCurrentState();
+    if (removeAppBar == false && currentState != "uploadFile") {
       return PreferredSize(
         preferredSize: Size(MediaQuery.of(context).size.width, 100),
         child: Padding(
@@ -633,31 +778,86 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
 // method for user profile (update username)
   String updatedText = "";
-  void updateText(String t) {
+  void updateText(String t) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       updatedText = t;
+      username = updatedText;
+      prefs.setString("username", updatedText);
     });
   }
+
+  getSharedPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    token = prefs.getString("token");
+    firstName = prefs.getString("firstName");
+    lastName = prefs.getString("lastName");
+    email = prefs.getString("email");
+    organization = prefs.getString("organization");
+    password = prefs.getString("password");
+    apiKey = prefs.getString("apiKey");
+  }
+
+  setInfo(String userId, String? token, String? f, String? l, String? e,
+      String? o, bool? state, String? p, String? apikey) async {
+    if (token != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("userId", userId);
+      prefs.setString("token", token);
+      prefs.setString("firstName", f!);
+      prefs.setString("lastName", l!);
+      prefs.setString("email", e!);
+      prefs.setString("organization", o!);
+      prefs.setBool("loginState", state!);
+      prefs.setString("password", p!);
+      prefs.setString("apiKey", apikey!);
+    }
+  }
+
+  final TextEditingController _oldPassword = TextEditingController();
+  final TextEditingController _newPassword = TextEditingController();
+  final TextEditingController _confirmPassword = TextEditingController();
+  final TextEditingController _newFirstName = TextEditingController();
+  final TextEditingController _newLastName = TextEditingController();
+  Map<String, dynamic>? input;
+  Map<String, dynamic>? transformedData;
+  String? jsonString;
+  String? encrypt;
+  bool _isLoading = false;
+  bool _isLoading1 = false;
+  bool iSobscureOldPassword = true;
+  bool iSobscureNewPassword = true;
+  bool iSobscureConfirmPassword = true;
+  bool editFirstName = false;
+  bool editLastName = false;
 
   PreferredSizeWidget loginAppBar() {
     final authProv = Provider.of<authProvider>(context);
     final TextEditingController _usernameController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
+    final _formKey1 = GlobalKey<FormState>();
+    final _formKeyFirstName = GlobalKey<FormState>();
+    final _formKeyLastName = GlobalKey<FormState>();
+    getSharedPref();
     return PreferredSize(
         preferredSize: Size(MediaQuery.of(context).size.width, 80),
-        child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Column(mainAxisSize: MainAxisSize.min, children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 25, left: 10),
+              child: IconButton(
+                onPressed: () {
+                  _scaffoldKey.currentState!.openDrawer();
+                },
+                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                icon: Image.asset("assets/drawer.png"),
+              ),
+            )
+          ]),
           Padding(
             padding: const EdgeInsets.only(top: 40, right: 20),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              // IconButton(
-              //     onPressed: () {},
-              //     icon: const RiveAnimation.asset(
-              //       "assets/icons.riv",
-              //       artboard: "BELL",
-              //     )),
-              // const SizedBox(
-              //   width: 10,
-              // ),
               showLanguageProfilPage
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
@@ -720,7 +920,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     });
                   },
                   icon: const Icon(Icons.language)),
-
               const SizedBox(
                 width: 20,
               ),
@@ -728,10 +927,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 //size
                 radius: 26.5,
                 backgroundImage:
-                    image != null ? FileImage(upload_image!) : null,
-                foregroundImage: image == null
-                    ? const AssetImage("assets/profilImag.png")
-                    : null,
+                    imageProfilPath != "" && imageProfilPath != null
+                        ? FileImage(File(imageProfilPath!))
+                        : null,
+                foregroundImage:
+                    imageProfilPath == "" || imageProfilPath == null
+                        ? const AssetImage("assets/profilImag.png")
+                        : null,
                 foregroundColor: Colors.transparent,
                 child: GestureDetector(
                   onTap: () {
@@ -739,356 +941,1005 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       backgroundColor: Colors.transparent,
                       context: context,
                       builder: (context) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 15, right: 15),
-                          child: Container(
-                              decoration: const BoxDecoration(
-                                  color: Color(0xffF8FBFA),
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(20),
-                                      topRight: Radius.circular(20))),
-                              child: ScrollConfiguration(
-                                behavior: MyScrollBehavior(),
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.only(bottom: 15),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 20),
-                                        child: CircleAvatar(
-                                          radius: 70,
-                                          backgroundImage: image != null
-                                              ? FileImage(upload_image!)
-                                              : null,
-                                          foregroundImage: image == null
-                                              ? const AssetImage(
-                                                  "assets/profilImag.png")
-                                              : null,
-                                          foregroundColor: Colors.transparent,
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 20, bottom: 40),
-                                        child: Center(
-                                            child: Text(
-                                          updatedText == ""
-                                              ? _language.tProfilUsername()
-                                              : updatedText,
-                                          style: const TextStyle(fontSize: 18),
-                                        )),
-                                      ),
-                                      Row(
+                        return FormField(
+                          builder: (state1) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 15, right: 15),
+                              child: Container(
+                                  decoration: const BoxDecoration(
+                                      color: Color(0xffF8FBFA),
+                                      borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(20),
+                                          topRight: Radius.circular(20))),
+                                  child: ScrollConfiguration(
+                                    behavior: MyScrollBehavior(),
+                                    child: SingleChildScrollView(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 15),
+                                      child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         mainAxisAlignment:
-                                            _language.getLanguage() == "AR"
-                                                ? MainAxisAlignment.end
-                                                : MainAxisAlignment.start,
+                                            MainAxisAlignment.center,
                                         children: [
-                                          Expanded(
-                                            child: ListTile(
-                                              onTap: () {
-                                                uploadImage().then(
-                                                  (value) {
-                                                    Navigator.pop(context);
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 20),
+                                            child: CircleAvatar(
+                                              radius: 60,
+                                              backgroundImage:
+                                                  imageProfilPath != "" &&
+                                                          imageProfilPath !=
+                                                              null
+                                                      ? FileImage(File(
+                                                          imageProfilPath!))
+                                                      : null,
+                                              foregroundImage: imageProfilPath ==
+                                                          "" ||
+                                                      imageProfilPath == null
+                                                  ? const AssetImage(
+                                                      "assets/profilImag.png")
+                                                  : null,
+                                              foregroundColor:
+                                                  Colors.transparent,
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 20, bottom: 40),
+                                            child: Center(
+                                                child: Text(
+                                              username == ""
+                                                  ? firstName.toString()
+                                                  : username.toString(),
+                                              style:
+                                                  const TextStyle(fontSize: 18),
+                                            )),
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                _language.getLanguage() == "AR"
+                                                    ? MainAxisAlignment.end
+                                                    : MainAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: ListTile(
+                                                  onTap: () {
+                                                    showDialog(
+                                                      barrierDismissible: false,
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return BackdropFilter(
+                                                          filter:
+                                                              ImageFilter.blur(
+                                                                  sigmaX: 10,
+                                                                  sigmaY: 10),
+                                                          child: AlertDialog(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                    0xffF3F3F3),
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            content:
+                                                                ScrollConfiguration(
+                                                              behavior:
+                                                                  MyScrollBehavior(),
+                                                              child: SingleChildScrollView(
+                                                                  child:
+                                                                      FormField(
+                                                                builder:
+                                                                    (state) {
+                                                                  return Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.min,
+                                                                        children: [
+                                                                          Text(
+                                                                            _language.tProfilUserInformation(),
+                                                                            style:
+                                                                                const TextStyle(fontWeight: FontWeight.bold),
+                                                                          )
+                                                                        ],
+                                                                      ),
+                                                                      Padding(
+                                                                        padding:
+                                                                            const EdgeInsets.only(top: 20),
+                                                                        child:
+                                                                            Column(
+                                                                          children: [
+                                                                            ListTile(
+                                                                              leading: const Icon(Icons.person),
+                                                                              title: Text(_language.tRegisterFirstName()),
+                                                                              subtitle: editFirstName
+                                                                                  ? Form(
+                                                                                      key: _formKeyFirstName,
+                                                                                      child: Theme(
+                                                                                        data: ThemeData(
+                                                                                          inputDecorationTheme: const InputDecorationTheme(
+                                                                                            focusedBorder: UnderlineInputBorder(
+                                                                                              borderSide: BorderSide(
+                                                                                                color: Colors.black,
+                                                                                              ),
+                                                                                            ),
+                                                                                          ),
+                                                                                        ),
+                                                                                        child: TextFormField(
+                                                                                          textAlign: _language.getLanguage() == "AR" ? TextAlign.end : TextAlign.start,
+                                                                                          controller: _newFirstName,
+                                                                                        ),
+                                                                                      ))
+                                                                                  : Text(firstName!),
+                                                                              trailing: IconButton(
+                                                                                  onPressed: () {
+                                                                                    editFirstName = !editFirstName;
+                                                                                    state.didChange(editFirstName);
+                                                                                  },
+                                                                                  icon: const Icon(Icons.edit)),
+                                                                            ),
+                                                                            ListTile(
+                                                                                leading: const Icon(Icons.person),
+                                                                                title: Text(_language.tRegisterLastName()),
+                                                                                subtitle: editLastName
+                                                                                    ? Form(
+                                                                                        key: _formKeyLastName,
+                                                                                        child: Theme(
+                                                                                          data: ThemeData(
+                                                                                            inputDecorationTheme: const InputDecorationTheme(
+                                                                                              focusedBorder: UnderlineInputBorder(
+                                                                                                borderSide: BorderSide(
+                                                                                                  color: Colors.black,
+                                                                                                ),
+                                                                                              ),
+                                                                                            ),
+                                                                                          ),
+                                                                                          child: TextFormField(
+                                                                                            textAlign: _language.getLanguage() == "AR" ? TextAlign.end : TextAlign.start,
+                                                                                            controller: _newLastName,
+                                                                                          ),
+                                                                                        ))
+                                                                                    : Text(lastName!),
+                                                                                trailing: IconButton(
+                                                                                    onPressed: () {
+                                                                                      editLastName = !editLastName;
+                                                                                      state.didChange(editLastName);
+                                                                                    },
+                                                                                    icon: const Icon(Icons.edit))),
+                                                                            ListTile(
+                                                                              leading: const Icon(Icons.email),
+                                                                              title: Text(_language.tLoginEmail()),
+                                                                              subtitle: Text(email!),
+                                                                            ),
+                                                                            ListTile(
+                                                                              leading: const Icon(Icons.corporate_fare),
+                                                                              title: Text(_language.tRegisterOrganization()),
+                                                                              subtitle: Text(organization!),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      ),
+                                                                      Row(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize.min,
+                                                                        children: [
+                                                                          editFirstName || editLastName
+                                                                              ? Padding(
+                                                                                  padding: const EdgeInsets.only(left: 10, right: 40, top: 20),
+                                                                                  child: Container(
+                                                                                    width: 80,
+                                                                                    height: 45,
+                                                                                    decoration: const BoxDecoration(borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10), bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)), color: Color(0xffFFFFFF)),
+                                                                                    child: TextButton(
+                                                                                        onPressed: () {
+                                                                                          editFirstName = editLastName = false;
+                                                                                          state.didChange(editFirstName);
+                                                                                          state.didChange(editLastName);
+                                                                                          Navigator.pop(context);
+                                                                                        },
+                                                                                        child: Text(
+                                                                                          _language.tProfilButtonCancel(),
+                                                                                          style: const TextStyle(color: Colors.black),
+                                                                                        )),
+                                                                                  ),
+                                                                                )
+                                                                              : const SizedBox(),
+                                                                          Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.only(right: 10, top: 20),
+                                                                            child:
+                                                                                Container(
+                                                                              width: 90,
+                                                                              decoration: const BoxDecoration(borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10), bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)), color: Color(0xff41B072)),
+                                                                              child: TextButton(
+                                                                                  onPressed: () async {
+                                                                                    var connectivityResult = await Connectivity().checkConnectivity();
+                                                                                    if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
+                                                                                      if (editFirstName) {
+                                                                                        setState(() {
+                                                                                          _isLoading1 = true;
+                                                                                          state.didChange(_isLoading1);
+                                                                                        });
+                                                                                        requestClass.updateUserInformations(token, password!, email, _newFirstName.text, lastName, organization, userId, apiKey).whenComplete(
+                                                                                          () {
+                                                                                            if (requestClass.updateUserInfoResponseStatus() == 200) {
+                                                                                              requestClass.getUserInformations(token, userId).whenComplete(
+                                                                                                () {
+                                                                                                  setInfo(userId!, token, _newFirstName.text, lastName, requestClass.getEmail(), requestClass.getOrganization(), true, requestClass.getPassword(), requestClass.getApiKey());
+                                                                                                  if (requestClass.userInfoStatus() == 200) {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                      state.didChange(_isLoading1);
+                                                                                                    });
+                                                                                                    Navigator.pop(context);
+                                                                                                    editFirstName = editLastName = false;
+                                                                                                    state.didChange(editFirstName);
+                                                                                                    state.didChange(editLastName);
+                                                                                                    firstName = _newFirstName.text;
+                                                                                                    state1.didChange(firstName);
+                                                                                                    Fluttertoast.showToast(msg: "succes");
+                                                                                                  } else {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                    });
+                                                                                                    state.didChange(_isLoading1);
+                                                                                                    Fluttertoast.showToast(msg: "error");
+                                                                                                  }
+                                                                                                },
+                                                                                              );
+                                                                                            } else {
+                                                                                              setState(() {
+                                                                                                _isLoading1 = false;
+                                                                                              });
+                                                                                              state.didChange(_isLoading1);
+                                                                                            }
+                                                                                          },
+                                                                                        );
+                                                                                      } else if (editLastName) {
+                                                                                        setState(() {
+                                                                                          _isLoading1 = true;
+                                                                                          state.didChange(_isLoading1);
+                                                                                        });
+                                                                                        requestClass.updateUserInformations(token, password!, email, firstName, _newLastName.text, organization, userId, apiKey).whenComplete(
+                                                                                          () {
+                                                                                            if (requestClass.updateUserInfoResponseStatus() == 200) {
+                                                                                              requestClass.getUserInformations(token, userId).whenComplete(
+                                                                                                () {
+                                                                                                  setInfo(userId!, token, firstName, _newLastName.text, requestClass.getEmail(), requestClass.getOrganization(), true, requestClass.getPassword(), requestClass.getApiKey());
+                                                                                                  if (requestClass.userInfoStatus() == 200) {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                      state.didChange(_isLoading1);
+                                                                                                    });
+                                                                                                    Navigator.pop(context);
+                                                                                                    editFirstName = editLastName = false;
+                                                                                                    state.didChange(editFirstName);
+                                                                                                    state.didChange(editLastName);
+                                                                                                    Fluttertoast.showToast(msg: "succes");
+                                                                                                  } else {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                    });
+                                                                                                    state.didChange(_isLoading1);
+                                                                                                    Fluttertoast.showToast(msg: "error");
+                                                                                                  }
+                                                                                                },
+                                                                                              );
+                                                                                            } else {
+                                                                                              setState(() {
+                                                                                                _isLoading1 = false;
+                                                                                              });
+                                                                                              state.didChange(_isLoading1);
+                                                                                            }
+                                                                                          },
+                                                                                        );
+                                                                                      } else {
+                                                                                        setState(() {
+                                                                                          _isLoading = false;
+                                                                                        });
+                                                                                        Navigator.pop(context);
+                                                                                      }
+                                                                                    } else {
+                                                                                      Fluttertoast.showToast(msg: _language.tCaptureError(), backgroundColor: Colors.grey);
+                                                                                    }
+                                                                                  },
+                                                                                  child: _isLoading1
+                                                                                      ? LoadingAnimationWidget.inkDrop(color: Colors.white, size: 20)
+                                                                                      : Text(
+                                                                                          _language.tProfilButtonSave(),
+                                                                                          style: const TextStyle(color: Colors.white),
+                                                                                        )),
+                                                                            ),
+                                                                          )
+                                                                        ],
+                                                                      )
+                                                                    ],
+                                                                  );
+                                                                },
+                                                              )),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
                                                   },
-                                                );
-                                              },
-                                              trailing: _language
-                                                          .getLanguage() ==
-                                                      "AR"
-                                                  ? const Icon(
-                                                      Icons.add_photo_alternate,
-                                                      color: Colors.black,
-                                                    )
-                                                  : null,
-                                              leading: _language
-                                                          .getLanguage() !=
-                                                      "AR"
-                                                  ? const Icon(
-                                                      Icons.add_photo_alternate,
-                                                      color: Colors.black,
-                                                    )
-                                                  : null,
-                                              title: Align(
-                                                alignment:
-                                                    _language.getLanguage() ==
+                                                  trailing: _language
+                                                              .getLanguage() ==
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.manage_accounts,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  leading: _language
+                                                              .getLanguage() !=
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.manage_accounts,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  title: Align(
+                                                    alignment: _language
+                                                                .getLanguage() ==
                                                             "AR"
                                                         ? Alignment.centerRight
                                                         : Alignment.centerLeft,
-                                                child: Text(
-                                                  _language.tProfilEditPhoto(),
-                                                  style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 13),
+                                                    child: Text(
+                                                      _language
+                                                          .tProfilUserInformation(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            _language.getLanguage() == "AR"
-                                                ? MainAxisAlignment.end
-                                                : MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: ListTile(
-                                              onTap: () {
-                                                //edit username show dialog
-                                                showDialog(
-                                                  barrierDismissible: false,
-                                                  context: context,
-                                                  builder: (context) {
-                                                    return BackdropFilter(
-                                                      filter: ImageFilter.blur(
-                                                          sigmaX: 10,
-                                                          sigmaY: 10),
-                                                      child: AlertDialog(
-                                                        shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        15.0)),
-                                                        content: Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            Row(
+                                              )
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                _language.getLanguage() == "AR"
+                                                    ? MainAxisAlignment.end
+                                                    : MainAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: ListTile(
+                                                  onTap: () {
+                                                    uploadImage().then(
+                                                      (value) {
+                                                        state1.didChange(
+                                                            imageProfilPath);
+                                                      },
+                                                    );
+                                                  },
+                                                  trailing: _language
+                                                              .getLanguage() ==
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons
+                                                              .add_photo_alternate,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  leading: _language
+                                                              .getLanguage() !=
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons
+                                                              .add_photo_alternate,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  title: Align(
+                                                    alignment: _language
+                                                                .getLanguage() ==
+                                                            "AR"
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                    child: Text(
+                                                      _language
+                                                          .tProfilEditPhoto(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                _language.getLanguage() == "AR"
+                                                    ? MainAxisAlignment.end
+                                                    : MainAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: ListTile(
+                                                  onTap: () {
+                                                    //edit username show dialog
+                                                    showDialog(
+                                                      barrierDismissible: false,
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return BackdropFilter(
+                                                          filter:
+                                                              ImageFilter.blur(
+                                                                  sigmaX: 10,
+                                                                  sigmaY: 10),
+                                                          child: AlertDialog(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                    0xffF3F3F3),
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            content: Column(
                                                               mainAxisSize:
                                                                   MainAxisSize
                                                                       .min,
                                                               children: [
-                                                                Text(
-                                                                  _language
-                                                                      .tProfilEnterUserName(),
-                                                                  style: const TextStyle(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold),
+                                                                Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Text(
+                                                                      _language
+                                                                          .tProfilEnterUserName(),
+                                                                      style: const TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold),
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                                Form(
+                                                                    key:
+                                                                        _formKey,
+                                                                    child:
+                                                                        Padding(
+                                                                      padding: const EdgeInsets
+                                                                              .only(
+                                                                          top:
+                                                                              25,
+                                                                          right:
+                                                                              10,
+                                                                          left:
+                                                                              10),
+                                                                      child:
+                                                                          TextFormField(
+                                                                        textAlign: _language.getLanguage() ==
+                                                                                "AR"
+                                                                            ? TextAlign.right
+                                                                            : TextAlign.left,
+                                                                        decoration:
+                                                                            InputDecoration(
+                                                                          fillColor:
+                                                                              Colors.white,
+                                                                          filled:
+                                                                              true,
+                                                                          contentPadding: const EdgeInsets.fromLTRB(
+                                                                              20,
+                                                                              10,
+                                                                              20,
+                                                                              10),
+                                                                          focusedBorder: OutlineInputBorder(
+                                                                              borderRadius: BorderRadius.circular(10),
+                                                                              borderSide: const BorderSide(color: Colors.grey)),
+                                                                          enabledBorder: OutlineInputBorder(
+                                                                              borderRadius: BorderRadius.circular(10),
+                                                                              borderSide: BorderSide(color: Colors.grey.shade400)),
+                                                                          errorBorder: OutlineInputBorder(
+                                                                              borderRadius: BorderRadius.circular(10),
+                                                                              borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                          focusedErrorBorder: OutlineInputBorder(
+                                                                              borderRadius: BorderRadius.circular(10),
+                                                                              borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                        ),
+                                                                        keyboardType:
+                                                                            TextInputType.name,
+                                                                        onChanged:
+                                                                            updateText,
+                                                                        controller:
+                                                                            _usernameController,
+                                                                        validator:
+                                                                            (value) {
+                                                                          if (value!
+                                                                              .isEmpty) {
+                                                                            return _language.tProfilEnterUserName();
+                                                                          }
+                                                                          return null;
+                                                                        },
+                                                                      ),
+                                                                    )),
+                                                                Row(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                              .only(
+                                                                          left:
+                                                                              10,
+                                                                          right:
+                                                                              40,
+                                                                          top:
+                                                                              20),
+                                                                      child:
+                                                                          Container(
+                                                                        width:
+                                                                            80,
+                                                                        decoration: const BoxDecoration(
+                                                                            borderRadius: BorderRadius.only(
+                                                                                topRight: Radius.circular(10),
+                                                                                topLeft: Radius.circular(10),
+                                                                                bottomLeft: Radius.circular(10),
+                                                                                bottomRight: Radius.circular(10)),
+                                                                            color: Color(0xffFFFFFF)),
+                                                                        child: TextButton(
+                                                                            onPressed: () {
+                                                                              Navigator.pop(context);
+                                                                            },
+                                                                            child: Text(
+                                                                              _language.tProfilButtonCancel(),
+                                                                              style: const TextStyle(color: Colors.black),
+                                                                            )),
+                                                                      ),
+                                                                    ),
+                                                                    Padding(
+                                                                      padding: const EdgeInsets
+                                                                              .only(
+                                                                          right:
+                                                                              10,
+                                                                          top:
+                                                                              20),
+                                                                      child:
+                                                                          Container(
+                                                                        width:
+                                                                            90,
+                                                                        decoration: const BoxDecoration(
+                                                                            borderRadius: BorderRadius.only(
+                                                                                topRight: Radius.circular(10),
+                                                                                topLeft: Radius.circular(10),
+                                                                                bottomLeft: Radius.circular(10),
+                                                                                bottomRight: Radius.circular(10)),
+                                                                            color: Color(0xff41B072)),
+                                                                        child: TextButton(
+                                                                            onPressed: () async {
+                                                                              if (_formKey.currentState!.validate()) {
+                                                                                setState(() {
+                                                                                  Navigator.of(context).pop(updatedText);
+                                                                                });
+                                                                              }
+                                                                            },
+                                                                            child: Text(
+                                                                              _language.tProfilButtonSave(),
+                                                                              style: const TextStyle(color: Colors.white),
+                                                                            )),
+                                                                      ),
+                                                                    )
+                                                                  ],
                                                                 )
                                                               ],
                                                             ),
-                                                            Form(
-                                                                key: _formKey,
-                                                                child: Padding(
-                                                                  padding: const EdgeInsets
-                                                                          .only(
-                                                                      top: 15,
-                                                                      right: 10,
-                                                                      left: 10),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: const EdgeInsets
-                                                                            .only(
-                                                                        top:
-                                                                            10),
-                                                                    child:
-                                                                        TextFormField(
-                                                                      decoration:
-                                                                          InputDecoration(
-                                                                        fillColor:
-                                                                            Colors.white,
-                                                                        filled:
-                                                                            true,
-                                                                        contentPadding: const EdgeInsets.fromLTRB(
-                                                                            20,
-                                                                            10,
-                                                                            20,
-                                                                            10),
-                                                                        focusedBorder: OutlineInputBorder(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(100.0),
-                                                                            borderSide: const BorderSide(color: Colors.grey)),
-                                                                        enabledBorder: OutlineInputBorder(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(100.0),
-                                                                            borderSide: BorderSide(color: Colors.grey.shade400)),
-                                                                        errorBorder: OutlineInputBorder(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(100.0),
-                                                                            borderSide: const BorderSide(color: Colors.red, width: 2.0)),
-                                                                        focusedErrorBorder: OutlineInputBorder(
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(100.0),
-                                                                            borderSide: const BorderSide(color: Colors.red, width: 2.0)),
-                                                                      ),
-                                                                      keyboardType:
-                                                                          TextInputType
-                                                                              .name,
-                                                                      onChanged:
-                                                                          updateText,
-                                                                      controller:
-                                                                          _usernameController,
-                                                                      validator:
-                                                                          (value) {
-                                                                        if (value!
-                                                                            .isEmpty) {
-                                                                          return _language
-                                                                              .tProfilEnterUserName();
-                                                                        }
-                                                                        return null;
-                                                                      },
-                                                                    ),
-                                                                  ),
-                                                                )),
-                                                            Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Padding(
-                                                                  padding: const EdgeInsets
-                                                                          .only(
-                                                                      left: 5,
-                                                                      right: 40,
-                                                                      top: 15),
-                                                                  child:
-                                                                      TextButton(
-                                                                          onPressed:
-                                                                              () {
-                                                                            Navigator.pop(context);
-                                                                          },
-                                                                          child:
-                                                                              Text(
-                                                                            _language.tProfilButtonCancel(),
-                                                                            style:
-                                                                                const TextStyle(color: Colors.black),
-                                                                          )),
-                                                                ),
-                                                                Padding(
-                                                                  padding: const EdgeInsets
-                                                                          .only(
-                                                                      right: 5,
-                                                                      left: 40,
-                                                                      top: 15),
-                                                                  child:
-                                                                      TextButton(
-                                                                          onPressed:
-                                                                              () {
-                                                                            if (_formKey.currentState!.validate()) {
-                                                                              setState(() {
-                                                                                // _usernameController.text =
-                                                                                //     "";
-                                                                                Navigator.of(context).pop(updatedText);
-                                                                              });
-                                                                            }
-                                                                          },
-                                                                          child:
-                                                                              Text(
-                                                                            _language.tProfilButtonSave(),
-                                                                            style:
-                                                                                const TextStyle(color: Colors.black),
-                                                                          )),
-                                                                )
-                                                              ],
-                                                            )
-                                                          ],
-                                                        ),
-                                                      ),
+                                                          ),
+                                                        );
+                                                      },
                                                     );
                                                   },
-                                                );
-                                              },
-                                              trailing:
-                                                  _language.getLanguage() ==
+                                                  trailing: _language
+                                                              .getLanguage() ==
                                                           "AR"
                                                       ? const Icon(
                                                           Icons.edit,
                                                           color: Colors.black,
                                                         )
                                                       : null,
-                                              leading:
-                                                  _language.getLanguage() !=
+                                                  leading: _language
+                                                              .getLanguage() !=
                                                           "AR"
                                                       ? const Icon(
                                                           Icons.edit,
                                                           color: Colors.black,
                                                         )
                                                       : null,
-                                              title: Align(
-                                                alignment:
-                                                    _language.getLanguage() ==
+                                                  title: Align(
+                                                    alignment: _language
+                                                                .getLanguage() ==
                                                             "AR"
                                                         ? Alignment.centerRight
                                                         : Alignment.centerLeft,
-                                                child: Text(
-                                                  _language
-                                                      .tProfilEditUsername(),
-                                                  style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 13),
+                                                    child: Text(
+                                                      _language
+                                                          .tProfilEditUsername(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            _language.getLanguage() == "AR"
-                                                ? MainAxisAlignment.end
-                                                : MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: ListTile(
-                                              onTap: () {
-                                                authProv.setLoginState(false);
-                                                Navigator.pushReplacement(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const Home(),
-                                                    ));
-                                              },
-                                              trailing:
-                                                  _language.getLanguage() ==
+                                              )
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                _language.getLanguage() == "AR"
+                                                    ? MainAxisAlignment.end
+                                                    : MainAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: ListTile(
+                                                  onTap: () async {
+                                                    showDialog(
+                                                      barrierDismissible: false,
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return BackdropFilter(
+                                                          filter:
+                                                              ImageFilter.blur(
+                                                                  sigmaX: 10,
+                                                                  sigmaY: 10),
+                                                          child: AlertDialog(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                    0xffF3F3F3),
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            10)),
+                                                            content:
+                                                                ScrollConfiguration(
+                                                              behavior:
+                                                                  MyScrollBehavior(),
+                                                              child:
+                                                                  SingleChildScrollView(
+                                                                child: Column(
+                                                                  mainAxisSize:
+                                                                      MainAxisSize
+                                                                          .min,
+                                                                  children: [
+                                                                    Row(
+                                                                      mainAxisSize:
+                                                                          MainAxisSize
+                                                                              .min,
+                                                                      children: [
+                                                                        Text(
+                                                                          _language
+                                                                              .tProfilchangeYourPassword(),
+                                                                          style:
+                                                                              const TextStyle(fontWeight: FontWeight.bold),
+                                                                        )
+                                                                      ],
+                                                                    ),
+                                                                    Form(
+                                                                        key:
+                                                                            _formKey1,
+                                                                        child: Padding(
+                                                                            padding: const EdgeInsets.only(top: 25, right: 10, left: 10),
+                                                                            child: Column(
+                                                                              mainAxisSize: MainAxisSize.min,
+                                                                              children: [
+                                                                                Align(
+                                                                                  alignment: _language.getLanguage() == "AR" ? Alignment.centerRight : Alignment.centerLeft,
+                                                                                  child: Text(_language.tProfilOldPassword()),
+                                                                                ),
+                                                                                Padding(
+                                                                                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                                                                  child: TextFormField(
+                                                                                    textAlign: _language.getLanguage() == "AR" ? TextAlign.right : TextAlign.left,
+                                                                                    controller: _oldPassword,
+                                                                                    obscureText: iSobscureOldPassword,
+                                                                                    decoration: InputDecoration(
+                                                                                      fillColor: Colors.white,
+                                                                                      filled: true,
+                                                                                      contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                                                                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
+                                                                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade400)),
+                                                                                      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                    ),
+                                                                                    onChanged: (value) {},
+                                                                                    validator: (value) {
+                                                                                      if (value!.isEmpty) {
+                                                                                        return _language.tProfilOldPassword();
+                                                                                      }
+                                                                                      return null;
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                                Align(
+                                                                                  alignment: _language.getLanguage() == "AR" ? Alignment.centerRight : Alignment.centerLeft,
+                                                                                  child: Text(_language.tProfilNewPassword()),
+                                                                                ),
+                                                                                Padding(
+                                                                                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                                                                  child: TextFormField(
+                                                                                    textAlign: _language.getLanguage() == "AR" ? TextAlign.right : TextAlign.left,
+                                                                                    controller: _newPassword,
+                                                                                    obscureText: true,
+                                                                                    decoration: InputDecoration(
+                                                                                      fillColor: Colors.white,
+                                                                                      filled: true,
+                                                                                      contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                                                                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
+                                                                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade400)),
+                                                                                      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                    ),
+                                                                                    onChanged: (value) {},
+                                                                                    validator: (value) {
+                                                                                      if (value!.isEmpty) {
+                                                                                        return _language.tProfilNewPassword();
+                                                                                      }
+                                                                                      return null;
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                                Align(
+                                                                                  alignment: _language.getLanguage() == "AR" ? Alignment.centerRight : Alignment.centerLeft,
+                                                                                  child: Text(_language.tProfilConfirmNewPassword()),
+                                                                                ),
+                                                                                Padding(
+                                                                                  padding: const EdgeInsets.only(top: 10, bottom: 10),
+                                                                                  child: TextFormField(
+                                                                                    textAlign: _language.getLanguage() == "AR" ? TextAlign.right : TextAlign.left,
+                                                                                    controller: _confirmPassword,
+                                                                                    obscureText: true,
+                                                                                    decoration: InputDecoration(
+                                                                                      fillColor: Colors.white,
+                                                                                      filled: true,
+                                                                                      contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                                                                                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.grey)),
+                                                                                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade400)),
+                                                                                      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.red, width: 2.0)),
+                                                                                    ),
+                                                                                    onChanged: (value) {},
+                                                                                    validator: (value) {
+                                                                                      if (value!.isEmpty) {
+                                                                                        return _language.tProfilConfirmNewPassword();
+                                                                                      } else if (_confirmPassword.text != _newPassword.text) {
+                                                                                        return _language.tRegisterConfirmPasswordErrorMessage();
+                                                                                      }
+                                                                                      return null;
+                                                                                    },
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ))),
+                                                                    FormField(
+                                                                      builder:
+                                                                          (state) {
+                                                                        return Row(
+                                                                          mainAxisSize:
+                                                                              MainAxisSize.min,
+                                                                          children: [
+                                                                            Padding(
+                                                                              padding: const EdgeInsets.only(left: 10, right: 40, top: 20),
+                                                                              child: Container(
+                                                                                width: 80,
+                                                                                height: 45,
+                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10), bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)), color: Color(0xffFFFFFF)),
+                                                                                child: TextButton(
+                                                                                    onPressed: () {
+                                                                                      Navigator.pop(context);
+                                                                                    },
+                                                                                    child: Text(
+                                                                                      _language.tProfilButtonCancel(),
+                                                                                      style: const TextStyle(color: Colors.black),
+                                                                                    )),
+                                                                              ),
+                                                                            ),
+                                                                            Padding(
+                                                                              padding: const EdgeInsets.only(right: 10, top: 20),
+                                                                              child: Container(
+                                                                                width: 90,
+                                                                                height: 45,
+                                                                                decoration: const BoxDecoration(borderRadius: BorderRadius.only(topRight: Radius.circular(10), topLeft: Radius.circular(10), bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)), color: Color(0xff41B072)),
+                                                                                child: _isLoading
+                                                                                    ? LoadingAnimationWidget.inkDrop(color: Colors.white, size: 20)
+                                                                                    : TextButton(
+                                                                                        onPressed: () async {
+                                                                                          var connectivityResult = await Connectivity().checkConnectivity();
+                                                                                          if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
+                                                                                            if (_formKey1.currentState!.validate()) {
+                                                                                              setState(() {
+                                                                                                _isLoading = true;
+                                                                                                state.didChange(_isLoading);
+                                                                                              });
+                                                                                              input = ({
+                                                                                                'old_password': _oldPassword.text.toString(),
+                                                                                                'new_password': _newPassword.text.toString(),
+                                                                                              });
+                                                                                              transformedData = {};
+                                                                                              input!.forEach((key, value) {
+                                                                                                transformedData![key] = value.toString();
+                                                                                              });
+                                                                                              jsonString = jsonEncode(transformedData);
+                                                                                              encrypt = requestClass.encryptRegisterInput(jsonString);
+                                                                                              requestClass.updatePasswordRequest(token, userId, encrypt).whenComplete(
+                                                                                                () {
+                                                                                                  if (requestClass.updatePwdResponseStatus() == 200) {
+                                                                                                    Fluttertoast.showToast(msg: _language.tProfilUpdatePwdSuccesMsg(), backgroundColor: Colors.grey);
+                                                                                                    Navigator.of(context).pop();
+                                                                                                    setState(() {
+                                                                                                      _isLoading = false;
+                                                                                                      _oldPassword.text = _newPassword.text = _confirmPassword.text = "";
+                                                                                                      state.didChange(_isLoading);
+                                                                                                    });
+                                                                                                  } else {
+                                                                                                    setState(() {
+                                                                                                      _isLoading = false;
+                                                                                                      state.didChange(_isLoading);
+                                                                                                    });
+                                                                                                    Fluttertoast.showToast(msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+                                                                                                  }
+                                                                                                },
+                                                                                              );
+                                                                                            } else {
+                                                                                              setState(() {
+                                                                                                _isLoading = false;
+                                                                                                state.didChange(_isLoading);
+                                                                                              });
+                                                                                            }
+                                                                                          } else {
+                                                                                            Fluttertoast.showToast(msg: _language.tCaptureError(), backgroundColor: Colors.grey);
+                                                                                          }
+                                                                                        },
+                                                                                        child: Text(
+                                                                                          _language.tProfilButtonSave(),
+                                                                                          style: const TextStyle(color: Colors.white),
+                                                                                        )),
+                                                                              ),
+                                                                            )
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                  trailing: _language
+                                                              .getLanguage() ==
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.password,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  leading: _language
+                                                              .getLanguage() !=
+                                                          "AR"
+                                                      ? const Icon(
+                                                          Icons.password,
+                                                          color: Colors.black,
+                                                        )
+                                                      : null,
+                                                  title: Align(
+                                                    alignment: _language
+                                                                .getLanguage() ==
+                                                            "AR"
+                                                        ? Alignment.centerRight
+                                                        : Alignment.centerLeft,
+                                                    child: Text(
+                                                      _language
+                                                          .tProfilEditPassword(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                _language.getLanguage() == "AR"
+                                                    ? MainAxisAlignment.end
+                                                    : MainAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: ListTile(
+                                                  onTap: () async {
+                                                    // authProv.setLoginState(false);
+                                                    SharedPreferences prefs =
+                                                        await SharedPreferences
+                                                            .getInstance();
+                                                    prefs.setString(
+                                                        "token", "");
+                                                    prefs.setString(
+                                                        "firstName", "");
+                                                    prefs.setString(
+                                                        "lastName", "");
+                                                    prefs.setString(
+                                                        "email", "");
+                                                    prefs.setString(
+                                                        "organization", "");
+                                                    prefs.setBool(
+                                                        "loginState", false);
+                                                    prefs.setString(
+                                                        "username", "");
+                                                    prefs.setString(
+                                                        "imageProfilPath", "");
+                                                    tasksId.clear();
+                                                    Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              const Home(),
+                                                        ));
+                                                  },
+                                                  trailing: _language
+                                                              .getLanguage() ==
                                                           "AR"
                                                       ? const Icon(
                                                           Icons.logout,
                                                           color: Colors.black,
                                                         )
                                                       : null,
-                                              leading:
-                                                  _language.getLanguage() !=
+                                                  leading: _language
+                                                              .getLanguage() !=
                                                           "AR"
                                                       ? const Icon(
                                                           Icons.logout,
                                                           color: Colors.black,
                                                         )
                                                       : null,
-                                              title: Align(
-                                                alignment:
-                                                    _language.getLanguage() ==
+                                                  title: Align(
+                                                    alignment: _language
+                                                                .getLanguage() ==
                                                             "AR"
                                                         ? Alignment.centerRight
                                                         : Alignment.centerLeft,
-                                                child: Text(
-                                                  _language.tProfilLogout(),
-                                                  style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 13),
+                                                    child: Text(
+                                                      _language.tProfilLogout(),
+                                                      style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                          )
+                                              )
+                                            ],
+                                          ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              )),
+                                    ),
+                                  )),
+                            );
+                          },
                         );
                       },
                     );
@@ -1100,9 +1951,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ]));
   }
 
-  Widget body() {
+  Widget? body() {
     final camProv = Provider.of<cameraProvider>(context);
-    if (_currentState == "home") {
+    if (_currentState == "home" && loginState == true) {
       return homeScreen();
     } else if (_currentState == "uploadFile") {
       return const UploadScreen();
@@ -1111,8 +1962,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         _currentState == "scanPass" ||
         _currentState == "scanInvoice") {
       return const CameraScreen();
+    } else if (_currentState == "Analytics") {
+      return Analytics();
+    } else if (_currentState == "UnderConstruction") {
+      return UnderConstruction();
     }
-    return homeScreen();
+    // return homeScreen();
+    return null;
   }
 
   Widget? homeFloatButton() {
@@ -1132,6 +1988,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Widget stackScanButton() {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     return Stack(
       children: [
         //align (button 1)
@@ -1176,6 +2033,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       setState(() {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.setCurrentState("businessCard");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
@@ -1237,6 +2096,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setPassportCamera(true);
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.setCurrentState("passport");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
@@ -1300,6 +2160,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(true);
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
@@ -1364,6 +2225,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       setState(() {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(false);
+                        camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.setCurrentState("idDocument");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
@@ -1445,6 +2308,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Widget stackIdButton() {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     return Stack(
       children: [
         //align (button 1)
@@ -1499,6 +2363,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         // _textBussButton = _textPassButton =
@@ -1571,6 +2436,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("passport");
                         camProv.setImagePath("");
+                        //  filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
                         // _textBussButton = _textPassButton =
@@ -1643,6 +2509,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(true);
                         camProv.setCurrentState("invoice");
                         camProv.setImagePath("");
+                        //   filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
                         // _textBussButton = _textPassButton =
@@ -1788,6 +2655,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.cameraState(true);
                         camProv.setUploadPath("");
                         camProv.setGenericState(true);
+                        filesProv.setResponse("");
+                        filesProv.setResponseState(false);
                         _FloatButtonIdPressed = false;
                       } else if (_FloatButtonIdPressed &&
                           camProv.getGenericState() == true) {
@@ -1801,7 +2670,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     });
                   } else {
                     Fluttertoast.showToast(
-                        msg: "Failed to connect to host",
+                        msg: _language.tCaptureError(),
                         backgroundColor: Colors.grey);
                   }
                 },
@@ -1832,6 +2701,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Widget stackPassButton() {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     return Stack(
       children: [
         //align (button 1)
@@ -1887,6 +2757,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
+                        //   filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         // _textBussButton = _textPassButton =
@@ -1960,6 +2831,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("passport");
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
                         // _textBottomBar = "Scan Pass";
@@ -2035,6 +2907,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setInvoiceCamera(true);
                         camProv.setImagePath("");
+                        //   filesProv.setResponse("");
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
@@ -2110,6 +2983,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
+                        //  filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
                         // _textBussButton = _textPassButton =
@@ -2181,6 +3055,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           camProv.getGenericState() == false) {
                         camProv.cameraState(true);
                         camProv.setUploadPath("");
+                        filesProv.setResponseState(false);
+                        filesProv.setResponse("");
                         camProv.setGenericState(true);
                         _FloatButtonPassPressed = false;
                       } else if (_FloatButtonPassPressed &&
@@ -2195,7 +3071,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     });
                   } else {
                     Fluttertoast.showToast(
-                        msg: "Failed to connect to host",
+                        msg: _language.tCaptureError(),
                         backgroundColor: Colors.grey);
                   }
                 },
@@ -2226,6 +3102,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Widget stackCardButton() {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     return Stack(
       children: [
         //align (button 1)
@@ -2281,6 +3158,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
+                        //     filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         _FloatButtonCardPressed = !_FloatButtonCardPressed;
@@ -2355,6 +3233,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("passport");
                         camProv.setImagePath("");
+                        //  filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
                         // _textBussButton = _textPassButton =
@@ -2428,6 +3307,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(true);
                         camProv.setPassportCamera(false);
                         camProv.setImagePath("");
+                        //filesProv.setResponse("");
                         camProv.setCurrentState("invoice");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
@@ -2503,6 +3383,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
+                        //  filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
                         // _textBussButton = _textPassButton =
@@ -2575,6 +3456,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setUploadPath("");
                         camProv.cameraState(true);
                         camProv.setGenericState(true);
+                        filesProv.setResponse("");
+                        filesProv.setResponseState(false);
                         _FloatButtonCardPressed = false;
                       } else if (_FloatButtonCardPressed &&
                           camProv.getGenericState() == true) {
@@ -2588,7 +3471,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     });
                   } else {
                     Fluttertoast.showToast(
-                        msg: "Failed to connect to host",
+                        msg: _language.tCaptureError(),
                         backgroundColor: Colors.grey);
                   }
                 },
@@ -2617,6 +3500,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   Widget stackInvoiceButton() {
     final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
     return Stack(
       children: [
         //align (button 1)
@@ -2672,6 +3556,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("businessCard");
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanCard";
                         // _textBussButton = _textPassButton =
@@ -2745,6 +3630,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setInvoiceCamera(false);
                         camProv.setCurrentState("passport");
                         camProv.setImagePath("");
+                        //   filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanPass";
                         // _textBussButton = _textPassButton =
@@ -2819,6 +3705,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setCurrentState("invoice");
                         camProv.setImagePath("");
+                        //     filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanInvoice";
                         _FloatButtonInvoicePressed =
@@ -2895,6 +3782,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         camProv.setPassportCamera(false);
                         camProv.setCurrentState("idDocument");
                         camProv.setImagePath("");
+                        // filesProv.setResponse("");
                         camProv.removeAppBar(false);
                         _currentState = "scanId";
                         // _textBussButton = _textPassButton =
@@ -2967,6 +3855,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           camProv.getGenericState() == false) {
                         camProv.setUploadPath("");
                         camProv.cameraState(true);
+                        filesProv.setResponse("");
+                        filesProv.setResponseState(false);
                         camProv.setGenericState(true);
                         _FloatButtonInvoicePressed = false;
                       } else if (_FloatButtonInvoicePressed &&
@@ -2981,7 +3871,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     });
                   } else {
                     Fluttertoast.showToast(
-                        msg: "Failed to connect to host",
+                        msg: _language.tCaptureError(),
                         backgroundColor: Colors.grey);
                   }
                 },
@@ -3010,6 +3900,111 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
+  String? productsResponse;
+  Map<String, dynamic>? productsData;
+  List<dynamic>? productList;
+  int? productCount;
+
+  readproductsConnectedUser() {
+    try {
+      productsResponse = requestClass.getProductsResponseBody();
+      if (productsResponse != null &&
+          productsResponse != "" &&
+          requestClass.getProductsStatus() != 401) {
+        productsData = jsonDecode(productsResponse!);
+        productList = productsData!['product_list'];
+        productCount = productsData!['product_count'];
+      }
+    } on Exception {
+      Fluttertoast.showToast(
+          msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+    }
+  }
+
+  Map<String, dynamic>? data;
+
+  String? postResponse;
+  String? extractResultResponse;
+  String? imagePath;
+  Map<String, dynamic>? data1;
+  String? p;
+  String? getResponse;
+  Future<void> readDocument(
+      String? taskId, String? userToken, String? id) async {
+    requestClass.userConnectedExtractResult(taskId, userToken).whenComplete(
+      () async {
+        extractResultResponse = requestClass.extractResultResponseBody();
+        if (extractResultResponse != null &&
+            requestClass.extractResultResponseStatus() == 200) {
+          data1 = await jsonDecode(extractResultResponse!);
+          p = data1!["document"]["Preprocessed_file_id"].toString();
+          requestClass
+              .getImageConnectedUserRequest(p, id, userToken)
+              .whenComplete(
+            () {
+              getResponse = requestClass.getUserConnectedImageResponseBody();
+              if (getResponse != null &&
+                  requestClass.postConnectedResponseStatus() != 500) {
+                // camProv.setImagePath(getResponse!);
+                // filesProv.setResponse(extractResultResponse);
+                // filesProv.setResponseState(true);
+                // filesProv.setResponseStatus(
+                //     requestClass.postConnectedResponseStatus());
+                imagePath = getResponse!;
+                // debugPrint(
+                //     "${camProv.getPathUploadImage()}+${filesProv.getResponse()}+ ${filesProv.getResponseState()}");
+              }
+            },
+          );
+        }
+      },
+    );
+  }
+
+  readProducts(int? pages, String? skillId) async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      requestClass.getProducts(token, userId, pages, skillId).whenComplete(
+        () async {
+          if (requestClass.productsResponseBody != null &&
+              requestClass.productStatus == 200) {
+            await readproductsConnectedUser();
+          } else if (requestClass.productStatus == 401) {
+            Fluttertoast.showToast(
+                msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoginPage(),
+                ));
+          }
+        },
+      ).whenComplete(() {
+        setState(() {
+          _loading1 = true;
+          _loading2 = true;
+        });
+      });
+    } else {
+      Fluttertoast.showToast(
+          msg: _language.tCaptureError(), backgroundColor: Colors.grey);
+    }
+  }
+
+  bool _loading1 = false;
+  bool _loading2 = false;
+  int? lastIndex = 5;
+  String? skillId;
+  List<String> tasksId = [];
+  List<String> filesId = [];
+// if (productList!.isNotEmpty &&
+//                                                 productList!.length >= 5) {
+//                                               lastIndex = 5;
+//                                             } else {
+//                                               lastIndex =
+//                                                   productList!.length.toInt();
+//                                             }
   Widget homeScreen() {
     final filesProv = Provider.of<filesProvider>(context);
     final camProv = Provider.of<cameraProvider>(context);
@@ -3457,100 +4452,119 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   ),
                                   controller: _refreshControllerFavoriteFilles,
                                   onRefresh: () {
-                                    fetchData();
                                     _onRefreshFavoriteFiles();
                                   },
                                   onLoading: _onLoadingFavoriteFiles,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.only(bottom: 40),
-                                    itemCount: 15,
-                                    itemBuilder: (context, index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 36, right: 37, top: 10),
-                                        child: InkWell(
-                                          overlayColor:
-                                              const MaterialStatePropertyAll(
-                                                  Colors.transparent),
-                                          onTap: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return AlertDialog(
-                                                  backgroundColor:
-                                                      const Color(0xffF8FBFA),
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15.0)),
-                                                  content: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: []),
-                                                );
-                                              },
+                                  child: _loading1
+                                      ? ListView.builder(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 40),
+                                          itemCount: 1,
+                                          itemBuilder: (context, index) {
+                                            // return Padding(
+                                            //   padding: const EdgeInsets.only(
+                                            //       left: 36, right: 37, top: 10),
+                                            //   child: InkWell(
+                                            //     onLongPress: () {},
+                                            //     overlayColor:
+                                            //         const MaterialStatePropertyAll(
+                                            //             Colors.transparent),
+                                            //     onTap: () {
+                                            //       showDialog(
+                                            //         context: context,
+                                            //         builder: (context) {
+                                            //           return AlertDialog(
+                                            //             backgroundColor:
+                                            //                 const Color(
+                                            //                     0xffF8FBFA),
+                                            //             shape: RoundedRectangleBorder(
+                                            //                 borderRadius:
+                                            //                     BorderRadius
+                                            //                         .circular(
+                                            //                             15.0)),
+                                            //             content: Column(
+                                            //                 mainAxisSize:
+                                            //                     MainAxisSize
+                                            //                         .min,
+                                            //                 children: []),
+                                            //           );
+                                            //         },
+                                            //       );
+                                            //     },
+                                            //     child: Container(
+                                            //       decoration: const BoxDecoration(
+                                            //           boxShadow: [
+                                            //             BoxShadow(
+                                            //                 color: Colors.black,
+                                            //                 // blurRadius: 1,
+                                            //                 spreadRadius: 0.5)
+                                            //           ],
+                                            //           borderRadius:
+                                            //               BorderRadius.only(
+                                            //                   topRight: Radius
+                                            //                       .circular(15),
+                                            //                   topLeft: Radius
+                                            //                       .circular(15),
+                                            //                   bottomLeft: Radius
+                                            //                       .circular(15),
+                                            //                   bottomRight:
+                                            //                       Radius
+                                            //                           .circular(
+                                            //                               15)),
+                                            //           color: Color(0xffFFFFFF)),
+                                            //       child: Row(
+                                            //         mainAxisSize:
+                                            //             MainAxisSize.max,
+                                            //         children: [
+                                            //           IconButton(
+                                            //               splashRadius: 0.1,
+                                            //               onPressed: () {},
+                                            //               icon: Image.asset(
+                                            //                 "assets/FileHomeIcon.png",
+                                            //                 width: 16.46,
+                                            //                 height: 20.25,
+                                            //               )),
+                                            //           // if (savedName != null)
+                                            //           // Expanded(
+                                            //           //   child: ListTile(
+                                            //           //     title: Text(
+                                            //           //       product[
+                                            //           //           'file_name'],
+                                            //           //       style:
+                                            //           //           const TextStyle(
+                                            //           //         color: Color(
+                                            //           //             0xff4A4A4A),
+                                            //           //       ),
+                                            //           //     ),
+                                            //           //     subtitle: Row(
+                                            //           //         mainAxisAlignment:
+                                            //           //             MainAxisAlignment
+                                            //           //                 .spaceBetween,
+                                            //           //         children: [
+                                            //           //           Text(
+                                            //           //               "${product['task_model_type']}\nSize:${product['file_size']}"),
+                                            //           //           Text(
+                                            //           //               "$formattedDate\n  ${product['status']}"),
+                                            //           //         ]),
+                                            //           //   ),
+                                            //           // ),
+                                            //         ],
+                                            //       ),
+                                            //     ),
+                                            //   ),
+                                            // );
+                                            return const Padding(
+                                              padding: EdgeInsets.only(top: 30),
+                                              child: ListTile(
+                                                  title: Center(
+                                                child:
+                                                    Text("No files to display"),
+                                              )),
                                             );
                                           },
-                                          child: Container(
-                                            decoration: const BoxDecoration(
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                      color: Colors.black,
-                                                      // blurRadius: 1,
-                                                      spreadRadius: 0.5)
-                                                ],
-                                                borderRadius: BorderRadius.only(
-                                                    topRight:
-                                                        Radius.circular(15),
-                                                    topLeft:
-                                                        Radius.circular(15),
-                                                    bottomLeft:
-                                                        Radius.circular(15),
-                                                    bottomRight:
-                                                        Radius.circular(15)),
-                                                color: Color(0xffFFFFFF)),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              children: [
-                                                IconButton(
-                                                    splashRadius: 0.1,
-                                                    onPressed: () {},
-                                                    icon: Image.asset(
-                                                      "assets/FileHomeIcon.png",
-                                                      width: 16.46,
-                                                      height: 20.25,
-                                                    )),
-                                                // if (savedName != null)
-                                                Expanded(
-                                                  child: ListTile(
-                                                    title: Text(
-                                                      " savedName",
-                                                      style: const TextStyle(
-                                                        color:
-                                                            Color(0xff4A4A4A),
-                                                      ),
-                                                    ),
-                                                    subtitle: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          const Text("type"),
-                                                          time == 0
-                                                              ? const Text(
-                                                                  "now")
-                                                              : Text(
-                                                                  "$time m ago")
-                                                        ]),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                        )
+                                      : LoadingAnimationWidget.hexagonDots(
+                                          color: Colors.black, size: 40),
                                 ),
                               ),
                             ]),
@@ -3562,7 +4576,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       MainAxisAlignment.spaceAround,
                                   children: [
                                     Text(
-                                      "${_language.tHomeAllResult()}()",
+                                      "${_language.tHomeAllResult()}(${lastIndex!})",
                                       style: const TextStyle(
                                           fontSize: 10,
                                           color: Color(0xff4A4A4A),
@@ -3645,8 +4659,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                       checkboxAllFiles2 =
                                                                           checkboxAllFiles3 =
                                                                               checkboxAllFiles4 = false;
+                                                                  tasksId
+                                                                      .clear();
+                                                                  _loading2 =
+                                                                      false;
+                                                                  skillId = "";
+                                                                  lastIndex = 5;
                                                                   Navigator.pop(
                                                                       context);
+                                                                  readProducts(
+                                                                      lastIndex!,
+                                                                      "");
                                                                 });
                                                               },
                                                             ),
@@ -3705,8 +4728,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles1,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles1 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles2 || checkboxAllFiles3 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles1 = false;
+                                                                                    state.didChange(checkboxAllFiles1);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles1 = !checkboxAllFiles1;
+                                                                                    state.didChange(checkboxAllFiles1);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Identity_Card_Arabic_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3723,8 +4764,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles1,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles1 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles2 || checkboxAllFiles3 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles1 = false;
+                                                                                    state.didChange(checkboxAllFiles1);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles1 = !checkboxAllFiles1;
+                                                                                    state.didChange(checkboxAllFiles1);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Identity_Card_Arabic_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3757,8 +4816,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles2,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles2 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles3 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles2 = false;
+                                                                                    state.didChange(checkboxAllFiles2);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles2 = !checkboxAllFiles2;
+                                                                                    state.didChange(checkboxAllFiles2);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Business_Card_Multilingual_Medium_DTR_document_1.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3775,8 +4852,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles2,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles2 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles3 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles2 = false;
+                                                                                    state.didChange(checkboxAllFiles2);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles2 = !checkboxAllFiles2;
+                                                                                    state.didChange(checkboxAllFiles2);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Business_Card_Multilingual_Medium_DTR_document_1.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3809,8 +4904,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles3,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles3 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles2 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles3 = false;
+                                                                                    state.didChange(checkboxAllFiles3);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles3 = !checkboxAllFiles3;
+                                                                                    state.didChange(checkboxAllFiles3);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Libyan_Passport_Arabic_English_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3827,8 +4940,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles3,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles3 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles2 || checkboxAllFiles4) {
+                                                                                    checkboxAllFiles3 = false;
+                                                                                    state.didChange(checkboxAllFiles3);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles3 = !checkboxAllFiles3;
+                                                                                    state.didChange(checkboxAllFiles3);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Libyan_Passport_Arabic_English_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3861,8 +4992,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles4,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles4 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles2 || checkboxAllFiles3) {
+                                                                                    checkboxAllFiles4 = false;
+                                                                                    state.didChange(checkboxAllFiles4);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles4 = !checkboxAllFiles4;
+                                                                                    state.didChange(checkboxAllFiles4);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Invoice_French_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3879,8 +5028,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                               value: checkboxAllFiles4,
                                                                               onChanged: (value) {
                                                                                 setState(() {
-                                                                                  checkboxAllFiles4 = value!;
-                                                                                  state.didChange(value);
+                                                                                  if (checkboxAllFiles1 || checkboxAllFiles2 || checkboxAllFiles3) {
+                                                                                    checkboxAllFiles4 = false;
+                                                                                    state.didChange(checkboxAllFiles4);
+                                                                                    setState(() {
+                                                                                      _loading2 = false;
+                                                                                      skillId = "";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                  } else {
+                                                                                    checkboxAllFiles4 = !checkboxAllFiles4;
+                                                                                    state.didChange(checkboxAllFiles4);
+                                                                                    setState(() {
+                                                                                      tasksId.clear();
+                                                                                      _loading2 = false;
+                                                                                      skillId = "Invoice_French_Medium_DTR_document_0.1";
+                                                                                      lastIndex = 5;
+                                                                                    });
+                                                                                    readProducts(lastIndex, skillId);
+                                                                                    Navigator.pop(context);
+                                                                                  }
                                                                                 });
                                                                               },
                                                                             );
@@ -3925,72 +5092,164 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   ),
                                   controller: _refreshControllerAllFiles,
                                   onLoading: _onLoadingAllFiles,
-                                  onRefresh: _onRefreshAllFiles,
-                                  child: ListView.builder(
-                                    padding: const EdgeInsets.only(bottom: 40),
-                                    itemCount: 8,
-                                    itemBuilder: (context, index) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 36, right: 37, top: 10),
-                                        child: InkWell(
-                                          overlayColor:
-                                              const MaterialStatePropertyAll(
-                                                  Colors.transparent),
-                                          onTap: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return AlertDialog(
-                                                  backgroundColor:
-                                                      const Color(0xffF8FBFA),
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              15.0)),
-                                                  content: Column(
+                                  onRefresh: () {
+                                    if (productCount! % 2 == 0) {
+                                      var reste = productList!.length % 5;
+                                      if (lastIndex! <
+                                          productList!.length - reste) {
+                                        lastIndex = lastIndex! + 5;
+                                        print(lastIndex);
+                                      } else if (lastIndex !=
+                                              productList!.length &&
+                                          productList!.length > lastIndex!) {
+                                        lastIndex = lastIndex! + reste;
+                                      }
+                                    } else {
+                                      var reste = productCount! % 2;
+                                      if (lastIndex! <
+                                          productList!.length - reste) {
+                                        lastIndex = lastIndex! + 5;
+                                      } else if (lastIndex !=
+                                              productList!.length &&
+                                          productList!.length > lastIndex!) {
+                                        lastIndex = lastIndex! + reste;
+                                      }
+                                    }
+                                    if (skillId == "" && skillId == null) {
+                                      readProducts(lastIndex!, "");
+                                    } else {
+                                      readProducts(lastIndex!, skillId);
+                                    }
+                                    _onRefreshAllFiles();
+                                  },
+                                  child: _loading2 && productList != null
+                                      ? ListView.builder(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 60),
+                                          itemCount: productList!.isNotEmpty
+                                              ? productList!.length
+                                              : 1,
+                                          itemBuilder: (context, index) {
+                                            if (productList!.isNotEmpty) {
+                                              var product = productList![index];
+                                              if (!tasksId
+                                                  .contains(product['id'])) {
+                                                tasksId.add(product['id']);
+                                              }
+                                              print(tasksId.length);
+                                              print(tasksId);
+
+                                              String dateTimeString =
+                                                  product['created_at'];
+                                              DateTime dateTime =
+                                                  DateTime.parse(
+                                                      dateTimeString);
+                                              String formattedDate =
+                                                  '${dateTime.year}-${dateTime.month}-${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
+
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 36,
+                                                    right: 37,
+                                                    top: 10),
+                                                child: InkWell(
+                                                  overlayColor:
+                                                      const MaterialStatePropertyAll(
+                                                          Colors.transparent),
+                                                  onTap: () async {
+                                                    print(
+                                                        'taskId:${tasksId[index]}');
+                                                    Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              showDocument(
+                                                            userId: userId,
+                                                            taskId:
+                                                                tasksId[index],
+                                                            userToken: token,
+                                                          ),
+                                                        ));
+                                                  },
+                                                  child: Container(
+                                                    decoration: const BoxDecoration(
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                              color:
+                                                                  Colors.black,
+                                                              spreadRadius: 0.5)
+                                                        ],
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        10),
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        10),
+                                                                bottomLeft: Radius
+                                                                    .circular(
+                                                                        10),
+                                                                bottomRight: Radius
+                                                                    .circular(
+                                                                        10)),
+                                                        color:
+                                                            Color(0xffFFFFFF)),
+                                                    child: Row(
                                                       mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: []),
-                                                );
-                                              },
-                                            );
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        IconButton(
+                                                            splashRadius: 0.1,
+                                                            onPressed: () {},
+                                                            icon: Image.asset(
+                                                              "assets/FileHomeIcon.png",
+                                                              width: 16.46,
+                                                              height: 20.25,
+                                                            )),
+                                                        Expanded(
+                                                          child: ListTile(
+                                                            title: Text(
+                                                              product[
+                                                                  'file_name'],
+                                                              style:
+                                                                  const TextStyle(
+                                                                color: Color(
+                                                                    0xff4A4A4A),
+                                                              ),
+                                                            ),
+                                                            subtitle: Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  Text(
+                                                                      "${product['task_model_type']}\nSize:${product['file_size']}"),
+                                                                  Text(
+                                                                      "$formattedDate\n  ${product['status']}"),
+                                                                ]),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              return const Padding(
+                                                padding:
+                                                    EdgeInsets.only(top: 30),
+                                                child: ListTile(
+                                                    title: Center(
+                                                  child: Text(
+                                                      "No files to display"),
+                                                )),
+                                              );
+                                            }
                                           },
-                                          child: Container(
-                                            decoration: const BoxDecoration(
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                      color: Colors.black,
-                                                      spreadRadius: 0.5)
-                                                ],
-                                                borderRadius: BorderRadius.only(
-                                                    topRight:
-                                                        Radius.circular(10),
-                                                    topLeft:
-                                                        Radius.circular(10),
-                                                    bottomLeft:
-                                                        Radius.circular(10),
-                                                    bottomRight:
-                                                        Radius.circular(10)),
-                                                color: Color(0xffFFFFFF)),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              children: [
-                                                IconButton(
-                                                    splashRadius: 0.1,
-                                                    onPressed: () {},
-                                                    icon: Image.asset(
-                                                      "assets/FileHomeIcon.png",
-                                                      width: 16.46,
-                                                      height: 20.25,
-                                                    ))
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                        )
+                                      : LoadingAnimationWidget.hexagonDots(
+                                          color: Colors.black, size: 40),
                                 ),
                               ),
                             ])
@@ -4005,6 +5264,310 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           ),
         ),
       ),
+    );
+  }
+
+  Widget Analytics() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 30),
+        child: Column(children: [
+          Container(
+              width: MediaQuery.of(context).size.width - 30,
+              decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(10),
+                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
+                      bottomRight: Radius.circular(10)),
+                  color: Color(0xffF3F3F3)),
+              child: ListTile(
+                title: Align(
+                    alignment: _language.getLanguage() == "AR"
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Text(_language.tDrawerAnalyticsText1())),
+                subtitle: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: _language.getLanguage() == "AR"
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: Text(
+                          "350",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.arrow_upward,
+                              size: 20,
+                              color: Color(0xff41B072),
+                            ),
+                            const Text(
+                              " 3.48 %  ",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff41B072)),
+                            ),
+                            Text(
+                              _language.tDrawerAnalyticsText2(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      )
+                    ]),
+                trailing: _language.getLanguage() != "AR"
+                    ? const Icon(Icons.bar_chart,
+                        size: 35, color: Color(0xffF5365C))
+                    : null,
+                leading: _language.getLanguage() == "AR"
+                    ? const Icon(Icons.bar_chart,
+                        size: 35, color: Color(0xffF5365C))
+                    : null,
+              )),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Container(
+                width: MediaQuery.of(context).size.width - 30,
+                decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(10),
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10)),
+                    color: Color(0xffF3F3F3)),
+                child: ListTile(
+                  title: Align(
+                      alignment: _language.getLanguage() == "AR"
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Text(_language.tDrawerAnalyticsText3())),
+                  subtitle: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: _language.getLanguage() == "AR"
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Text(
+                            "2300",
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.arrow_downward,
+                                size: 20,
+                                color: Color(0xff41B072),
+                              ),
+                              const Text(
+                                " 3.48 %  ",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xff41B072)),
+                              ),
+                              Text(
+                                _language.tDrawerAnalyticsText4(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        )
+                      ]),
+                  trailing: _language.getLanguage() != "AR"
+                      ? const Icon(
+                          Icons.pie_chart,
+                          size: 35,
+                          color: Color(0xffFB6340),
+                        )
+                      : null,
+                  leading: _language.getLanguage() == "AR"
+                      ? const Icon(
+                          Icons.pie_chart,
+                          size: 35,
+                          color: Color(0xffFB6340),
+                        )
+                      : null,
+                )),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Container(
+                width: MediaQuery.of(context).size.width - 30,
+                decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(10),
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10)),
+                    color: Color(0xffF3F3F3)),
+                child: ListTile(
+                  title: Align(
+                      alignment: _language.getLanguage() == "AR"
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Text(_language.tDrawerAnalyticsText5())),
+                  subtitle: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: _language.getLanguage() == "AR"
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Text(
+                            "924",
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.arrow_upward,
+                                size: 20,
+                                color: Color(0xff41B072),
+                              ),
+                              const Text(
+                                " 1.10 %  ",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xff41B072)),
+                              ),
+                              Text(
+                                _language.tDrawerAnalyticsText6(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        )
+                      ]),
+                  trailing: _language.getLanguage() != "AR"
+                      ? const Icon(
+                          Icons.groups_2,
+                          size: 35,
+                          color: Color(0xffFFD600),
+                        )
+                      : null,
+                  leading: _language.getLanguage() == "AR"
+                      ? const Icon(
+                          Icons.groups_2,
+                          size: 35,
+                          color: Color(0xffFFD600),
+                        )
+                      : null,
+                )),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Container(
+                width: MediaQuery.of(context).size.width - 30,
+                decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(10),
+                        topLeft: Radius.circular(10),
+                        bottomLeft: Radius.circular(10),
+                        bottomRight: Radius.circular(10)),
+                    color: Color(0xffF3F3F3)),
+                child: ListTile(
+                  title: Align(
+                      alignment: _language.getLanguage() == "AR"
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Text(_language.tDrawerAnalyticsText7())),
+                  subtitle: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: _language.getLanguage() == "AR"
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Text(
+                            "49,65%",
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.arrow_upward,
+                                size: 20,
+                                color: Color(0xff41B072),
+                              ),
+                              const Text(
+                                " 12 %  ",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xff41B072)),
+                              ),
+                              Text(
+                                _language.tDrawerAnalyticsText2(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        )
+                      ]),
+                  trailing: _language.getLanguage() != "AR"
+                      ? const Icon(
+                          Icons.percent,
+                          size: 35,
+                          color: Color(0xff11CDEF),
+                        )
+                      : null,
+                  leading: _language.getLanguage() == "AR"
+                      ? const Icon(
+                          Icons.percent,
+                          size: 35,
+                          color: Color(0xff11CDEF),
+                        )
+                      : null,
+                )),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget UnderConstruction() {
+    return Center(
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Image.asset(
+          "assets/under-construction.png",
+          width: 200,
+        ),
+        Text(
+          _language.tUnderConstructionText(),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        )
+      ]),
     );
   }
 }

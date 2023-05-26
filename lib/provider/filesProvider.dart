@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 class filesProvider with ChangeNotifier {
   String? saveName;
   bool state1 = false;
-
+  bool state3 = false;
+  int? state4;
   String? state8;
+  String? state2;
   setSaveName(String t) {
     saveName = t;
     notifyListeners();
@@ -34,5 +36,35 @@ class filesProvider with ChangeNotifier {
 
   getFilePath() {
     return state8;
+  }
+
+  //response
+  setResponse(String? r) {
+    state2 = r;
+    notifyListeners();
+  }
+
+  getResponse() {
+    return state2;
+  }
+
+  //response
+  setResponseState(bool r) {
+    state3 = r;
+    notifyListeners();
+  }
+
+  getResponseState() {
+    return state3;
+  }
+
+  //response status for exctract post request
+  setResponseStatus(int? r) {
+    state4 = r;
+    notifyListeners();
+  }
+
+  getResponseStatus() {
+    return state4;
   }
 }

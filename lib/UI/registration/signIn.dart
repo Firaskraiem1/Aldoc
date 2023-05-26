@@ -1,15 +1,20 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, prefer_final_fields, override_on_non_overriding_member
+
+import 'dart:convert';
 
 import 'package:aldoc/UI/Home.dart';
+import 'package:aldoc/UI/RestImplementation/RequestClass.dart';
 import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:aldoc/UI/registration/forget_password.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
 import 'package:aldoc/UI/registration/signUp.dart';
 import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/authProvider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,10 +28,20 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final double _headerHeight = 300; //250
-  final Key _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool iSobscurePassword = true;
   final Language _language = Language();
+  TextEditingController _email = TextEditingController();
+  TextEditingController _password = TextEditingController();
+  RequestClass requestClass = RequestClass();
+  Map<String, dynamic>? input;
+  Map<String, dynamic>? transformedData;
+  String? jsonString;
+  String? encrypt;
+  String? loginResponseToken;
+  String? loginResponseRefreshToken;
+  final prefs = SharedPreferences.getInstance();
   @override
   void initState() {
     super.initState();
@@ -46,9 +61,36 @@ class _LoginPageState extends State<LoginPage> {
     ]);
   }
 
+  setInfo(
+      String userId,
+      String? token,
+      String? refresh_token,
+      String? f,
+      String? l,
+      String? e,
+      String? o,
+      bool? state,
+      String? p,
+      String? apikey) async {
+    if (token != null) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("userId", userId);
+      prefs.setString("token", token);
+      prefs.setString("refresh_token", refresh_token!);
+      prefs.setString("firstName", f!);
+      prefs.setString("lastName", l!);
+      prefs.setString("email", e!);
+      prefs.setString("organization", o!);
+      prefs.setBool("loginState", state!);
+      prefs.setString("password", p!);
+      prefs.setString("apiKey", apikey!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authProv = Provider.of<authProvider>(context);
+    // final authProv = Provider.of<authProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xffF8FBFA),
       body: ScrollConfiguration(
@@ -83,14 +125,25 @@ class _LoginPageState extends State<LoginPage> {
                                 Container(
                                   decoration:
                                       ThemeHelper().inputBoxDecorationShaddow(),
-                                  child: TextField(
+                                  child: TextFormField(
+                                    validator: (val) {
+                                      if (val!.isEmpty) {
+                                        return _language.tLoginEmailMessage();
+                                      } else if (!RegExp(
+                                              r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+                                          .hasMatch(val)) {
+                                        return _language
+                                            .tLoginEmailErrorMessage();
+                                      }
+                                      return null;
+                                    },
+                                    controller: _email,
                                     textAlign: _language.getLanguage() == "AR"
                                         ? TextAlign.end
                                         : TextAlign.start,
                                     decoration: ThemeHelper()
                                         .textInputDecoration(
                                             _language.tLoginEmail(),
-                                            _language.tLoginEmailMessage(),
                                             Icons.email),
                                   ),
                                 ),
@@ -98,7 +151,15 @@ class _LoginPageState extends State<LoginPage> {
                                 Container(
                                   decoration:
                                       ThemeHelper().inputBoxDecorationShaddow(),
-                                  child: TextField(
+                                  child: TextFormField(
+                                    validator: (val) {
+                                      if (val!.isEmpty) {
+                                        return _language
+                                            .tLoginPasswordMessage();
+                                      }
+                                      return null;
+                                    },
+                                    controller: _password,
                                     textAlign: _language.getLanguage() == "AR"
                                         ? TextAlign.end
                                         : TextAlign.start,
@@ -143,17 +204,16 @@ class _LoginPageState extends State<LoginPage> {
                                                           color: Colors.grey,
                                                         ))
                                               : null,
-                                      label: Align(
-                                          alignment:
-                                              _language.getLanguage() == "AR"
-                                                  ? Alignment.centerRight
-                                                  : Alignment.centerLeft,
-                                          child:
-                                              Text(_language.tLoginPassword())),
-                                      labelStyle:
-                                          const TextStyle(color: Colors.black),
-                                      hintText:
-                                          _language.tLoginPasswordMessage(),
+                                      // label: Align(
+                                      //     alignment:
+                                      //         _language.getLanguage() == "AR"
+                                      //             ? Alignment.centerRight
+                                      //             : Alignment.centerLeft,
+                                      //     child:
+                                      //         Text(_language.tLoginPassword())),
+                                      // labelStyle:
+                                      //     const TextStyle(color: Colors.black),
+                                      hintText: _language.tLoginPassword(),
                                       fillColor: Colors.white,
                                       filled: true,
                                       contentPadding: const EdgeInsets.fromLTRB(
@@ -209,7 +269,7 @@ class _LoginPageState extends State<LoginPage> {
                                       .buttonBoxDecoration(context),
                                   child: ElevatedButton(
                                     style: ThemeHelper().buttonStyle(),
-                                    child: _isLoading
+                                    child: _isLoading == true
                                         ? LoadingAnimationWidget.inkDrop(
                                             color: Colors.white, size: 30)
                                         : Text(
@@ -222,21 +282,114 @@ class _LoginPageState extends State<LoginPage> {
                                                 color: Colors.white),
                                           ),
                                     onPressed: () async {
-                                      setState(() {
-                                        authProv.setLoginState(true);
-                                        _isLoading = true;
-                                      });
-                                      await Future.delayed(
-                                        const Duration(seconds: 4),
-                                        () {
-                                          Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const Home(),
-                                              ));
-                                        },
-                                      );
+                                      var connectivityResult =
+                                          await Connectivity()
+                                              .checkConnectivity();
+                                      if (connectivityResult ==
+                                              ConnectivityResult.mobile ||
+                                          connectivityResult ==
+                                              ConnectivityResult.wifi) {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() {
+                                            _isLoading = true;
+                                          });
+                                          input = ({
+                                            'password':
+                                                _password.text.toString(),
+                                            'email': _email.text.toString(),
+                                          });
+                                          transformedData = {};
+                                          input!.forEach((key, value) {
+                                            transformedData![key] =
+                                                value.toString();
+                                          });
+                                          jsonString =
+                                              jsonEncode(transformedData);
+                                          encrypt = requestClass
+                                              .encryptRegisterInput(jsonString);
+                                          requestClass
+                                              .loginPostRequest(encrypt)
+                                              .then((value) {
+                                            loginResponseToken = requestClass
+                                                .loginResponseBody();
+                                            loginResponseRefreshToken = requestClass
+                                                .loginResponseBodyRefreshToken();
+                                            // if (loginResponseToken != null) {
+
+                                            requestClass
+                                                .getUser(loginResponseToken,
+                                                    _email.text.toString())
+                                                .whenComplete(
+                                              () {
+                                                debugPrint(
+                                                    "user id5555:${requestClass.getUserId()}");
+                                                requestClass
+                                                    .getUserInformations(
+                                                        loginResponseToken,
+                                                        requestClass
+                                                            .getUserId())
+                                                    .whenComplete(
+                                                  () {
+                                                    setInfo(
+                                                        requestClass
+                                                            .getUserId()
+                                                            .toString(),
+                                                        loginResponseToken,
+                                                        loginResponseRefreshToken,
+                                                        requestClass
+                                                            .getFirstName(),
+                                                        requestClass
+                                                            .getlastName(),
+                                                        requestClass.getEmail(),
+                                                        requestClass
+                                                            .getOrganization(),
+                                                        true,
+                                                        requestClass
+                                                            .getPassword(),
+                                                        requestClass
+                                                            .getApiKey());
+                                                    if (requestClass
+                                                                .loginResponseStatus() ==
+                                                            200 &&
+                                                        requestClass
+                                                                .userInfoStatus() ==
+                                                            200) {
+                                                      Fluttertoast.showToast(
+                                                          msg: _language
+                                                              .tLoginSuccesMsg(),
+                                                          backgroundColor:
+                                                              Colors.grey);
+                                                      Navigator.pushReplacement(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const Home(),
+                                                          ));
+                                                    } else {
+                                                      setState(() {
+                                                        _isLoading = false;
+                                                      });
+                                                      Fluttertoast.showToast(
+                                                          msg: _language
+                                                              .tErrorMsg(),
+                                                          backgroundColor:
+                                                              Colors.grey);
+                                                    }
+                                                  },
+                                                );
+                                              },
+                                            );
+                                          });
+                                        } else {
+                                          setState(() {
+                                            _isLoading = false;
+                                          });
+                                        }
+                                      } else {
+                                        Fluttertoast.showToast(
+                                            msg: _language.tCaptureError(),
+                                            backgroundColor: Colors.grey);
+                                      }
                                     },
                                   ),
                                 ),
@@ -283,6 +436,48 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                         ])),
                                 ),
+                                Text(_language.tLoginOrText()),
+                                Container(
+                                  margin:
+                                      const EdgeInsets.fromLTRB(10, 15, 10, 20),
+                                  child: _language.getLanguage() == "AR"
+                                      ? Text.rich(TextSpan(children: [
+                                          TextSpan(
+                                            text: _language.tLoginStartDemo(),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () {
+                                                setInfo("", "", "", "", "", "",
+                                                    "", false, "", "");
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const Home()));
+                                              },
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xff41B072)),
+                                          ),
+                                        ]))
+                                      : Text.rich(TextSpan(children: [
+                                          TextSpan(
+                                            text: _language.tLoginStartDemo(),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () {
+                                                setInfo("", "", "", "", "", "",
+                                                    "", false, "", "");
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const Home()));
+                                              },
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xff41B072)),
+                                          ),
+                                        ])),
+                                )
                               ],
                             )),
                       ],

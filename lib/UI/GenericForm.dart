@@ -1,14 +1,14 @@
-// ignore_for_file: no_leading_underscores_for_local_identifiers, non_constant_identifier_names, unused_local_variable, depend_on_referenced_packages, unused_element, use_build_context_synchronously, prefer_final_fields, override_on_non_overriding_member
+// ignore_for_file: no_leading_underscores_for_local_identifiers, non_constant_identifier_names, unused_local_variable, depend_on_referenced_packages, unused_element, use_build_context_synchronously, prefer_final_fields, override_on_non_overriding_member, unrelated_type_equality_checks
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:aldoc/UI/local_notification.dart';
+import 'package:aldoc/provider/Language.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:folder_file_saver/folder_file_saver.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,10 +17,10 @@ import 'package:rive/rive.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_screenshot_widget/share_screenshot_widget.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GenericForm extends StatefulWidget {
   const GenericForm({super.key});
-
   @override
   State<GenericForm> createState() => _GenericFormState();
 }
@@ -31,39 +31,105 @@ class _GenericFormState extends State<GenericForm> {
   List<String>? keys;
   List<String>? values;
   List<String>? keys2;
-  List<double>? values2;
+  List<dynamic>? values2;
   bool buttonFavoritePressed = false;
   bool buttonSharePressed = false;
-
   String? screenshotPath;
   // /////////////////////:
   final GlobalKey _widgetScreenshotKey = GlobalKey();
   late final local_notification service;
   ScreenshotController _screenshotController = ScreenshotController();
+  bool loading = false;
+  Map<String, dynamic>? data;
+  String? response;
+  Language _language = Language();
+  bool? loginState;
 
   ///methodes
-  Future<void> readJson() async {
-    final String response =
-        await rootBundle.loadString("assets/ocrResult.json");
-    final Map<String, dynamic> data = await json.decode(response);
-    data["ocr_results"].forEach(
-      (key, value) {
-        setState(() {
-          _result[key] = value;
-        });
-        keys = _result.keys.toList();
-        values = _result.values.cast<String>().toList();
-      },
-    );
-    data["detection_score"].forEach(
-      (key, value) {
-        setState(() {
-          _result2[key] = value * 100;
-        });
-        keys2 = _result2.keys.toList();
-        values2 = _result2.values.cast<double>().toList();
-      },
-    );
+  Future<void> readJsonDemo() async {
+    final filesProv = Provider.of<filesProvider>(context);
+    final camProv = Provider.of<cameraProvider>(context);
+
+    try {
+      response = filesProv.getResponse();
+      if (response != null && response != "") {
+        data = await jsonDecode(response!);
+        if (data != null &&
+            data != "" &&
+            filesProv.getResponseStatus() != 500) {
+          if (data!["data"]["ocr_results"] != null &&
+              data!["data"]["ocr_results"] != "") {
+            data!["data"]["ocr_results"].forEach(
+              (key, value) {
+                setState(() {
+                  _result[key] = value;
+                });
+                keys = _result.keys.toList();
+                values = _result.values.cast<String>().toList();
+              },
+            );
+          }
+          if (data!["data"]["detection_score"] != null &&
+              data!["data"]["detection_score"] != "") {
+            data!["data"]["detection_score"].forEach(
+              (key, value) {
+                setState(() {
+                  _result2[key] = value * 100;
+                });
+                keys2 = _result2.keys.toList();
+                values2 = _result2.values.toList();
+              },
+            );
+          }
+        }
+      }
+    } on Exception {
+      Fluttertoast.showToast(
+          msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+    }
+  }
+
+  Future<void> readJsonUserConnected() async {
+    final filesProv = Provider.of<filesProvider>(context);
+    final camProv = Provider.of<cameraProvider>(context);
+
+    try {
+      response = filesProv.getResponse();
+      if (response != null && response != "") {
+        data = await jsonDecode(response!);
+        if (data != null &&
+            data != "" &&
+            filesProv.getResponseStatus() != 500) {
+          if (data!["document"]["data"]["ocr_results"] != null &&
+              data!["document"]["data"]["ocr_results"] != "") {
+            data!["document"]["data"]["ocr_results"].forEach(
+              (key, value) {
+                setState(() {
+                  _result[key] = value;
+                });
+                keys = _result.keys.toList();
+                values = _result.values.cast<String>().toList();
+              },
+            );
+          }
+          if (data!["document"]["data"]["detection_score"] != null &&
+              data!["document"]["data"]["detection_score"] != "") {
+            data!["document"]["data"]["detection_score"].forEach(
+              (key, value) {
+                setState(() {
+                  _result2[key] = value * 100;
+                });
+                keys2 = _result2.keys.toList();
+                values2 = _result2.values.toList();
+              },
+            );
+          }
+        }
+      }
+    } on Exception {
+      Fluttertoast.showToast(
+          msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+    }
   }
 
   Future<void> saveScreenshotToPdf() async {
@@ -91,7 +157,18 @@ class _GenericFormState extends State<GenericForm> {
     service = local_notification();
     service.intialize();
     super.initState();
-    readJson();
+    setState(
+      () => _language.getLanguage(),
+    );
+    SharedPreferences.getInstance().then(
+      (value) {
+        setState(() {
+          loginState = value.getBool("loginState");
+        });
+      },
+    );
+    // loadingAnimation();
+    // readJson();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
@@ -107,9 +184,44 @@ class _GenericFormState extends State<GenericForm> {
 
   @override
   Widget build(BuildContext context) {
+    final camProv = Provider.of<cameraProvider>(context);
+    final filesProv = Provider.of<filesProvider>(context);
+    String? ImageUploadedPath = camProv.getPathUploadImage();
+    String? currentState = camProv.getCurrentState();
+    if (loginState == true) {
+      readJsonUserConnected();
+    } else {
+      readJsonDemo();
+    }
     return Scaffold(
       backgroundColor: const Color(0xffF8FBFA),
-      body: formView(),
+      body: filesProv.getResponseState() == true
+          ? formView()
+          : Stack(
+              children: [
+                // && currentState == "uploadFile"
+                ImageUploadedPath != null && currentState == "uploadFile"
+                    ? Center(
+                        child: Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 4),
+                        child: Image.file(
+                          File(camProv.getPathUploadImage().toString()),
+                          height: 170,
+                          width: 275,
+                        ),
+                      ))
+                    : Center(
+                        child: Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 4),
+                        child: Image.file(
+                          File(camProv.getPathImage().toString()),
+                          height: 170,
+                          width: 275,
+                        ),
+                      )),
+                const Center(child: RiveAnimation.asset("assets/ocr_card.riv")),
+              ],
+            ),
     );
   }
 
@@ -130,25 +242,28 @@ class _GenericFormState extends State<GenericForm> {
             width: MediaQuery.of(context).size.width,
           ));
     } else if (ImageUploadedPath != null && currentState == "uploadFile") {
+      //&& currentState == "uploadFile"
       return Padding(
         padding: const EdgeInsets.only(top: 65, right: 25, left: 25),
-        child: ImageUploadedPath.split(".").last == 'pdf'
-            ? Padding(
-                padding: const EdgeInsets.only(bottom: 350),
-                child: PDFView(
-                  filePath: ImageUploadedPath,
-                  fitEachPage: true,
-                  pageSnap: false,
-                ),
-              )
-            : Image.file(
-                File(
-                  ImageUploadedPath,
-                ),
-                height: 230,
-                // fit: BoxFit.fitWidth,
-                width: MediaQuery.of(context).size.width,
-              ),
+        child:
+            // ImageUploadedPath.split(".").last == 'pdf'
+            //     ? Padding(
+            //         padding: const EdgeInsets.only(bottom: 350),
+            //         child: PDFView(
+            //           filePath: ImageUploadedPath,
+            //           fitEachPage: true,
+            //           pageSnap: false,
+            //         ),
+            //       )
+            //     :
+            Image.file(
+          File(
+            ImageUploadedPath,
+          ),
+          height: 230,
+          // fit: BoxFit.fitWidth,
+          width: MediaQuery.of(context).size.width,
+        ),
       );
     }
     return Container();
@@ -162,7 +277,7 @@ class _GenericFormState extends State<GenericForm> {
 
         service.showNotification(
             id: 0,
-            title: "File Download",
+            title: _language.tGenericFormDownloadNotification(),
             body: "",
             p: currentProgress,
             showProgress: true);
@@ -170,12 +285,12 @@ class _GenericFormState extends State<GenericForm> {
         timer.cancel();
         service.showNotification(
             id: 0,
-            title: ' Download completed',
+            title: _language.tGenericFormDownloadCompletedNotification(),
             body: "",
             p: 0,
             showProgress: false);
-        service.onDidReceivedLocalNotifications(
-            0, "test", "", "Download Completed");
+        // service.onDidReceivedLocalNotifications(
+        //     0, "test", "", "Download Completed");
       }
     });
   }
@@ -222,7 +337,7 @@ class _GenericFormState extends State<GenericForm> {
                             mainAxisExtent: 80,
                             mainAxisSpacing: 5,
                             crossAxisCount: 2,
-                            crossAxisSpacing: 0.1),
+                            crossAxisSpacing: 1),
                     padding: const EdgeInsets.only(top: 5, bottom: 10),
                     itemCount: _result.length,
                     itemBuilder: (context, index) {
@@ -230,20 +345,27 @@ class _GenericFormState extends State<GenericForm> {
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              children: [
-                                Text(
-                                  "${keys![index]} :",
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ],
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${keys![index]} :",
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 7),
                               child: Row(
                                 children: [
-                                  champContainer(
-                                      values![index], values2![index].toInt())
+                                  values2 != null
+                                      ? champContainer(values![index],
+                                          values2![index].toInt())
+                                      : champContainer(values![index], null)
                                 ],
                               ),
                             ),
@@ -264,7 +386,6 @@ class _GenericFormState extends State<GenericForm> {
                           buttonFavoritePressed = !buttonFavoritePressed;
                         });
                         // saver screenshot
-
                         if (buttonFavoritePressed == true &&
                             savedName != null &&
                             _saveName.text == "") {
@@ -281,6 +402,7 @@ class _GenericFormState extends State<GenericForm> {
                                 filter:
                                     ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                                 child: AlertDialog(
+                                  backgroundColor: const Color(0xffF3F3F3),
                                   shape: RoundedRectangleBorder(
                                       borderRadius:
                                           BorderRadius.circular(15.0)),
@@ -291,10 +413,10 @@ class _GenericFormState extends State<GenericForm> {
                                         mainAxisSize: MainAxisSize.min,
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
-                                        children: const [
+                                        children: [
                                           Text(
-                                            "File Name",
-                                            style: TextStyle(
+                                            _language.tGenericFormFileName(),
+                                            style: const TextStyle(
                                                 fontWeight: FontWeight.bold),
                                           )
                                         ],
@@ -315,8 +437,7 @@ class _GenericFormState extends State<GenericForm> {
                                                     OutlineInputBorder(
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(
-                                                                    100.0),
+                                                                .circular(10.0),
                                                         borderSide:
                                                             const BorderSide(
                                                                 color: Colors
@@ -325,15 +446,14 @@ class _GenericFormState extends State<GenericForm> {
                                                     OutlineInputBorder(
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(
-                                                                    100.0),
+                                                                .circular(10.0),
                                                         borderSide: BorderSide(
                                                             color: Colors.grey
                                                                 .shade400)),
                                                 errorBorder: OutlineInputBorder(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            100.0),
+                                                            10.0),
                                                     borderSide:
                                                         const BorderSide(
                                                             color: Colors.red,
@@ -342,8 +462,7 @@ class _GenericFormState extends State<GenericForm> {
                                                     OutlineInputBorder(
                                                         borderRadius:
                                                             BorderRadius
-                                                                .circular(
-                                                                    100.0),
+                                                                .circular(10.0),
                                                         borderSide:
                                                             const BorderSide(
                                                                 color:
@@ -353,9 +472,11 @@ class _GenericFormState extends State<GenericForm> {
                                               controller: _saveName,
                                               validator: (value) {
                                                 if (value!.isEmpty) {
-                                                  return "Enter file name";
+                                                  return _language
+                                                      .tGenericFormFileNameMsgError1();
                                                 } else if (value == savedName) {
-                                                  return "file name already exists";
+                                                  return _language
+                                                      .tGenericFormFileNameMsgError2();
                                                 }
                                                 return null;
                                               },
@@ -366,53 +487,93 @@ class _GenericFormState extends State<GenericForm> {
                                         children: [
                                           Padding(
                                             padding: const EdgeInsets.only(
-                                                left: 5, right: 40, top: 15),
-                                            child: TextButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    buttonFavoritePressed =
-                                                        false;
-                                                  });
-                                                  Navigator.pop(context);
-                                                },
-                                                child: const Text(
-                                                  "Cancel",
-                                                  style: TextStyle(
-                                                      color: Colors.black),
-                                                )),
+                                                left: 10, right: 40, top: 20),
+                                            child: Container(
+                                              width: 80,
+                                              decoration: const BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                          topRight: Radius
+                                                              .circular(10),
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  10),
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                  10),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                  10)),
+                                                  color: Color(0xffFFFFFF)),
+                                              child: TextButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      buttonFavoritePressed =
+                                                          false;
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text(
+                                                    _language
+                                                        .tProfilButtonCancel(),
+                                                    style: const TextStyle(
+                                                        color: Colors.black),
+                                                  )),
+                                            ),
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.only(
-                                                right: 5, left: 40, top: 15),
-                                            child: TextButton(
-                                                onPressed: () async {
-                                                  if (_formKey.currentState!
-                                                      .validate()) {
-                                                    if (_saveName.text !=
-                                                            savedName ||
-                                                        savedName == null) {
-                                                      setState(() {
-                                                        filesProv.setSaveName(
-                                                            _saveName.text);
-                                                        filesProv
-                                                            .setFavoriteState(
-                                                                true);
-                                                        Navigator.pop(context);
-                                                        Fluttertoast.showToast(
-                                                            msg: "File saved!",
-                                                            backgroundColor:
-                                                                Colors.grey);
-                                                        buttonFavoritePressed =
-                                                            true;
-                                                      });
+                                                right: 10, top: 20),
+                                            child: Container(
+                                              width: 100,
+                                              decoration: const BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                          topRight: Radius
+                                                              .circular(10),
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  10),
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                  10),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                  10)),
+                                                  color: Color(0xff41B072)),
+                                              child: TextButton(
+                                                  onPressed: () async {
+                                                    if (_formKey.currentState!
+                                                        .validate()) {
+                                                      if (_saveName.text !=
+                                                              savedName ||
+                                                          savedName == null) {
+                                                        setState(() {
+                                                          filesProv.setSaveName(
+                                                              _saveName.text);
+                                                          filesProv
+                                                              .setFavoriteState(
+                                                                  true);
+                                                          Navigator.pop(
+                                                              context);
+                                                          Fluttertoast.showToast(
+                                                              msg: _language
+                                                                  .tGenericFormSaveMsg(),
+                                                              backgroundColor:
+                                                                  Colors.grey);
+                                                          buttonFavoritePressed =
+                                                              true;
+                                                        });
+                                                      }
                                                     }
-                                                  }
-                                                },
-                                                child: const Text(
-                                                  "Save",
-                                                  style: TextStyle(
-                                                      color: Colors.black),
-                                                )),
+                                                  },
+                                                  child: Text(
+                                                    _language
+                                                        .tProfilButtonSave(),
+                                                    style: const TextStyle(
+                                                        color: Colors.white),
+                                                  )),
+                                            ),
                                           )
                                         ],
                                       )
@@ -455,10 +616,8 @@ class _GenericFormState extends State<GenericForm> {
                           position: const RelativeRect.fromLTRB(150, 75, 35, 0),
                           items: [
                             PopupMenuItem(
-                                child: TextButton.icon(
-                              label: const Text("Download File",
-                                  style: TextStyle(color: Colors.black)),
-                              onPressed: () async {
+                                child: ListTile(
+                              onTap: () async {
                                 saveScreenshotToPdf();
                                 await Future.delayed(
                                   const Duration(seconds: 2),
@@ -467,23 +626,33 @@ class _GenericFormState extends State<GenericForm> {
                                   },
                                 );
                               },
-                              icon: const Padding(
-                                padding: EdgeInsets.only(right: 7),
-                                child: Icon(Icons.file_download_outlined),
+                              leading: const Icon(
+                                Icons.file_download_outlined,
+                                color: Colors.black,
+                              ),
+                              title: Text(
+                                _language.tGenericFormDownloadFileText(),
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold),
                               ),
                             )),
                             PopupMenuItem(
-                                child: TextButton.icon(
-                              onPressed: () {
+                                child: ListTile(
+                              onTap: () {
                                 shareWidgets(globalKey: _widgetScreenshotKey);
                               },
-                              label: const Text(
-                                "Share",
-                                style: TextStyle(color: Colors.black),
+                              leading: const Icon(
+                                Icons.ios_share_rounded,
+                                color: Colors.black,
                               ),
-                              icon: const Padding(
-                                padding: EdgeInsets.only(right: 7),
-                                child: Icon(Icons.ios_share_rounded),
+                              title: Text(
+                                _language.tGenericFormShareText(),
+                                style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold),
                               ),
                             )),
                           ]);
@@ -501,43 +670,69 @@ class _GenericFormState extends State<GenericForm> {
     );
   }
 
-  Widget champContainer(String t, int t2) {
+  Widget champContainer(String? t, int? t2) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: double.infinity),
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(7)),
-      child: Center(
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Text(t, style: const TextStyle(fontSize: 13)),
-          ),
-          IconButton(
+        width: 160,
+        // constraints: const BoxConstraints(maxWidth: double.infinity),
+        decoration: BoxDecoration(
+            color: const Color(0xffF8FBFA),
+            borderRadius: BorderRadius.circular(7)),
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        top: 15, bottom: 10, left: 10, right: 90),
+                    child: Text(t!, style: const TextStyle(fontSize: 13)),
+                  ),
+                ]),
+              ),
+            ),
+            Align(
               alignment: Alignment.centerRight,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: t));
-              },
-              icon: const Icon(
-                Icons.content_copy,
-                size: 17,
-              )),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "${t2.toString()}%",
-                style: const TextStyle(fontSize: 13),
+              child: Container(
+                decoration: const BoxDecoration(
+                    color: Color(0xffF8FBFA),
+                    borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(7),
+                        bottomRight: Radius.circular(7))),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                        alignment: Alignment.centerRight,
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: t));
+                        },
+                        icon: const Icon(
+                          Icons.content_copy,
+                          size: 17,
+                        )),
+                    if (t2 != null)
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "${t2.toString()}%",
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          const Icon(
+                            size: 19,
+                            Icons.check_circle,
+                            color: Color(0xff41B072),
+                          ),
+                        ],
+                      )
+                  ],
+                ),
               ),
-              const Icon(
-                size: 19,
-                Icons.check_circle,
-                color: Color(0xff41B072),
-              ),
-            ],
-          )
-        ]),
-      ),
-    );
+            ),
+          ],
+        ));
   }
 }
 

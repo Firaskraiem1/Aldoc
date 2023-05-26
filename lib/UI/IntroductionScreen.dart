@@ -13,8 +13,6 @@ class IntroductionScreen extends StatefulWidget {
 }
 
 class _IntroductionScreenState extends State<IntroductionScreen> {
-  bool _isLoading = false;
-
   @override
   void initState() {
     super.initState();
@@ -48,44 +46,28 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
               decoration: ThemeHelper().buttonBoxDecoration(context),
               child: ElevatedButton(
                 style: ThemeHelper().buttonStyle(),
-                child: _isLoading
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          LoadingAnimationWidget.stretchedDots(
-                              color: Colors.white, size: 35)
-                        ],
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            "Let's Go!",
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                          const SizedBox(
-                            width: 12.71,
-                          ),
-                          Image.asset("assets/arrow-right-outline.png")
-                        ],
-                      ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Let's Go!",
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(
+                      width: 12.71,
+                    ),
+                    Image.asset("assets/arrow-right-outline.png")
+                  ],
+                ),
                 onPressed: () async {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  await Future.delayed(
-                    const Duration(seconds: 2),
-                    () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Home(),
-                          ));
-                    },
-                  );
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Home(),
+                      ));
                 },
               ),
             ),
