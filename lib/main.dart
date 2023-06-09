@@ -1,6 +1,5 @@
 import 'package:aldoc/UI/splashScreen.dart';
 import 'package:aldoc/provider/Language.dart';
-import 'package:aldoc/provider/authProvider.dart';
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:flutter/material.dart';
@@ -31,9 +30,6 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(
           create: (context) => cameraProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => authProvider(),
         ),
         ChangeNotifierProvider(
           create: (context) => filesProvider(),

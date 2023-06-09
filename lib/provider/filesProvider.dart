@@ -9,6 +9,7 @@ class filesProvider with ChangeNotifier {
   int? state4;
   String? state8;
   String? state2;
+  List<dynamic> favoriteList = [];
   setSaveName(String t) {
     saveName = t;
     notifyListeners();
@@ -66,5 +67,27 @@ class filesProvider with ChangeNotifier {
 
   getResponseStatus() {
     return state4;
+  }
+
+  setFavoriteList(String? taskId, String? dateCreation, String? fileName,
+      String? fileSize) {
+    favoriteList.add({
+      'task_id': taskId,
+      'created_at': dateCreation,
+      'file_name': fileName,
+      'file_size': fileSize
+    });
+    notifyListeners();
+  }
+
+  removeEmelentFromList(int? index) {
+    if (index != null) {
+      favoriteList.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  getFavoriteList() {
+    return favoriteList;
   }
 }

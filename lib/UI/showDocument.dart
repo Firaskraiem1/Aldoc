@@ -27,11 +27,21 @@ class showDocument extends StatefulWidget {
   String? userId;
   String? userToken;
   String? taskId;
+  String? dateCreation;
+  String? fileName;
+  String? fileSize;
+  bool? favoriteState = false;
+  int? index;
   showDocument(
       {super.key,
       required this.userToken,
       required this.userId,
-      required this.taskId});
+      required this.taskId,
+      required this.dateCreation,
+      required this.fileName,
+      required this.fileSize,
+      required this.favoriteState,
+      required this.index});
 
   @override
   State<showDocument> createState() => _showDocumentState();
@@ -64,10 +74,6 @@ class _showDocumentState extends State<showDocument> {
                   requestClass.postConnectedResponseStatus() != 500) {
                 setState(() {
                   imagePath = getResponse!;
-                  print(imagePath);
-                });
-
-                setState(() {
                   load = true;
                 });
               }
@@ -104,6 +110,9 @@ class _showDocumentState extends State<showDocument> {
     service.intialize();
     super.initState();
     readDocument(widget.taskId, widget.userToken, widget.userId);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
   }
 
   bool? load = false;
@@ -111,6 +120,7 @@ class _showDocumentState extends State<showDocument> {
   @override
   Widget build(BuildContext context) {
     readJsonUserConnected();
+    final filesProv = Provider.of<filesProvider>(context);
     return Scaffold(
         backgroundColor: const Color(0xffF8FBFA),
         appBar: PreferredSize(
@@ -123,7 +133,8 @@ class _showDocumentState extends State<showDocument> {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const Home(),
+                        builder: (context) =>
+                            Home(favoriteProductList: favoriteProductList),
                       ));
                 },
                 icon: const Icon(
@@ -135,21 +146,6 @@ class _showDocumentState extends State<showDocument> {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // IconButton(
-                  //     splashRadius: 0.1,
-                  //     onPressed: () {
-                  //       buttonFavoritePressed = !buttonFavoritePressed;
-                  //     },
-                  //     icon: buttonFavoritePressed
-                  //         ? const Icon(
-                  //             Icons.star_rate,
-                  //             size: 23,
-                  //             color: Color.fromARGB(255, 36, 119, 91),
-                  //           )
-                  //         : const RiveAnimation.asset(
-                  //             "assets/iconswhite.riv",
-                  //             artboard: "LIKE/STAR",
-                  //           )),
                   IconButton(
                       onPressed: () {
                         showDialog(
@@ -250,6 +246,12 @@ class _showDocumentState extends State<showDocument> {
                                                           state.didChange(
                                                               loading);
                                                         });
+                                                        if (widget.index !=
+                                                            null) {
+                                                          filesProv
+                                                              .removeEmelentFromList(
+                                                                  widget.index);
+                                                        }
                                                         deleteDocument(
                                                                 widget.taskId!,
                                                                 widget
@@ -270,7 +272,7 @@ class _showDocumentState extends State<showDocument> {
                                                                       MaterialPageRoute(
                                                                         builder:
                                                                             (context) =>
-                                                                                const Home(),
+                                                                                Home(favoriteProductList: []),
                                                                       ));
                                                             } else {
                                                               Fluttertoast.showToast(
@@ -352,7 +354,7 @@ class _showDocumentState extends State<showDocument> {
     try {
       response = extractResultResponse;
       if (response != null && response != "") {
-        data = await jsonDecode(response!);
+        data = await json.decode(response!);
         if (data != null &&
             data != "" &&
             filesProv.getResponseStatus() != 500) {
@@ -453,11 +455,9 @@ class _showDocumentState extends State<showDocument> {
   String? screenshotPath;
   final ScreenshotController _screenshotController = ScreenshotController();
   final GlobalKey _widgetScreenshotKey = GlobalKey();
+  List<dynamic> favoriteProductList = [];
   Widget formView() {
-    final _formKey = GlobalKey<FormState>();
-    final TextEditingController _saveName = TextEditingController();
     final filesProv = Provider.of<filesProvider>(context);
-    String? savedName = filesProv.getSaveName();
     return Align(
       alignment: Alignment.bottomCenter,
       child: ShareScreenshotAsImage(
@@ -511,9 +511,12 @@ class _showDocumentState extends State<showDocument> {
                               child: Row(
                                 children: [
                                   values2 != null
-                                      ? champContainer(values![index],
+                                      ? champContainer(
+                                          utf8.decode(values![index].codeUnits),
                                           values2![index].toInt())
-                                      : champContainer(values![index], null)
+                                      : champContainer(
+                                          utf8.decode(values![index].codeUnits),
+                                          null)
                                 ],
                               ),
                             ),
@@ -524,28 +527,41 @@ class _showDocumentState extends State<showDocument> {
                   ),
                 ),
               ),
-              Positioned(
-                  top: 0,
-                  right: 45,
-                  child: IconButton(
-                      splashRadius: 0.1,
-                      onPressed: () {},
-                      icon: buttonFavoritePressed &&
-                                  savedName != null &&
-                                  filesProv.getFavoriteState() == true ||
-                              !buttonFavoritePressed &&
-                                  savedName != null &&
-                                  _saveName.text == "" &&
-                                  filesProv.getFavoriteState() == true
-                          ? const Icon(
-                              Icons.star_rate,
-                              size: 23,
-                              color: Color(0xffF8FBFA),
-                            )
-                          : const RiveAnimation.asset(
-                              "assets/iconswhite.riv",
-                              artboard: "LIKE/STAR",
-                            ))),
+              widget.favoriteState == false
+                  ? Positioned(
+                      top: 0,
+                      right: 45,
+                      child: IconButton(
+                          splashRadius: 0.1,
+                          onPressed: () {
+                            setState(() {
+                              buttonFavoritePressed = !buttonFavoritePressed;
+                            });
+                            if (buttonFavoritePressed == true) {
+                              filesProv.setFavoriteList(
+                                  widget.taskId,
+                                  widget.dateCreation,
+                                  widget.fileName,
+                                  widget.fileSize);
+                              Fluttertoast.showToast(
+                                  msg: _language.tGenericAddToFavoris(),
+                                  backgroundColor: Colors.grey);
+                            } else {
+                              favoriteProductList.removeAt(0);
+                            }
+                            print(favoriteProductList);
+                          },
+                          icon: buttonFavoritePressed
+                              ? const Icon(
+                                  Icons.star_rate,
+                                  size: 23,
+                                  color: Color(0xffF8FBFA),
+                                )
+                              : const RiveAnimation.asset(
+                                  "assets/iconswhite.riv",
+                                  artboard: "LIKE/STAR",
+                                )))
+                  : const SizedBox(),
               Positioned(
                   top: 0,
                   right: 10,
@@ -558,7 +574,8 @@ class _showDocumentState extends State<showDocument> {
                           context: context,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
-                          position: const RelativeRect.fromLTRB(150, 75, 35, 0),
+                          position:
+                              const RelativeRect.fromLTRB(150, 130, 35, 0),
                           items: [
                             PopupMenuItem(
                                 child: ListTile(
@@ -652,6 +669,9 @@ class _showDocumentState extends State<showDocument> {
                         alignment: Alignment.centerRight,
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: t));
+                          Fluttertoast.showToast(
+                              msg: _language.tGenericFormCopieText(),
+                              backgroundColor: Colors.grey);
                         },
                         icon: const Icon(
                           Icons.content_copy,

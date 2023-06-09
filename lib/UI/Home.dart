@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable, override_on_non_overriding_member, prefer_typing_uninitialized_variables, avoid_print, use_build_context_synchronously
+// ignore_for_file: non_constant_identifier_names, no_leading_underscores_for_local_identifiers, unused_local_variable, override_on_non_overriding_member, prefer_typing_uninitialized_variables, avoid_print, use_build_context_synchronously, must_be_immutable
 
 import 'dart:async';
 import 'dart:convert';
@@ -10,7 +10,7 @@ import 'package:aldoc/UI/UploadScreen.dart';
 import 'package:aldoc/UI/registration/signIn.dart';
 import 'package:aldoc/UI/showDocument.dart';
 import 'package:aldoc/provider/Language.dart';
-import 'package:aldoc/provider/authProvider.dart';
+
 import 'package:aldoc/provider/cameraProvider.dart';
 import 'package:aldoc/provider/filesProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -21,10 +21,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:rive/rive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  List<dynamic>? favoriteProductList;
+  Home({super.key, required this.favoriteProductList});
 
   @override
   State<Home> createState() => _HomeState();
@@ -53,6 +55,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool? loginState;
   String? username;
   String? imageProfilPath;
+
 ////
 ////methodes
 
@@ -74,7 +77,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           userId = value.getString("userId");
         });
       },
-    ).whenComplete(() => readProducts(5, ""));
+    ).whenComplete(
+      () {
+        readProducts(5, "");
+        lastIndex = 5;
+      },
+    );
     _loading1 = _loading2 = false;
     _currentState = "home";
     _alignement1 = Alignment.bottomCenter;
@@ -188,6 +196,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     final camProv = Provider.of<cameraProvider>(context);
     String? currentState = camProv.getCurrentState();
     bool removeAppBar = camProv.getRemoveAppBar();
+
     return Scaffold(
       key: _scaffoldKey,
       extendBodyBehindAppBar: _currentState == "scanId" ||
@@ -565,7 +574,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 ///////////////////////////// widgets ////////////////////////////
   ///
   PreferredSizeWidget appBarWidget() {
-    final authProv = Provider.of<authProvider>(context);
     final camProv = Provider.of<cameraProvider>(context);
     String? currentState = camProv.getCurrentState();
     // bool loginState = authProv.getLoginState();
@@ -659,6 +667,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     camProv.removeAppBar(false);
                                     camProv.setCurrentState("");
                                     camProv.setGenericState(false);
+
                                     _currentState = "home";
                                     _FloatButtonPressed =
                                         _FloatButtonCardPressed =
@@ -735,7 +744,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const Home(),
+                        builder: (context) => Home(favoriteProductList: []),
                       ));
                 },
                 icon: const Icon(
@@ -832,7 +841,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   bool editLastName = false;
 
   PreferredSizeWidget loginAppBar() {
-    final authProv = Provider.of<authProvider>(context);
     final TextEditingController _usernameController = TextEditingController();
     final _formKey = GlobalKey<FormState>();
     final _formKey1 = GlobalKey<FormState>();
@@ -1161,7 +1169,45 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                                   onPressed: () async {
                                                                                     var connectivityResult = await Connectivity().checkConnectivity();
                                                                                     if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
-                                                                                      if (editFirstName) {
+                                                                                      if (editFirstName && editLastName) {
+                                                                                        setState(() {
+                                                                                          _isLoading1 = true;
+                                                                                          state.didChange(_isLoading1);
+                                                                                        });
+                                                                                        requestClass.updateUserInformations(token, password!, email, _newFirstName.text, _newLastName.text, organization, userId, apiKey).whenComplete(
+                                                                                          () {
+                                                                                            if (requestClass.updateUserInfoResponseStatus() == 200) {
+                                                                                              requestClass.getUserInformations(token, userId).whenComplete(
+                                                                                                () {
+                                                                                                  setInfo(userId!, token, _newFirstName.text, _newLastName.text, requestClass.getEmail(), requestClass.getOrganization(), true, requestClass.getPassword(), requestClass.getApiKey());
+                                                                                                  if (requestClass.userInfoStatus() == 200) {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                      state.didChange(_isLoading1);
+                                                                                                    });
+                                                                                                    Navigator.pop(context);
+                                                                                                    editFirstName = editLastName = false;
+                                                                                                    state.didChange(editFirstName);
+                                                                                                    state.didChange(editLastName);
+                                                                                                    Fluttertoast.showToast(msg: _language.tUpdateInfoSuccesMsg(), backgroundColor: Colors.grey);
+                                                                                                  } else {
+                                                                                                    setState(() {
+                                                                                                      _isLoading1 = false;
+                                                                                                    });
+                                                                                                    state.didChange(_isLoading1);
+                                                                                                    Fluttertoast.showToast(msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+                                                                                                  }
+                                                                                                },
+                                                                                              );
+                                                                                            } else {
+                                                                                              setState(() {
+                                                                                                _isLoading1 = false;
+                                                                                              });
+                                                                                              state.didChange(_isLoading1);
+                                                                                            }
+                                                                                          },
+                                                                                        );
+                                                                                      } else if (editFirstName) {
                                                                                         setState(() {
                                                                                           _isLoading1 = true;
                                                                                           state.didChange(_isLoading1);
@@ -1183,13 +1229,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                                                     state.didChange(editLastName);
                                                                                                     firstName = _newFirstName.text;
                                                                                                     state1.didChange(firstName);
-                                                                                                    Fluttertoast.showToast(msg: "succes");
+                                                                                                    Fluttertoast.showToast(msg: _language.tUpdateInfoSuccesMsg(), backgroundColor: Colors.grey);
                                                                                                   } else {
                                                                                                     setState(() {
                                                                                                       _isLoading1 = false;
                                                                                                     });
                                                                                                     state.didChange(_isLoading1);
-                                                                                                    Fluttertoast.showToast(msg: "error");
+                                                                                                    Fluttertoast.showToast(msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
                                                                                                   }
                                                                                                 },
                                                                                               );
@@ -1221,13 +1267,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                                                     editFirstName = editLastName = false;
                                                                                                     state.didChange(editFirstName);
                                                                                                     state.didChange(editLastName);
-                                                                                                    Fluttertoast.showToast(msg: "succes");
+                                                                                                    Fluttertoast.showToast(msg: _language.tUpdateInfoSuccesMsg(), backgroundColor: Colors.grey);
                                                                                                   } else {
                                                                                                     setState(() {
                                                                                                       _isLoading1 = false;
                                                                                                     });
                                                                                                     state.didChange(_isLoading1);
-                                                                                                    Fluttertoast.showToast(msg: "error");
+                                                                                                    Fluttertoast.showToast(msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
                                                                                                   }
                                                                                                 },
                                                                                               );
@@ -1743,6 +1789,9 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                                                 child: TextButton(
                                                                                     onPressed: () {
                                                                                       Navigator.pop(context);
+                                                                                      setState(() {
+                                                                                        _newPassword.text = _oldPassword.text = _confirmPassword.text = "";
+                                                                                      });
                                                                                     },
                                                                                     child: Text(
                                                                                       _language.tProfilButtonCancel(),
@@ -1896,7 +1945,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         context,
                                                         MaterialPageRoute(
                                                           builder: (context) =>
-                                                              const Home(),
+                                                              Home(
+                                                                  favoriteProductList: []),
                                                         ));
                                                   },
                                                   trailing: _language
@@ -1967,8 +2017,33 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     } else if (_currentState == "UnderConstruction") {
       return UnderConstruction();
     }
-    // return homeScreen();
-    return null;
+
+    return demoPage();
+  }
+
+  Widget demoPage() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "     DOCUMENT DIGITIZATION \nAND INFORMATION EXTRACTION",
+            style: TextStyle(
+              fontSize: 20,
+            ),
+          ),
+          Image.asset(
+            "assets/ocr_demo.png",
+            width: 250,
+            height: 150,
+          ),
+          const SizedBox(
+              height: 200,
+              width: 200,
+              child: RiveAnimation.asset("assets/uparrows.riv"))
+        ],
+      ),
+    );
   }
 
   Widget? homeFloatButton() {
@@ -2018,7 +2093,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 //fin padding
                 // container button 1
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2080,7 +2155,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button 2
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2144,7 +2219,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button 2
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2210,7 +2285,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2345,7 +2420,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 //fin padding
                 // container button 1
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2418,7 +2493,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button 2
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2491,7 +2566,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button 2
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2566,7 +2641,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ),
                 // fin padding
                 // conatiner button
-                Container(
+                SizedBox(
                   width: 65,
                   height: 65,
                   child: FloatingActionButton(
@@ -2617,7 +2692,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     _FloatButtonIdPressed && camProv.getGenericState() == true
                 ? const EdgeInsets.only(bottom: 20)
                 : const EdgeInsets.all(0),
-            child: Container(
+            child: SizedBox(
               // with and height of float button
               width: _FloatButtonIdPressed &&
                           camProv.getGenericState() == false ||
@@ -3903,6 +3978,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   String? productsResponse;
   Map<String, dynamic>? productsData;
   List<dynamic>? productList;
+
   int? productCount;
 
   readproductsConnectedUser() {
@@ -3994,22 +4070,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   bool _loading1 = false;
   bool _loading2 = false;
-  int? lastIndex = 5;
+  int? lastIndex;
   String? skillId;
   List<String> tasksId = [];
-  List<String> filesId = [];
-// if (productList!.isNotEmpty &&
-//                                                 productList!.length >= 5) {
-//                                               lastIndex = 5;
-//                                             } else {
-//                                               lastIndex =
-//                                                   productList!.length.toInt();
-//                                             }
+
   Widget homeScreen() {
     final filesProv = Provider.of<filesProvider>(context);
     final camProv = Provider.of<cameraProvider>(context);
     String? savedName = filesProv.getSaveName();
     String? ImageUploadedPath = camProv.getPathUploadImage();
+
+    List<dynamic>? favoritesDocuments = filesProv.getFavoriteList();
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(top: 50),
@@ -4083,7 +4154,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                       MainAxisAlignment.spaceAround,
                                   children: [
                                     Text(
-                                      "${_language.tHomeAllResult()}()",
+                                      "${_language.tHomeAllResult()}(${favoritesDocuments!.length})",
                                       style: const TextStyle(
                                           fontSize: 10,
                                           color: Color(0xff4A4A4A),
@@ -4455,112 +4526,132 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                     _onRefreshFavoriteFiles();
                                   },
                                   onLoading: _onLoadingFavoriteFiles,
-                                  child: _loading1
+                                  child: _loading1 && favoritesDocuments != null
                                       ? ListView.builder(
                                           padding:
                                               const EdgeInsets.only(bottom: 40),
-                                          itemCount: 1,
+                                          itemCount:
+                                              favoritesDocuments.isNotEmpty
+                                                  ? favoritesDocuments.length
+                                                  : 1,
                                           itemBuilder: (context, index) {
-                                            // return Padding(
-                                            //   padding: const EdgeInsets.only(
-                                            //       left: 36, right: 37, top: 10),
-                                            //   child: InkWell(
-                                            //     onLongPress: () {},
-                                            //     overlayColor:
-                                            //         const MaterialStatePropertyAll(
-                                            //             Colors.transparent),
-                                            //     onTap: () {
-                                            //       showDialog(
-                                            //         context: context,
-                                            //         builder: (context) {
-                                            //           return AlertDialog(
-                                            //             backgroundColor:
-                                            //                 const Color(
-                                            //                     0xffF8FBFA),
-                                            //             shape: RoundedRectangleBorder(
-                                            //                 borderRadius:
-                                            //                     BorderRadius
-                                            //                         .circular(
-                                            //                             15.0)),
-                                            //             content: Column(
-                                            //                 mainAxisSize:
-                                            //                     MainAxisSize
-                                            //                         .min,
-                                            //                 children: []),
-                                            //           );
-                                            //         },
-                                            //       );
-                                            //     },
-                                            //     child: Container(
-                                            //       decoration: const BoxDecoration(
-                                            //           boxShadow: [
-                                            //             BoxShadow(
-                                            //                 color: Colors.black,
-                                            //                 // blurRadius: 1,
-                                            //                 spreadRadius: 0.5)
-                                            //           ],
-                                            //           borderRadius:
-                                            //               BorderRadius.only(
-                                            //                   topRight: Radius
-                                            //                       .circular(15),
-                                            //                   topLeft: Radius
-                                            //                       .circular(15),
-                                            //                   bottomLeft: Radius
-                                            //                       .circular(15),
-                                            //                   bottomRight:
-                                            //                       Radius
-                                            //                           .circular(
-                                            //                               15)),
-                                            //           color: Color(0xffFFFFFF)),
-                                            //       child: Row(
-                                            //         mainAxisSize:
-                                            //             MainAxisSize.max,
-                                            //         children: [
-                                            //           IconButton(
-                                            //               splashRadius: 0.1,
-                                            //               onPressed: () {},
-                                            //               icon: Image.asset(
-                                            //                 "assets/FileHomeIcon.png",
-                                            //                 width: 16.46,
-                                            //                 height: 20.25,
-                                            //               )),
-                                            //           // if (savedName != null)
-                                            //           // Expanded(
-                                            //           //   child: ListTile(
-                                            //           //     title: Text(
-                                            //           //       product[
-                                            //           //           'file_name'],
-                                            //           //       style:
-                                            //           //           const TextStyle(
-                                            //           //         color: Color(
-                                            //           //             0xff4A4A4A),
-                                            //           //       ),
-                                            //           //     ),
-                                            //           //     subtitle: Row(
-                                            //           //         mainAxisAlignment:
-                                            //           //             MainAxisAlignment
-                                            //           //                 .spaceBetween,
-                                            //           //         children: [
-                                            //           //           Text(
-                                            //           //               "${product['task_model_type']}\nSize:${product['file_size']}"),
-                                            //           //           Text(
-                                            //           //               "$formattedDate\n  ${product['status']}"),
-                                            //           //         ]),
-                                            //           //   ),
-                                            //           // ),
-                                            //         ],
-                                            //       ),
-                                            //     ),
-                                            //   ),
-                                            // );
-                                            return const Padding(
-                                              padding: EdgeInsets.only(top: 30),
-                                              child: ListTile(
-                                                  title: Center(
-                                                child:
-                                                    Text("No files to display"),
-                                              )),
-                                            );
+                                            if (favoritesDocuments.isNotEmpty) {
+                                              var product =
+                                                  favoritesDocuments[index];
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 36,
+                                                    right: 37,
+                                                    top: 10),
+                                                child: InkWell(
+                                                  overlayColor:
+                                                      const MaterialStatePropertyAll(
+                                                          Colors.transparent),
+                                                  onTap: () {
+                                                    Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              showDocument(
+                                                            index: null,
+                                                            favoriteState: true,
+                                                            userId: userId,
+                                                            taskId:
+                                                                favoritesDocuments[
+                                                                        index]
+                                                                    ['task_id'],
+                                                            userToken: token,
+                                                            dateCreation:
+                                                                favoritesDocuments[
+                                                                        index][
+                                                                    'created_at'],
+                                                            fileName:
+                                                                favoritesDocuments[
+                                                                        index][
+                                                                    'file_name'],
+                                                            fileSize:
+                                                                favoritesDocuments[
+                                                                        index][
+                                                                    'file_size'],
+                                                          ),
+                                                        ));
+                                                  },
+                                                  child: Container(
+                                                    decoration: const BoxDecoration(
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                              color:
+                                                                  Colors.black,
+                                                              // blurRadius: 1,
+                                                              spreadRadius: 0.5)
+                                                        ],
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        15),
+                                                                topLeft: Radius
+                                                                    .circular(
+                                                                        15),
+                                                                bottomLeft: Radius
+                                                                    .circular(
+                                                                        15),
+                                                                bottomRight: Radius
+                                                                    .circular(
+                                                                        15)),
+                                                        color:
+                                                            Color(0xffFFFFFF)),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.max,
+                                                      children: [
+                                                        IconButton(
+                                                            splashRadius: 0.1,
+                                                            onPressed: () {},
+                                                            icon: Image.asset(
+                                                              "assets/FileHomeIcon.png",
+                                                              width: 16.46,
+                                                              height: 20.25,
+                                                            )),
+                                                        Expanded(
+                                                          child: ListTile(
+                                                            title: Text(
+                                                              product[
+                                                                  'file_name'],
+                                                              style:
+                                                                  const TextStyle(
+                                                                color: Color(
+                                                                    0xff4A4A4A),
+                                                              ),
+                                                            ),
+                                                            subtitle: Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  Text(
+                                                                      "document\nSize:${product['file_size']}"),
+                                                                  Text(
+                                                                      "${product['created_at']}\n  Transcribed"),
+                                                                ]),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 30),
+                                                child: ListTile(
+                                                    title: Center(
+                                                  child: Text(_language
+                                                      .tHomeNofilesToDisplayMsg()),
+                                                )),
+                                              );
+                                            }
                                           },
                                         )
                                       : LoadingAnimationWidget.hexagonDots(
@@ -5093,34 +5184,40 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                   controller: _refreshControllerAllFiles,
                                   onLoading: _onLoadingAllFiles,
                                   onRefresh: () {
-                                    if (productCount! % 2 == 0) {
-                                      var reste = productList!.length % 5;
-                                      if (lastIndex! <
-                                          productList!.length - reste) {
-                                        lastIndex = lastIndex! + 5;
+                                    _onRefreshAllFiles();
+                                    print("length:${productCount!}");
+                                    if (productCount! > 5) {
+                                      if (productCount! % 5 == 0 &&
+                                          lastIndex! < productCount!) {
+                                        setState(() {
+                                          lastIndex = lastIndex! + 5;
+                                        });
                                         print(lastIndex);
-                                      } else if (lastIndex !=
-                                              productList!.length &&
-                                          productList!.length > lastIndex!) {
-                                        lastIndex = lastIndex! + reste;
+                                      } else {
+                                        var reste = productCount! % 5;
+                                        print("reste:$reste");
+                                        if (lastIndex! <
+                                            productCount! - reste) {
+                                          setState(() {
+                                            lastIndex = lastIndex! + 5;
+                                          });
+                                        } else {
+                                          if (lastIndex != productCount!) {
+                                            setState(() {
+                                              lastIndex = lastIndex! + reste;
+                                            });
+                                          }
+                                        }
                                       }
                                     } else {
-                                      var reste = productCount! % 2;
-                                      if (lastIndex! <
-                                          productList!.length - reste) {
-                                        lastIndex = lastIndex! + 5;
-                                      } else if (lastIndex !=
-                                              productList!.length &&
-                                          productList!.length > lastIndex!) {
-                                        lastIndex = lastIndex! + reste;
-                                      }
+                                      lastIndex = productCount;
                                     }
-                                    if (skillId == "" && skillId == null) {
+                                    if (skillId == "" || skillId == null) {
+                                      print("lastIndex:$lastIndex");
                                       readProducts(lastIndex!, "");
                                     } else {
                                       readProducts(lastIndex!, skillId);
                                     }
-                                    _onRefreshAllFiles();
                                   },
                                   child: _loading2 && productList != null
                                       ? ListView.builder(
@@ -5136,8 +5233,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                   .contains(product['id'])) {
                                                 tasksId.add(product['id']);
                                               }
-                                              print(tasksId.length);
-                                              print(tasksId);
+                                              // print(tasksId.length);
+                                              // print(tasksId);
 
                                               String dateTimeString =
                                                   product['created_at'];
@@ -5164,10 +5261,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         MaterialPageRoute(
                                                           builder: (context) =>
                                                               showDocument(
+                                                            index: index,
+                                                            favoriteState:
+                                                                false,
                                                             userId: userId,
                                                             taskId:
                                                                 tasksId[index],
                                                             userToken: token,
+                                                            dateCreation:
+                                                                formattedDate,
+                                                            fileName: product[
+                                                                'file_name'],
+                                                            fileSize: product[
+                                                                'file_size'],
                                                           ),
                                                         ));
                                                   },
@@ -5236,13 +5342,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                 ),
                                               );
                                             } else {
-                                              return const Padding(
-                                                padding:
-                                                    EdgeInsets.only(top: 30),
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 30),
                                                 child: ListTile(
                                                     title: Center(
-                                                  child: Text(
-                                                      "No files to display"),
+                                                  child: Text(_language
+                                                      .tHomeNofilesToDisplayMsg()),
                                                 )),
                                               );
                                             }

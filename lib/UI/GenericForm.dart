@@ -363,9 +363,18 @@ class _GenericFormState extends State<GenericForm> {
                               child: Row(
                                 children: [
                                   values2 != null
-                                      ? champContainer(values![index],
+                                      ? champContainer(
+                                          loginState == true
+                                              ? utf8.decode(
+                                                  values![index].codeUnits)
+                                              : values![index],
                                           values2![index].toInt())
-                                      : champContainer(values![index], null)
+                                      : champContainer(
+                                          loginState == true
+                                              ? utf8.decode(
+                                                  values![index].codeUnits)
+                                              : values![index],
+                                          null)
                                 ],
                               ),
                             ),
@@ -376,231 +385,249 @@ class _GenericFormState extends State<GenericForm> {
                   ),
                 ),
               ),
-              Positioned(
-                  top: 0,
-                  right: 45,
-                  child: IconButton(
-                      splashRadius: 0.1,
-                      onPressed: () {
-                        setState(() {
-                          buttonFavoritePressed = !buttonFavoritePressed;
-                        });
-                        // saver screenshot
-                        if (buttonFavoritePressed == true &&
-                            savedName != null &&
-                            _saveName.text == "") {
-                          setState(() {
-                            savedName = "";
-                            buttonFavoritePressed = false;
-                          });
-                        } else {
-                          showDialog(
-                            barrierDismissible: false,
-                            context: context,
-                            builder: (context) {
-                              return BackdropFilter(
-                                filter:
-                                    ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                child: AlertDialog(
-                                  backgroundColor: const Color(0xffF3F3F3),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(15.0)),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            _language.tGenericFormFileName(),
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          )
-                                        ],
-                                      ),
-                                      Form(
-                                          key: _formKey,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                top: 15, right: 10, left: 10),
-                                            child: TextFormField(
-                                              decoration: InputDecoration(
-                                                fillColor: Colors.white,
-                                                filled: true,
-                                                contentPadding:
-                                                    const EdgeInsets.fromLTRB(
-                                                        20, 10, 20, 10),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                        borderSide:
-                                                            const BorderSide(
-                                                                color: Colors
-                                                                    .grey)),
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                        borderSide: BorderSide(
-                                                            color: Colors.grey
-                                                                .shade400)),
-                                                errorBorder: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10.0),
-                                                    borderSide:
-                                                        const BorderSide(
-                                                            color: Colors.red,
-                                                            width: 2.0)),
-                                                focusedErrorBorder:
-                                                    OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10.0),
-                                                        borderSide:
-                                                            const BorderSide(
-                                                                color:
-                                                                    Colors.red,
-                                                                width: 2.0)),
-                                              ),
-                                              controller: _saveName,
-                                              validator: (value) {
-                                                if (value!.isEmpty) {
-                                                  return _language
-                                                      .tGenericFormFileNameMsgError1();
-                                                } else if (value == savedName) {
-                                                  return _language
-                                                      .tGenericFormFileNameMsgError2();
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          )),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 10, right: 40, top: 20),
-                                            child: Container(
-                                              width: 80,
-                                              decoration: const BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                          topRight: Radius
-                                                              .circular(10),
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                  10),
-                                                          bottomLeft:
-                                                              Radius.circular(
-                                                                  10),
-                                                          bottomRight:
-                                                              Radius.circular(
-                                                                  10)),
-                                                  color: Color(0xffFFFFFF)),
-                                              child: TextButton(
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      buttonFavoritePressed =
-                                                          false;
-                                                    });
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Text(
-                                                    _language
-                                                        .tProfilButtonCancel(),
-                                                    style: const TextStyle(
-                                                        color: Colors.black),
-                                                  )),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                right: 10, top: 20),
-                                            child: Container(
-                                              width: 100,
-                                              decoration: const BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.only(
-                                                          topRight: Radius
-                                                              .circular(10),
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                  10),
-                                                          bottomLeft:
-                                                              Radius.circular(
-                                                                  10),
-                                                          bottomRight:
-                                                              Radius.circular(
-                                                                  10)),
-                                                  color: Color(0xff41B072)),
-                                              child: TextButton(
-                                                  onPressed: () async {
-                                                    if (_formKey.currentState!
-                                                        .validate()) {
-                                                      if (_saveName.text !=
-                                                              savedName ||
-                                                          savedName == null) {
-                                                        setState(() {
-                                                          filesProv.setSaveName(
-                                                              _saveName.text);
-                                                          filesProv
-                                                              .setFavoriteState(
-                                                                  true);
-                                                          Navigator.pop(
-                                                              context);
-                                                          Fluttertoast.showToast(
-                                                              msg: _language
-                                                                  .tGenericFormSaveMsg(),
-                                                              backgroundColor:
-                                                                  Colors.grey);
-                                                          buttonFavoritePressed =
-                                                              true;
-                                                        });
-                                                      }
-                                                    }
-                                                  },
-                                                  child: Text(
-                                                    _language
-                                                        .tProfilButtonSave(),
-                                                    style: const TextStyle(
-                                                        color: Colors.white),
-                                                  )),
-                                            ),
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                      icon: buttonFavoritePressed &&
-                                  savedName != null &&
-                                  filesProv.getFavoriteState() == true ||
-                              !buttonFavoritePressed &&
-                                  savedName != null &&
-                                  _saveName.text == "" &&
-                                  filesProv.getFavoriteState() == true
-                          ? const Icon(
-                              Icons.star_rate,
-                              size: 23,
-                              color: Color(0xffF8FBFA),
-                            )
-                          : const RiveAnimation.asset(
-                              "assets/iconswhite.riv",
-                              artboard: "LIKE/STAR",
-                            ))),
+              // loginState != null && loginState!
+              //     ? Positioned(
+              //         top: 0,
+              //         right: 45,
+              //         child: IconButton(
+              //             splashRadius: 0.1,
+              //             onPressed: () {
+              //               setState(() {
+              //                 buttonFavoritePressed = !buttonFavoritePressed;
+              //               });
+              //               // saver screenshot
+              //               if (buttonFavoritePressed == true &&
+              //                   savedName != null &&
+              //                   _saveName.text == "") {
+              //                 setState(() {
+              //                   savedName = "";
+              //                   buttonFavoritePressed = false;
+              //                 });
+              //               } else {
+              //                 showDialog(
+              //                   barrierDismissible: false,
+              //                   context: context,
+              //                   builder: (context) {
+              //                     return BackdropFilter(
+              //                       filter: ImageFilter.blur(
+              //                           sigmaX: 10, sigmaY: 10),
+              //                       child: AlertDialog(
+              //                         backgroundColor: const Color(0xffF3F3F3),
+              //                         shape: RoundedRectangleBorder(
+              //                             borderRadius:
+              //                                 BorderRadius.circular(15.0)),
+              //                         content: Column(
+              //                           mainAxisSize: MainAxisSize.min,
+              //                           children: [
+              //                             Row(
+              //                               mainAxisSize: MainAxisSize.min,
+              //                               mainAxisAlignment:
+              //                                   MainAxisAlignment.center,
+              //                               children: [
+              //                                 Text(
+              //                                   _language
+              //                                       .tGenericFormFileName(),
+              //                                   style: const TextStyle(
+              //                                       fontWeight:
+              //                                           FontWeight.bold),
+              //                                 )
+              //                               ],
+              //                             ),
+              //                             Form(
+              //                                 key: _formKey,
+              //                                 child: Padding(
+              //                                   padding: const EdgeInsets.only(
+              //                                       top: 15,
+              //                                       right: 10,
+              //                                       left: 10),
+              //                                   child: TextFormField(
+              //                                     decoration: InputDecoration(
+              //                                       fillColor: Colors.white,
+              //                                       filled: true,
+              //                                       contentPadding:
+              //                                           const EdgeInsets
+              //                                                   .fromLTRB(
+              //                                               20, 10, 20, 10),
+              //                                       focusedBorder:
+              //                                           OutlineInputBorder(
+              //                                               borderRadius:
+              //                                                   BorderRadius
+              //                                                       .circular(
+              //                                                           10.0),
+              //                                               borderSide:
+              //                                                   const BorderSide(
+              //                                                       color: Colors
+              //                                                           .grey)),
+              //                                       enabledBorder:
+              //                                           OutlineInputBorder(
+              //                                               borderRadius:
+              //                                                   BorderRadius
+              //                                                       .circular(
+              //                                                           10.0),
+              //                                               borderSide: BorderSide(
+              //                                                   color: Colors
+              //                                                       .grey
+              //                                                       .shade400)),
+              //                                       errorBorder:
+              //                                           OutlineInputBorder(
+              //                                               borderRadius:
+              //                                                   BorderRadius
+              //                                                       .circular(
+              //                                                           10.0),
+              //                                               borderSide:
+              //                                                   const BorderSide(
+              //                                                       color: Colors
+              //                                                           .red,
+              //                                                       width:
+              //                                                           2.0)),
+              //                                       focusedErrorBorder:
+              //                                           OutlineInputBorder(
+              //                                               borderRadius:
+              //                                                   BorderRadius
+              //                                                       .circular(
+              //                                                           10.0),
+              //                                               borderSide:
+              //                                                   const BorderSide(
+              //                                                       color: Colors
+              //                                                           .red,
+              //                                                       width:
+              //                                                           2.0)),
+              //                                     ),
+              //                                     controller: _saveName,
+              //                                     validator: (value) {
+              //                                       if (value!.isEmpty) {
+              //                                         return _language
+              //                                             .tGenericFormFileNameMsgError1();
+              //                                       } else if (value ==
+              //                                           savedName) {
+              //                                         return _language
+              //                                             .tGenericFormFileNameMsgError2();
+              //                                       }
+              //                                       return null;
+              //                                     },
+              //                                   ),
+              //                                 )),
+              //                             Row(
+              //                               mainAxisSize: MainAxisSize.min,
+              //                               children: [
+              //                                 Padding(
+              //                                   padding: const EdgeInsets.only(
+              //                                       left: 10,
+              //                                       right: 40,
+              //                                       top: 20),
+              //                                   child: Container(
+              //                                     width: 80,
+              //                                     decoration: const BoxDecoration(
+              //                                         borderRadius:
+              //                                             BorderRadius.only(
+              //                                                 topRight: Radius
+              //                                                     .circular(10),
+              //                                                 topLeft: Radius
+              //                                                     .circular(10),
+              //                                                 bottomLeft: Radius
+              //                                                     .circular(10),
+              //                                                 bottomRight:
+              //                                                     Radius
+              //                                                         .circular(
+              //                                                             10)),
+              //                                         color: Color(0xffFFFFFF)),
+              //                                     child: TextButton(
+              //                                         onPressed: () {
+              //                                           setState(() {
+              //                                             buttonFavoritePressed =
+              //                                                 false;
+              //                                           });
+              //                                           Navigator.pop(context);
+              //                                         },
+              //                                         child: Text(
+              //                                           _language
+              //                                               .tProfilButtonCancel(),
+              //                                           style: const TextStyle(
+              //                                               color:
+              //                                                   Colors.black),
+              //                                         )),
+              //                                   ),
+              //                                 ),
+              //                                 Padding(
+              //                                   padding: const EdgeInsets.only(
+              //                                       right: 10, top: 20),
+              //                                   child: Container(
+              //                                     width: 100,
+              //                                     decoration: const BoxDecoration(
+              //                                         borderRadius:
+              //                                             BorderRadius.only(
+              //                                                 topRight: Radius
+              //                                                     .circular(10),
+              //                                                 topLeft: Radius
+              //                                                     .circular(10),
+              //                                                 bottomLeft: Radius
+              //                                                     .circular(10),
+              //                                                 bottomRight:
+              //                                                     Radius
+              //                                                         .circular(
+              //                                                             10)),
+              //                                         color: Color(0xff41B072)),
+              //                                     child: TextButton(
+              //                                         onPressed: () async {
+              //                                           if (_formKey
+              //                                               .currentState!
+              //                                               .validate()) {
+              //                                             if (_saveName.text !=
+              //                                                     savedName ||
+              //                                                 savedName ==
+              //                                                     null) {
+              //                                               setState(() {
+              //                                                 filesProv
+              //                                                     .setSaveName(
+              //                                                         _saveName
+              //                                                             .text);
+              //                                                 filesProv
+              //                                                     .setFavoriteState(
+              //                                                         true);
+              //                                                 Navigator.pop(
+              //                                                     context);
+              //                                                 Fluttertoast.showToast(
+              //                                                     msg: _language
+              //                                                         .tGenericFormSaveMsg(),
+              //                                                     backgroundColor:
+              //                                                         Colors
+              //                                                             .grey);
+              //                                                 buttonFavoritePressed =
+              //                                                     true;
+              //                                               });
+              //                                             }
+              //                                           }
+              //                                         },
+              //                                         child: Text(
+              //                                           _language
+              //                                               .tProfilButtonSave(),
+              //                                           style: const TextStyle(
+              //                                               color:
+              //                                                   Colors.white),
+              //                                         )),
+              //                                   ),
+              //                                 )
+              //                               ],
+              //                             )
+              //                           ],
+              //                         ),
+              //                       ),
+              //                     );
+              //                   },
+              //                 );
+              //               }
+              //             },
+              //             icon: buttonFavoritePressed
+              //                 ? const Icon(
+              //                     Icons.star_rate,
+              //                     size: 23,
+              //                     color: Color(0xffF8FBFA),
+              //                   )
+              //                 : const RiveAnimation.asset(
+              //                     "assets/iconswhite.riv",
+              //                     artboard: "LIKE/STAR",
+              //                   )))
+              //     : const SizedBox(),
               Positioned(
                   top: 0,
                   right: 10,
@@ -707,6 +734,9 @@ class _GenericFormState extends State<GenericForm> {
                         alignment: Alignment.centerRight,
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: t));
+                          Fluttertoast.showToast(
+                              msg: _language.tGenericFormCopieText(),
+                              backgroundColor: Colors.grey);
                         },
                         icon: const Icon(
                           Icons.content_copy,

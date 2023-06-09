@@ -500,7 +500,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                             requestClass.registerResponseBody();
                                         debugPrint(
                                             "************$registerResponse");
-                                        if (registerResponse != null) {
+                                        if (registerResponse != null &&
+                                            requestClass
+                                                    .registerResponseStatus() ==
+                                                200) {
                                           Fluttertoast.showToast(
                                               msg: _language
                                                   .tRegisterSuccesMsg(),

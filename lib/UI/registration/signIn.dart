@@ -9,14 +9,13 @@ import 'package:aldoc/UI/registration/forget_password.dart';
 import 'package:aldoc/UI/registration/header_widget.dart';
 import 'package:aldoc/UI/registration/signUp.dart';
 import 'package:aldoc/provider/Language.dart';
-import 'package:aldoc/provider/authProvider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:provider/provider.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
@@ -204,15 +203,6 @@ class _LoginPageState extends State<LoginPage> {
                                                           color: Colors.grey,
                                                         ))
                                               : null,
-                                      // label: Align(
-                                      //     alignment:
-                                      //         _language.getLanguage() == "AR"
-                                      //             ? Alignment.centerRight
-                                      //             : Alignment.centerLeft,
-                                      //     child:
-                                      //         Text(_language.tLoginPassword())),
-                                      // labelStyle:
-                                      //     const TextStyle(color: Colors.black),
                                       hintText: _language.tLoginPassword(),
                                       fillColor: Colors.white,
                                       filled: true,
@@ -363,7 +353,8 @@ class _LoginPageState extends State<LoginPage> {
                                                           context,
                                                           MaterialPageRoute(
                                                             builder: (context) =>
-                                                                const Home(),
+                                                                Home(
+                                                                    favoriteProductList: []),
                                                           ));
                                                     } else {
                                                       setState(() {
@@ -452,7 +443,9 @@ class _LoginPageState extends State<LoginPage> {
                                                     context,
                                                     MaterialPageRoute(
                                                         builder: (context) =>
-                                                            const Home()));
+                                                            Home(
+                                                              favoriteProductList: [],
+                                                            )));
                                               },
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
@@ -470,7 +463,9 @@ class _LoginPageState extends State<LoginPage> {
                                                     context,
                                                     MaterialPageRoute(
                                                         builder: (context) =>
-                                                            const Home()));
+                                                            Home(
+                                                              favoriteProductList: [],
+                                                            )));
                                               },
                                             style: const TextStyle(
                                                 fontWeight: FontWeight.bold,

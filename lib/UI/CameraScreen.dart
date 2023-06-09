@@ -204,8 +204,8 @@ class _CameraScreenState extends State<CameraScreen>
                       userId,
                       camProv.getCurrentState(),
                       token)
-                  .whenComplete(
-                () async {
+                  .then(
+                (value) async {
                   postResponse = requestClass.postConnectdResponseBody();
                   filesProv.setResponseStatus(
                       requestClass.postConnectedResponseStatus());
@@ -337,8 +337,8 @@ class _CameraScreenState extends State<CameraScreen>
                       userId,
                       camProv.getCurrentState(),
                       token)
-                  .whenComplete(
-                () async {
+                  .then(
+                (value) async {
                   postResponse = requestClass.postConnectdResponseBody();
                   filesProv.setResponseStatus(
                       requestClass.postConnectedResponseStatus());

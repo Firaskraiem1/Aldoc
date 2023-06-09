@@ -155,23 +155,29 @@ class RequestClass {
   }
 
   Future<void> userConnectedExtractResult(
-      String? taskId, String? userToken) async {
+    String? taskId,
+    String? userToken,
+  ) async {
     // taskId = taskId!.replaceAll(" ", "");
+
     Uri url = Uri.parse(
         'https://aldoc.dev.algobrain.ai/api/document_per_task?task_id=$taskId');
-
-    debugPrint("$url");
-    var getExtract =
-        await http.get(url, headers: {'Authorization': 'Bearer $userToken'});
-    extractResult = getExtract.body;
-    extractResultStatus = getExtract.statusCode;
-    debugPrint(
-        "$extractResult+ ${getExtract.statusCode}+${getExtract.reasonPhrase}");
-    if (getExtract.statusCode == 200) {
-      debugPrint("$extractResult+ ${getExtract.statusCode}");
-    } else {
-      Fluttertoast.showToast(
-          msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+    try {
+      debugPrint("$url");
+      var getExtract =
+          await http.get(url, headers: {'Authorization': 'Bearer $userToken'});
+      extractResult = getExtract.body;
+      extractResultStatus = getExtract.statusCode;
+      debugPrint(
+          "$extractResult+ ${getExtract.statusCode}+${getExtract.reasonPhrase}");
+      if (getExtract.statusCode == 200) {
+        debugPrint("$extractResult+ ${getExtract.statusCode}");
+      } else {
+        throw Exception(Fluttertoast.showToast(
+            msg: _language.tErrorMsg(), backgroundColor: Colors.grey));
+      }
+    } catch (error) {
+      print("e:$error");
     }
   }
 
@@ -212,19 +218,24 @@ class RequestClass {
       String? p, String? userId, String? userToken) async {
     Uri url = Uri.parse(
         'https://aldoc.dev.algobrain.ai/demo//get_file?user_id=$userId&file_id=$p');
-    var getResponse =
-        await http.get(url, headers: {'Authorization': 'Bearer $userToken'});
-    var responseImage = getResponse.bodyBytes;
-    var tempDir = await getTemporaryDirectory();
-    var tempPath = tempDir.path;
-    var file = File('$tempPath/image${DateTime.now()}.jpg');
-    await file.writeAsBytes(responseImage);
-    pathImageuserConnected = file.path.toString();
-    if (getResponse.statusCode == 200) {
-      debugPrint("get request succes");
-    } else {
-      Fluttertoast.showToast(
-          msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
+
+    try {
+      var getResponse =
+          await http.get(url, headers: {'Authorization': 'Bearer $userToken'});
+      var responseImage = getResponse.bodyBytes;
+      var tempDir = await getTemporaryDirectory();
+      var tempPath = tempDir.path;
+      var file = File('$tempPath/image${DateTime.now()}.jpg');
+      await file.writeAsBytes(responseImage);
+      pathImageuserConnected = file.path.toString();
+      if (getResponse.statusCode == 200) {
+        debugPrint("get request succes");
+      } else {
+        throw Exception(Fluttertoast.showToast(
+            msg: _language.tErrorMsg(), backgroundColor: Colors.grey));
+      }
+    } catch (error) {
+      print("e:$error");
     }
   }
 
@@ -243,6 +254,7 @@ class RequestClass {
     return encrypted.base64;
   }
 
+  int? statusRegister;
   Future<void> registerPostRequest(String? encrypted) async {
     Uri url = Uri.parse(
         'https://aldoc.dev.algobrain.ai/bff//users/registerEncrypted');
@@ -259,12 +271,18 @@ class RequestClass {
             msg: _language.tErrorMsg(), backgroundColor: Colors.grey);
       }
       eee = response.body;
+      statusRegister = response.statusCode;
       debugPrint("${response.reasonPhrase}+${response.statusCode}");
     }
   }
 
   String? registerResponseBody() {
     var r = eee;
+    return r;
+  }
+
+  int? registerResponseStatus() {
+    var r = statusRegister;
     return r;
   }
 
@@ -446,7 +464,7 @@ class RequestClass {
   Future<void> getProducts(
       String? userToken, String? userId, int? pages, String? skillId) async {
     Uri url = Uri.parse("https://aldoc.dev.algobrain.ai/api/products");
-    if (userId != null && userToken != null) {
+    if (userId != "" && userToken != null) {
       var request = await http.post(
         url,
         body: skillId != ""

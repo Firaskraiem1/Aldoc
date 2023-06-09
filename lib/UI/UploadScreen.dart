@@ -813,8 +813,8 @@ class _UploadScreenState extends State<UploadScreen> {
                                                               userId,
                                                               "idDocument",
                                                               token)
-                                                          .whenComplete(
-                                                        () async {
+                                                          .then(
+                                                        (value) async {
                                                           postResponse =
                                                               requestClass
                                                                   .postConnectdResponseBody();
@@ -842,8 +842,10 @@ class _UploadScreenState extends State<UploadScreen> {
                                                                     .toString();
                                                             debugPrint(
                                                                 "taskId:$taskId");
+
                                                             debugPrint(
                                                                 "token :$token");
+
                                                             requestClass
                                                                 .userConnectedExtractResult(
                                                                     taskId,

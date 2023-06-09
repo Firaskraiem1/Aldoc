@@ -3,8 +3,6 @@ import 'package:aldoc/UI/registration/ThemeHelper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:loading_animation_widget/loading_animation_widget.dart';
-
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
 
@@ -66,7 +64,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const Home(),
+                        builder: (context) => Home(favoriteProductList: []),
                       ));
                 },
               ),

@@ -305,9 +305,9 @@ class Language with ChangeNotifier {
 
   String tProfilConfirmNewPassword() {
     if (getLanguage() == "AR") {
-      return "أدخل كلمة المرور الجديدة";
+      return "أدخل كلمة المرور المؤكدة الخاصة بك";
     } else if (getLanguage() == "FR") {
-      return "Entrez votre nouveau mot de passe";
+      return "Entrez votre mot de passe de confirmation";
     } else {
       return "Enter your confirm password";
     }
@@ -320,6 +320,16 @@ class Language with ChangeNotifier {
       return "Échec de la connexion à l’hôte";
     } else {
       return "Failed to connect to host";
+    }
+  }
+
+  String tHomeNofilesToDisplayMsg() {
+    if (getLanguage() == "AR") {
+      return "لا توجد ملفات للعرض";
+    } else if (getLanguage() == "FR") {
+      return "Aucun fichier à afficher";
+    } else {
+      return "No files to display";
     }
   }
 
@@ -350,6 +360,36 @@ class Language with ChangeNotifier {
       return "Suppression de document réussie";
     } else {
       return "Document delete successfully";
+    }
+  }
+
+  String tUpdateInfoSuccesMsg() {
+    if (getLanguage() == "AR") {
+      return "تم تحديث المعلومات الشخصية";
+    } else if (getLanguage() == "FR") {
+      return "Renseignements personnels mis à jour";
+    } else {
+      return "Personal information updated";
+    }
+  }
+
+  String tGenericFormCopieText() {
+    if (getLanguage() == "AR") {
+      return "تم نسخ النص بنجاح";
+    } else if (getLanguage() == "FR") {
+      return "texte copié avec succès";
+    } else {
+      return "text copied successfully";
+    }
+  }
+
+  String tGenericAddToFavoris() {
+    if (getLanguage() == "AR") {
+      return "تمت إضافة المستند بنجاح إلى الملفات المفضلة";
+    } else if (getLanguage() == "FR") {
+      return "Document ajouté avec succès aux fichiers favoris  ";
+    } else {
+      return "document successfully added to favorites files";
     }
   }
 
