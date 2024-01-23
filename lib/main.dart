@@ -11,7 +11,7 @@ String? language = "EN";
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.getInstance().then((value) {
-    //language = value.getString("language");
+    language = value.getString("language");
     runApp(const MyApp());
   });
 }
