@@ -1,6 +1,5 @@
-# aldoc
-
-A new Flutter project.
+# Aldoc
+Document Digitalization and information extraction
 
 ## Getting Started
 
